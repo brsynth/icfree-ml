@@ -1,0 +1,15 @@
+Parameter,Status,Maximum concentration
+Mg-glutamate,variable,10.4
+k-glutamate,variable,355
+Sodium oxalate,variable,2.1
+3-PGA,variable,30
+NTP,variable,1.5
+NAD,variable,30
+Folinic acid,variable,0.2
+Spermidine,variable,1.3
+tRNA,variable,2
+Amino acids,variable,0.5
+Extract,variable,10
+HEPES,variable,30
+GOI-DNA,variable,50
+GFP-DNA,variable,50
