@@ -1,0 +1,39 @@
+# Volume required and stocks.
+# Calculated the concentrations of the compounds stocks so the final volumes sent to the destination well 
+# were multiples of 2.5 nL (the droplet size managed by the Echo liquid handler). 
+# We chose our stock volumes so that the minimal volume to transfer was 12.5 nL (or 5 droplets).
+
+vol_max = 10.5
+n = 5
+
+stock_mg_glutamate = 168
+stock_k_glutamate = 3360
+stock_sodiumoxalate = 0
+stock_pga = 1400
+stock_nucleotides_mix = 630
+stock_nad = 138.6
+stock_folinic_acid = 28.56
+stock_spermidine = 420
+stock_aa = 6
+stock_trna = 84
+
+stock_dna_mix = 300
+stock_hepes = 2100
+stock_extract = 89.5
+
+# stock_peg = 40
+# stock_coa = 109.2/n
+# stock_camp = 315/n
+# stock_hmp = 0
+# stock_glucose = 0
+# stock_pep = 0
+# stock_glycogen = 0
+# stock_k2hpo4 = 0
+# stock_glucose6p = 0
+# stock_phosphocreatine = 0
+# stock_creatinekinase = 0
+# stock_gsh = 0
+# stock_gssg = 0
+# stock_maltodextrin = 0
+
+
