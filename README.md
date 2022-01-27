@@ -1,7 +1,7 @@
 
 # Description
 
-Machine learning scripts for the iCFree project
+Design of experiments (DoE) and machine learning scripts for the iCFree project
 
 # Installation
 
