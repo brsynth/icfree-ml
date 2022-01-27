@@ -1,8 +1,24 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-import pandas as pd
-import numpy as np
+
+from numpy import (
+    concatenate,
+    array,
+    asarray,
+    shape,
+    reshape,
+    multiply,
+    fromiter,
+    full,
+    stack
+)
+
+from pandas import (
+    read_csv,
+    DataFrame
+)
+
 from pyDOE2 import (
     lhs
 )
@@ -23,7 +39,7 @@ def input_importer(input_file):
         dataframe populated with input_file data
     """
 
-    input_df = pd.read_csv(input_file)
+    input_df = read_csv(input_file)
     return input_df
 
 
@@ -60,15 +76,15 @@ def input_processor(input_df):
             fixed_parameters = input_df[input_df['Status'] == 'fixed']
             maximum_fixed_concentrations = list(
                 fixed_parameters['Maximum concentration'])
-            fixed_parameters = np.array(fixed_parameters['Parameter'])
+            fixed_parameters = array(fixed_parameters['Parameter'])
 
         if (input_df[status] == 'variable').any():
             variable_parameters = input_df[input_df['Status'] == 'variable']
-            maximum_variable_concentrations = np.array(
+            maximum_variable_concentrations = array(
                 variable_parameters['Maximum concentration'])
-            variable_parameters = np.array(variable_parameters['Parameter'])
-            n_variable_parameters = np.shape(variable_parameters)[0]
-            maximum_variable_concentrations = np.reshape(
+            variable_parameters = array(variable_parameters['Parameter'])
+            n_variable_parameters = shape(variable_parameters)[0]
+            maximum_variable_concentrations = reshape(
                 maximum_variable_concentrations,
                 (1, n_variable_parameters))
 
@@ -140,7 +156,7 @@ def levels_array_generator(
 
         levels_list.append(new_sample)
 
-    levels_array = np.asarray(
+    levels_array = asarray(
         levels_list)
 
     return levels_array
@@ -166,7 +182,7 @@ def variable_concentrations_array_generator(
         N-by-samples array with variable concentrations values for each factor.
     """
 
-    variable_concentrations_array = np.multiply(
+    variable_concentrations_array = multiply(
         levels_array,
         maximum_variable_concentrations)
     return variable_concentrations_array
@@ -192,20 +208,20 @@ def fixed_concentrations_array_generator(
         N-by-samples array with fixed concentrations values for each factor.
     """
 
-    nrows_variable_concentrations_array = np.shape(
+    nrows_variable_concentrations_array = shape(
         variable_concentrations_array)[0]
 
     fixed_concentrations_array_list = []
 
     for maximum_fixed_concentration in maximum_fixed_concentrations:
-        fixed_concentrations_array = np.full(
+        fixed_concentrations_array = full(
             nrows_variable_concentrations_array,
             maximum_fixed_concentration)
 
         fixed_concentrations_array_list.append(
             fixed_concentrations_array)
 
-    fixed_concentrations_array = np.stack(
+    fixed_concentrations_array = stack(
         fixed_concentrations_array_list, axis=-1)
 
     return fixed_concentrations_array
@@ -228,14 +244,14 @@ def maximum_concentrations_sample_generator(input_df):
 
     maximum_concentrations_dict = dict(
         input_df[['Parameter', 'Maximum concentration']].to_numpy())
-    maximum_concentrations_sample = np.fromiter(
+    maximum_concentrations_sample = fromiter(
         maximum_concentrations_dict.values(),
         dtype=float)
 
-    nrows_maximum_concentrations_sample = np.shape(
+    nrows_maximum_concentrations_sample = shape(
         maximum_concentrations_sample)[0]
 
-    maximum_concentrations_sample = np.reshape(
+    maximum_concentrations_sample = reshape(
         maximum_concentrations_sample,
         (1, nrows_maximum_concentrations_sample))
 
@@ -266,13 +282,13 @@ def autofluorescence_sample_generator(maximum_concentrations_dict):
     if 'GFP-DNA' in autofluorescence_dict:
         autofluorescence_dict['GFP-DNA'] = 0
 
-    autofluorescence_sample = np.fromiter(
+    autofluorescence_sample = fromiter(
         autofluorescence_dict.values(), dtype=float)
 
-    nrows_autofluorescence_sample = np.shape(
+    nrows_autofluorescence_sample = shape(
         autofluorescence_sample)[0]
 
-    autofluorescence_sample = np.reshape(
+    autofluorescence_sample = reshape(
         autofluorescence_sample, (1, nrows_autofluorescence_sample))
 
     return autofluorescence_sample
@@ -298,7 +314,7 @@ def control_concentrations_array_generator(
         N-by-samples array. Concatenation of all control samples.
     """
 
-    control_concentrations_array = np.concatenate(
+    control_concentrations_array = concatenate(
         (maximum_concentrations_sample, autofluorescence_sample), axis=0)
     return control_concentrations_array
 
@@ -331,15 +347,15 @@ def initial_training_set_generator(
         Duplicate of initial_training_set. 0 is assigned to the GOI-DNA column.
     """
 
-    all_concentrations_array = np.concatenate(
+    all_concentrations_array = concatenate(
         (variable_concentrations_array, fixed_concentrations_array),
         axis=1)
 
-    initial_set_array = np.concatenate(
+    initial_set_array = concatenate(
         (all_concentrations_array, control_concentrations_array),
         axis=0)
 
-    initial_set = pd.DataFrame(initial_set_array)
+    initial_set = DataFrame(initial_set_array)
     initial_set_without_goi = initial_set.copy()
     all_parameters = input_df['Parameter'].tolist()
     initial_set_without_goi.columns = all_parameters
