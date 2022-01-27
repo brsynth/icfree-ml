@@ -13,4 +13,4 @@ Yorgo EL MOUBAYED
 
 # Licence
 
-Released under the MIT licence. See the LICENCE file for details.
+Released under the MIT licence. See the [LICENSE](https://github.com/brsynth/icfree-ml/blob/main/LICENSE.md) file for details.
