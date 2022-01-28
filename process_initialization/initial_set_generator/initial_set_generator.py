@@ -23,8 +23,14 @@ from pyDOE2 import (
     lhs
 )
 
+# from typing import (
+#     Dict,
+#     List,
+#     Tuple
+# )
 
-def input_importer(input_file):
+
+def input_importer(input_file) -> DataFrame:
     """
     Import csv input into a dataframe
 
@@ -35,15 +41,15 @@ def input_importer(input_file):
 
     Returns
     -------
-    input_df : dataframe
-        dataframe populated with input_file data
+    input_df : DataFrame
+        Pandas dataframe populated with input_file data
     """
 
-    input_df = read_csv(input_file)
+    input_df = read_csv(input_file, sep='\t')
     return input_df
 
 
-def input_processor(input_df):
+def input_processor(input_df: DataFrame):
     """
     Determine variable and fixed parameters, and maximum concentrations.
 
@@ -388,11 +394,13 @@ def save_intial_training_set(
     all_parameters = input_df['Parameter'].tolist()
 
     initial_set = initial_set.to_csv(
-        'initial_training_set.csv',
+        'initial_training_set.tsv',
+        sep='\t',
         header=all_parameters)
 
     initial_set_without_goi = initial_set_without_goi.to_csv(
-        'initial_training_set_without_goi.csv',
+        'initial_training_set_without_goi.tsv',
+        sep='\t',
         header=all_parameters)
 
     return initial_set, initial_set_without_goi
