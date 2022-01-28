@@ -5,7 +5,23 @@ Design of experiments (DoE) and machine learning scripts for the iCFree project
 
 # Installation
 
+~~~bash
+bash packages.sh
+~~~
+
+~~~bash
+git clone https://github.com/brsynth/icfree-ml.git
+~~~
+
 # Usage
+
+~~~bash
+cd process_initialization
+~~~
+
+~~~bash
+python -m initial_set_generator data/input/tsv/proCFPS_parameters.tsv
+~~~
 
 # Authors
 
