@@ -6,11 +6,11 @@ Design of experiments (DoE) and machine learning scripts for the iCFree project
 # Installation
 
 ~~~bash
-bash packages.sh
+git clone https://github.com/brsynth/icfree-ml.git
 ~~~
 
 ~~~bash
-git clone https://github.com/brsynth/icfree-ml.git
+bash packages.sh
 ~~~
 
 # Usage
