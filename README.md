@@ -20,7 +20,7 @@ cd process_initialization
 ~~~
 
 ~~~bash
-python -m initial_set_generator data/input/tsv/proCFPS_parameters.tsv
+python -m initial_set_generator <tsv parameters file>
 ~~~
 
 # Authors
