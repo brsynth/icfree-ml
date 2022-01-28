@@ -1,0 +1,12 @@
+Parameter	Status	Maximuml concentration
+MgCl2	variable	1.5
+KCl	variable	125
+Amino acids	variable	500
+tRNA	variable	2000
+Phosphocreatine	variable	100
+Creatine kinase	variable	1000
+GOI-mRNA	fixed	1000
+Ribosomes	variable	20
+Rabbit reticulocyte lysate (RRL) supernatant	variable	75%
+Glucose	variable	10
+GFP-mRNA	fixed	1000

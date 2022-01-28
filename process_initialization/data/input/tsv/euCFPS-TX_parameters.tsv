@@ -1,0 +1,15 @@
+Parameter	Status	Maximuml concentration
+rATP	variable	4
+rCTP	variable	4
+rGTP	variable	4
+rUTP	variable	4
+DNA	variable	10
+T7-RNA polymerase	variable	40
+RNasin	variable	40
+Spermidine	variable	10
+DTT	variable	10
+NaCl	variable	50
+Tris-HCl	variable	100
+MgCl2	variable	100
+GFP-DNA	fixed	
+GOI-DNA	fixed	

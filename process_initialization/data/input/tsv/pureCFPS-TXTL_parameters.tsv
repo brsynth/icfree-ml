@@ -1,0 +1,16 @@
+Parameter	Status	Maximuml concentration
+Mg-acetate	variable	20
+κ-glutamate	variable	200
+HEPES	variable	150
+Phosphocreatine	variable	50
+ATP, GTP	variable	5
+CTP, UTP	variable	2.5
+TCEP	variable	5
+Folinic acid	variable	0.05
+Spermidine	variable	3
+Ribosomes	variable	3.6
+Amino acids	variable	1
+tRNA	variable	7.5
+Protein solution	variable	2.5
+GOI-DNA	fixed	8
+GFP-DNA	fixed	8
