@@ -13,7 +13,7 @@ git clone https://github.com/brsynth/icfree-ml.git
 bash packages.sh
 ~~~
 
-# Usage
+# Usage (Currently restricted to the initial_set_generator module)
 
 ~~~bash
 cd process_initialization
