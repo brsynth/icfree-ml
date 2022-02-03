@@ -8,6 +8,7 @@ from numpy import (
     asarray,
     shape,
     reshape,
+    fromiter,
     multiply,
     full,
     stack
@@ -260,67 +261,27 @@ def fixed_concentrations_array_generator(
 #         maximum_concentrations_sample,
 #         (1, nrows_maximum_concentrations_sample))
 
-#     return maximum_concentrations_dict, maximum_concentrations_sample
+#     return maximum_concentrations_sample
 
 
-# def autofluorescence_sample_generator(maximum_concentrations_dict):
-#     """
-#     Generate autofluorescence sample.
-#     All factors (w/ DNA) are at maximum concentration.
-
-#     Parameters
-#     ----------
-#     input : dataframe
-#         User csv input imported into a dataframe.
-
-#     Returns
-#     -------
-#     autofluorescence_concentrations_sample : 1d-array
-#         N-maximum-concentrations array with values for all factor (w/ DNA).
-#     """
-
-#     autofluorescence_dict = maximum_concentrations_dict
-
-#     if 'GOI-DNA' in autofluorescence_dict:
-#         autofluorescence_dict['GOI-DNA'] = 0
-
-#     if 'GFP-DNA' in autofluorescence_dict:
-#         autofluorescence_dict['GFP-DNA'] = 0
-
-#     autofluorescence_sample = fromiter(
-#         autofluorescence_dict.values(), dtype=float)
-
-#     nrows_autofluorescence_sample = shape(
-#         autofluorescence_sample)[0]
-
-#     autofluorescence_sample = reshape(
-#         autofluorescence_sample, (1, nrows_autofluorescence_sample))
-
-#     return autofluorescence_sample
-
-
-# def control_concentrations_array_generator(
-#         maximum_concentrations_sample,
-#         autofluorescence_sample):
+# def control_concentrations_array_generator():
 #     """
 #     Concatenate all control samples into a single array
-
+#     Template in case more controls are needed
+#
 #     Parameters
 #     ----------
 #     maximum_concentrations_sample : 1d-array
 #         N-maximum-concentrations array with maximum concentrations values.
-
-#     autofluorescence_concentrations_sample : 1d-array
-#         N-maximum-concentrations array with values for factors w/o DNA.
-
+#
 #     Returns
 #     -------
-#     control_concentrations_array : 2d-array
+#     control_concentrations_array : nd-array
 #         N-by-samples array. Concatenation of all control samples.
 #     """
 
 #     control_concentrations_array = concatenate(
-#         (maximum_concentrations_sample, autofluorescence_sample), axis=0)
+#         (), axis=0)
 #     return control_concentrations_array
 
 
@@ -339,20 +300,34 @@ def initial_plates_generator(
     fixed_concentrations_array : 2d-array
         N-fixed-concentrations array with values for each factor.
 
-    control_concentrations_array : 2d-array
-        N-by-samples array. Concatenation of all control samples.
+    maximum_concentrations_sample : 1d-array
+        N-maximum-concentrations array with values for all factor.
 
     Returns
     -------
     initial_set : dataframe
         Matrix generated from the concatenation of all samples.
 
-    initial_set_without_goi : dataframe
-        Duplicate of initial_training_set. 0 is assigned to the GOI-DNA column.
+    normalizer_set : dataframe
+        Duplicate of initial_set. 0 is assigned to the GOI-DNA column.
+
+    autofluorescence_set : dataframe
+        Duplicate of normalizer_set. 0 is assigned to the GFP-DNA column.
     """
 
+    # all_concentrations_array = concatenate(
+    #     (variable_concentrations_array,
+    #         fixed_concentrations_array,),
+    #     axis=1)
+
+    # initial_set_array = concatenate(
+    #     (all_concentrations_array,
+    #         maximum_concentrations_sample),
+    #     axis=0)
+
     initial_set_array = concatenate(
-        (variable_concentrations_array, fixed_concentrations_array),
+        (variable_concentrations_array,
+            fixed_concentrations_array,),
         axis=1)
 
     initial_set = DataFrame(initial_set_array)

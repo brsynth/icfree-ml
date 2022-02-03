@@ -38,17 +38,7 @@ def main():
                                 maximum_fixed_concentrations)
 
     # maximum_concentrations_sample = maximum_concentrations_sample_generator(
-    #                             input_df)[1]
-
-    # maximum_concentrations_dict = maximum_concentrations_sample_generator(
     #                             input_df)[0]
-
-    # autofluorescence_sample = autofluorescence_sample_generator(
-    #                         maximum_concentrations_dict)
-
-    # control_concentrations_array = control_concentrations_array_generator(
-    #                             maximum_concentrations_sample,
-    #                             autofluorescence_sample)
 
     initial_set = initial_plates_generator(
         variable_concentrations_array,
