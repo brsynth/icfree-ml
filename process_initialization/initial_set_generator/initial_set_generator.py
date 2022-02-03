@@ -374,10 +374,11 @@ def save_intial_plates(
     normalizer_set = normalizer_set.to_csv(
         'normalizer_set.tsv',
         sep='\t',
-        header=all_parameters)
+        header=all_parameters,
+        index=False)
 
     autolfuorescence_set = autolfuorescence_set.to_csv(
-        'autolfuorescence_set.tsv',
+        'autofluorescence_set.tsv',
         sep='\t',
         header=all_parameters,
         index=False)
