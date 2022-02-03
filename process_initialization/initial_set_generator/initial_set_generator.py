@@ -9,7 +9,6 @@ from numpy import (
     shape,
     reshape,
     multiply,
-    fromiter,
     full,
     stack
 )
@@ -233,102 +232,61 @@ def fixed_concentrations_array_generator(
     return fixed_concentrations_array
 
 
-def maximum_concentrations_sample_generator(input_df):
-    """
-    Generate control sample with all factors at maximum concentration
+# def maximum_concentrations_sample_generator(input_df):
+#     """
+#     Generate control sample with all factors at maximum concentration
 
-    Parameters
-    ----------
-    input_df : dataframe
-        User csv input imported into a dataframe.
+#     Parameters
+#     ----------
+#     input_df : dataframe
+#         User csv input imported into a dataframe.
 
-    Returns
-    -------
-    maximum_concentrations_sample : 1d-array
-        N-maximum-concentrations array with values for all factor.
-    """
+#     Returns
+#     -------
+#     maximum_concentrations_sample : 1d-array
+#         N-maximum-concentrations array with values for all factor.
+#     """
 
-    maximum_concentrations_dict = dict(
-        input_df[['Parameter', 'Maximum concentration']].to_numpy())
-    maximum_concentrations_sample = fromiter(
-        maximum_concentrations_dict.values(),
-        dtype=float)
+#     maximum_concentrations_dict = dict(
+#         input_df[['Parameter', 'Maximum concentration']].to_numpy())
+#     maximum_concentrations_sample = fromiter(
+#         maximum_concentrations_dict.values(),
+#         dtype=float)
 
-    nrows_maximum_concentrations_sample = shape(
-        maximum_concentrations_sample)[0]
+#     nrows_maximum_concentrations_sample = shape(
+#         maximum_concentrations_sample)[0]
 
-    maximum_concentrations_sample = reshape(
-        maximum_concentrations_sample,
-        (1, nrows_maximum_concentrations_sample))
+#     maximum_concentrations_sample = reshape(
+#         maximum_concentrations_sample,
+#         (1, nrows_maximum_concentrations_sample))
 
-    return maximum_concentrations_dict, maximum_concentrations_sample
-
-
-def autofluorescence_sample_generator(maximum_concentrations_dict):
-    """
-    Generate autofluorescence sample.
-    All factors (w/ DNA) are at maximum concentration.
-
-    Parameters
-    ----------
-    input : dataframe
-        User csv input imported into a dataframe.
-
-    Returns
-    -------
-    autofluorescence_concentrations_sample : 1d-array
-        N-maximum-concentrations array with values for all factor (w/ DNA).
-    """
-
-    autofluorescence_dict = maximum_concentrations_dict
-
-    if 'GOI-DNA' in autofluorescence_dict:
-        autofluorescence_dict['GOI-DNA'] = 0
-
-    if 'GFP-DNA' in autofluorescence_dict:
-        autofluorescence_dict['GFP-DNA'] = 0
-
-    autofluorescence_sample = fromiter(
-        autofluorescence_dict.values(), dtype=float)
-
-    nrows_autofluorescence_sample = shape(
-        autofluorescence_sample)[0]
-
-    autofluorescence_sample = reshape(
-        autofluorescence_sample, (1, nrows_autofluorescence_sample))
-
-    return autofluorescence_sample
+#     return maximum_concentrations_sample
 
 
-def control_concentrations_array_generator(
-        maximum_concentrations_sample,
-        autofluorescence_sample):
-    """
-    Concatenate all control samples into a single array
+# def control_concentrations_array_generator():
+#     """
+#     Concatenate all control samples into a single array
+#     Template in case more controls are needed
+#
+#     Parameters
+#     ----------
+#     maximum_concentrations_sample : 1d-array
+#         N-maximum-concentrations array with maximum concentrations values.
+#
+#     Returns
+#     -------
+#     control_concentrations_array : nd-array
+#         N-by-samples array. Concatenation of all control samples.
+#     """
 
-    Parameters
-    ----------
-    maximum_concentrations_sample : 1d-array
-        N-maximum-concentrations array with maximum concentrations values.
-
-    autofluorescence_concentrations_sample : 1d-array
-        N-maximum-concentrations array with values for factors w/o DNA.
-
-    Returns
-    -------
-    control_concentrations_array : 2d-array
-        N-by-samples array. Concatenation of all control samples.
-    """
-
-    control_concentrations_array = concatenate(
-        (maximum_concentrations_sample, autofluorescence_sample), axis=0)
-    return control_concentrations_array
+#     control_concentrations_array = concatenate(
+#         (), axis=0)
+#     return control_concentrations_array
 
 
-def initial_training_set_generator(
+def initial_plates_generator(
         variable_concentrations_array,
         fixed_concentrations_array,
-        control_concentrations_array,
         input_df):
     """
     Concatenate variable and fixed concentrations array with control array.
@@ -341,39 +299,55 @@ def initial_training_set_generator(
     fixed_concentrations_array : 2d-array
         N-fixed-concentrations array with values for each factor.
 
-    control_concentrations_array : 2d-array
-        N-by-samples array. Concatenation of all control samples.
+    maximum_concentrations_sample : 1d-array
+        N-maximum-concentrations array with values for all factor.
 
     Returns
     -------
     initial_set : dataframe
         Matrix generated from the concatenation of all samples.
 
-    initial_set_without_goi : dataframe
-        Duplicate of initial_training_set. 0 is assigned to the GOI-DNA column.
+    normalizer_set : dataframe
+        Duplicate of initial_set. 0 is assigned to the GOI-DNA column.
+
+    autofluorescence_set : dataframe
+        Duplicate of normalizer_set. 0 is assigned to the GFP-DNA column.
     """
 
-    all_concentrations_array = concatenate(
-        (variable_concentrations_array, fixed_concentrations_array),
-        axis=1)
+    # all_concentrations_array = concatenate(
+    #     (variable_concentrations_array,
+    #         fixed_concentrations_array,),
+    #     axis=1)
+
+    # initial_set_array = concatenate(
+    #     (all_concentrations_array,
+    #         maximum_concentrations_sample),
+    #     axis=0)
 
     initial_set_array = concatenate(
-        (all_concentrations_array, control_concentrations_array),
-        axis=0)
+        (variable_concentrations_array,
+            fixed_concentrations_array,),
+        axis=1)
 
     initial_set = DataFrame(initial_set_array)
-    initial_set_without_goi = initial_set.copy()
+
+    normalizer_set = initial_set.copy()
     all_parameters = input_df['Parameter'].tolist()
-    initial_set_without_goi.columns = all_parameters
-    initial_set_without_goi['GOI-DNA'] = initial_set_without_goi['GOI-DNA']*0
+    normalizer_set.columns = all_parameters
+    normalizer_set['GOI-DNA'] = normalizer_set['GOI-DNA']*0
 
-    return initial_set, initial_set_without_goi
+    autolfuorescence_set = normalizer_set.copy()
+    autolfuorescence_set.columns = all_parameters
+    autolfuorescence_set['GFP-DNA'] = normalizer_set['GFP-DNA']*0
+
+    return initial_set, normalizer_set, autolfuorescence_set, all_parameters
 
 
-def save_intial_training_set(
-        input_df,
+def save_intial_plates(
         initial_set,
-        initial_set_without_goi):
+        normalizer_set,
+        autolfuorescence_set,
+        all_parameters):
     """
     Save initial training set in csv file
 
@@ -391,18 +365,21 @@ def save_intial_training_set(
         full_concentrations_df data in a csv file
     """
 
-    all_parameters = input_df['Parameter'].tolist()
-
     initial_set = initial_set.to_csv(
         'initial_training_set.tsv',
         sep='\t',
         header=all_parameters,
         index=False)
 
-    initial_set_without_goi = initial_set_without_goi.to_csv(
-        'initial_training_set_without_goi.tsv',
+    normalizer_set = normalizer_set.to_csv(
+        'normalizer_set.tsv',
+        sep='\t',
+        header=all_parameters)
+
+    autolfuorescence_set = autolfuorescence_set.to_csv(
+        'autolfuorescence_set.tsv',
         sep='\t',
         header=all_parameters,
         index=False)
 
-    return initial_set, initial_set_without_goi
+    return initial_set, normalizer_set, autolfuorescence_set
