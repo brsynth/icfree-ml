@@ -396,11 +396,13 @@ def save_intial_training_set(
     initial_set = initial_set.to_csv(
         'initial_training_set.tsv',
         sep='\t',
-        header=all_parameters)
+        header=all_parameters,
+        index=False)
 
     initial_set_without_goi = initial_set_without_goi.to_csv(
         'initial_training_set_without_goi.tsv',
         sep='\t',
-        header=all_parameters)
+        header=all_parameters,
+        index=False)
 
     return initial_set, initial_set_without_goi
