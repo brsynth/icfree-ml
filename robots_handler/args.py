@@ -25,6 +25,24 @@ def add_arguments(parser):
         help='Path to a .tsv file containing CFPS parameters and features',
     )
 
+    parser.add_argument(
+        'input1',
+        type=str,
+        help='Path to a .tsv file containing initial training set',
+    )
+
+    parser.add_argument(
+        'input2',
+        type=str,
+        help='Path to a .tsv file containing normalizer set',
+    )
+
+    parser.add_argument(
+        'input3',
+        type=str,
+        help='Path to a .tsv file containing autofluorescence set',
+    )
+
     # parser.add_argument(
     #     'output',
     #     type=str,
