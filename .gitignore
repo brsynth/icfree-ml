@@ -3,3 +3,4 @@
 .ipynb_checkpoints
 .vscode/settings.json
 initial_set_generator/data/output/.DS_Store
+__pycache__
