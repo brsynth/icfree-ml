@@ -6,12 +6,23 @@ from .echo_handler import (
     save_volumes_array
 )
 
+from .args import build_args_parser
+
 
 def main():
-    input_file = 'proCFPS_parameters.tsv'
-    input_file_1 = 'initial_training_set.tsv'
-    input_file_2 = 'normalizer_set.tsv'
-    input_file_3 = 'autofluorescence_set.tsv'
+    # input_file = 'proCFPS_parameters.tsv'
+    # input_file_1 = 'initial_training_set.tsv'
+    # input_file_2 = 'normalizer_set.tsv'
+    # input_file_3 = 'autofluorescence_set.tsv'
+    parser = build_args_parser(
+        program='robots_handler',
+        description='Convert concetrations tsv files into volumes tsv files')
+
+    args = parser.parse_args()
+    input_file = args.input
+    input_file_1 = args.input1
+    input_file_2 = args.input2
+    input_file_3 = args.input3
 
     input_df = input_importer(
         input_file,
