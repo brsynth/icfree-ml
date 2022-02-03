@@ -22,7 +22,7 @@ def add_arguments(parser):
     parser.add_argument(
         'input',
         type=str,
-        help='Path to a .csv file containing CFPS parameters and features',
+        help='Path to a .tsv file containing CFPS parameters and features',
     )
 
     # parser.add_argument(
