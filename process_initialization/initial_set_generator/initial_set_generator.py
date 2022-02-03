@@ -8,7 +8,6 @@ from numpy import (
     asarray,
     shape,
     reshape,
-    fromiter,
     multiply,
     full,
     stack
