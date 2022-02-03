@@ -24,7 +24,10 @@ def input_importer(
     input_df_2 = read_csv(input_file_2, sep='\t')
     input_df_3 = read_csv(input_file_3, sep='\t')
 
-    return input_df, input_df_1, input_df_2, input_df_3
+    return (input_df,
+            input_df_1,
+            input_df_2,
+            input_df_3)
 
 
 def volumes_array_generator(
