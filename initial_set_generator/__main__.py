@@ -16,7 +16,7 @@ def main():
 
     parser = build_args_parser(
         program='initial_set_generator',
-        description='Generate the initial training set for active learning')
+        description='Generate the initial plates for active learning')
 
     args = parser.parse_args()
 
