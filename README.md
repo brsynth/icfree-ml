@@ -10,17 +10,25 @@ git clone https://github.com/brsynth/icfree-ml.git
 ~~~
 
 ~~~bash
+cd icfree-ml
+~~~
+
+~~~bash
 bash packages.sh
 ~~~
 
-# Usage (Currently restricted to the initial_set_generator module)
+# Usage
 
-~~~bash
-cd process_initialization
-~~~
+Running the initial_set_generator module
 
 ~~~bash
 python -m initial_set_generator <tsv parameters file>
+~~~
+
+Running the robots_handler module
+
+~~~bash
+python -m robots_handler < initial_training_set tsv file> < normalizer_set tsv file> <autofluorescence tsv file>
 ~~~
 
 # Authors
