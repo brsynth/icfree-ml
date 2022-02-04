@@ -2,4 +2,4 @@
 *.pyc
 .ipynb_checkpoints
 .vscode/settings.json
-s__pycache__
+__pycache__
