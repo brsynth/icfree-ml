@@ -366,19 +366,19 @@ def save_intial_plates(
     """
 
     initial_set = initial_set.to_csv(
-        'initial_training_set.tsv',
+        'data/initial_output/initial_training_set.tsv',
         sep='\t',
         header=all_parameters,
         index=False)
 
     normalizer_set = normalizer_set.to_csv(
-        'normalizer_set.tsv',
+        'data/initial_output/normalizer_set.tsv',
         sep='\t',
         header=all_parameters,
         index=False)
 
     autolfuorescence_set = autolfuorescence_set.to_csv(
-        'autofluorescence_set.tsv',
+        'data/initial_output/autofluorescence_set.tsv',
         sep='\t',
         header=all_parameters,
         index=False)
