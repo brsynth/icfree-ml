@@ -22,13 +22,13 @@ bash packages.sh
 Running the initial_set_generator module
 
 ~~~bash
-python -m initial_set_generator <tsv parameters file>
+python -m initial_set_generator <CFPS-parameters tsv file>
 ~~~
 
 Running the robots_handler module
 
 ~~~bash
-python -m robots_handler < initial_training_set tsv file> < normalizer_set tsv file> <autofluorescence tsv file>
+python -m robots_handler <initial_training_set tsv file> < normalizer_set tsv file> <autofluorescence tsv file>
 ~~~
 
 # Authors
