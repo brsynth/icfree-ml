@@ -1,15 +1,15 @@
-Parameter	Status	Maximuml concentration
-rATP	variable	4
-rCTP	variable	4
-rGTP	variable	4
-rUTP	variable	4
-DNA	variable	10
-T7-RNA polymerase	variable	40
-RNasin	variable	40
-Spermidine	variable	10
-DTT	variable	10
-NaCl	variable	50
-Tris-HCl	variable	100
-MgCl2	variable	100
-GFP-DNA	fixed	
-GOI-DNA	fixed	
+Parameter	Status	Maximuml concentration	Stock concentration
+rATP	variable	4	n/a
+rCTP	variable	4	n/a
+rGTP	variable	4	n/a
+rUTP	variable	4	n/a
+DNA	variable	10	n/a
+T7-RNA polymerase	variable	40	n/a
+RNasin	variable	40	n/a
+Spermidine	variable	10	n/a
+DTT	variable	10	n/a
+NaCl	variable	50	n/a
+Tris-HCl	variable	100	n/a
+MgCl2	variable	100	n/a
+GFP-DNA	fixed	n/a	n/a
+GOI-DNA	fixed	n/a	n/a
