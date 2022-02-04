@@ -73,18 +73,18 @@ def save_volumes_array(
     all_parameters = input_df['Parameter'].tolist()
 
     initial_set_volumes = intial_set_volumes.to_csv(
-        'intial_set_volumes.tsv',
+        'data/volumes_output/intial_set_volumes.tsv',
         sep='\t',
         header=all_parameters,
         index=False)
 
     normalizer_set_volumes = normalizer_set_volumes.to_csv(
-        'normalizer_set_volumes.tsv',
+        'data/volumes_output/normalizer_set_volumes.tsv',
         sep='\t',
         header=all_parameters)
 
     autofluorescence_set_volumes = autofluorescence_set_volumes.to_csv(
-        'autofluorescence_set_volumes.tsv',
+        'data/volumes_output/autofluorescence_set_volumes.tsv',
         sep='\t',
         header=all_parameters,
         index=False)
