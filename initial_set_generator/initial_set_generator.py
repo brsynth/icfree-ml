@@ -31,12 +31,12 @@ from pyDOE2 import (
 
 def input_importer(input_file) -> DataFrame:
     """
-    Import csv input into a dataframe
+    Import tsv input into a dataframe
 
     Parameters
     ----------
-    input_file : csv file
-        csv with list of parameters and relative features
+    input_file : tsv file
+        tsv with list of parameters and relative features
 
     Returns
     -------
