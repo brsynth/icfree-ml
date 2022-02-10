@@ -1,9 +1,12 @@
 import sys
 
-from .concentrations_converter import (
+from .echo_instructor import (
     input_importer,
     volumes_array_generator,
-    save_volumes_array
+    save_volumes_array,
+    volumes_dispatcher,
+    source_to_destination,
+    save_echo_instructions
 )
 
 from .args import build_args_parser
