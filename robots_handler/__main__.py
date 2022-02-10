@@ -1,6 +1,6 @@
 import sys
 
-from .echo_handler import (
+from .concentrations_converter import (
     input_importer,
     volumes_array_generator,
     save_volumes_array
@@ -10,10 +10,6 @@ from .args import build_args_parser
 
 
 def main():
-    # input_file = 'proCFPS_parameters.tsv'
-    # input_file_1 = 'initial_training_set.tsv'
-    # input_file_2 = 'normalizer_set.tsv'
-    # input_file_3 = 'autofluorescence_set.tsv'
     parser = build_args_parser(
         program='robots_handler',
         description='Convert concetrations tsv files into volumes tsv files')
