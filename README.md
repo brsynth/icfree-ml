@@ -25,10 +25,16 @@ Running the initial_set_generator from the CLI
 python -m initial_set_generator <CFPS-parameters tsv file>
 ~~~
 
-Running the robots_handler from the CLI
+Running the echo_instructor from the CLI
 
 ~~~bash
-python -m robots_handler <initial_training_set tsv file> <normalizer_set tsv file> <autofluorescence tsv file>
+python -m echo_instructor <initial_training_set tsv file> <normalizer_set tsv file> <autofluorescence tsv file>
+~~~
+
+Running the plate_reader_data_processor from the CLI
+
+~~~bash
+python -m plate_reader_data_processor
 ~~~
 
 # Authors
