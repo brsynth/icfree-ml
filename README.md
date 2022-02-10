@@ -19,13 +19,13 @@ bash packages.sh
 
 # Usage
 
-Running the initial_set_generator module
+Running the initial_set_generator from the CLI
 
 ~~~bash
 python -m initial_set_generator <CFPS-parameters tsv file>
 ~~~
 
-Running the robots_handler module
+Running the robots_handler from the CLI
 
 ~~~bash
 python -m robots_handler <initial_training_set tsv file> <normalizer_set tsv file> <autofluorescence tsv file>
