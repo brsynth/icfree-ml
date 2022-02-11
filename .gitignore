@@ -1,5 +1,12 @@
+# macOS
 .DS_Store
-*.pyc
+
+# Jupyter Notebook
 .ipynb_checkpoints
+
+# vscode
 .vscode/settings.json
+
+# Byte-compiled
 __pycache__
+*.pyc
