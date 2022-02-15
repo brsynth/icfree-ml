@@ -36,7 +36,7 @@ def input_importer(input_file) -> DataFrame:
     Parameters
     ----------
     input_file : tsv file
-        tsv with list of parameters and relative features
+        tsv with list of CFPS parameters and relative features
 
     Returns
     -------
@@ -349,7 +349,7 @@ def save_intial_plates(
         autolfuorescence_set,
         all_parameters):
     """
-    Save initial training set in csv file
+    Save Pandas dataframes in tsv files
 
     Parameters
     ----------
