@@ -4,7 +4,7 @@
 
 from numpy import (
     fromiter,
-    multiply,
+    multiply
 )
 
 from pandas import (
@@ -186,7 +186,7 @@ def save_volumes_array(
             autofluorescence_set_volumes)
 
 
-def volumes_dispatcher(
+def destination_plate_generator(
         volumes_array,
         starting_well,
         vertical):
@@ -196,7 +196,7 @@ def volumes_dispatcher(
     Parameters
     ----------
     volumes_array : DataFrame
-        Add description.
+        _description_
     starting_well : str
         Name of the starter well to begin filling the 384 well-plate.
     vertical: bool
@@ -206,10 +206,10 @@ def volumes_dispatcher(
     Returns
     -------
     all_dataframe:
-        add description
+        _description_
 
     volumes_wells: DataFrame
-        add description
+        _description_
     """
     all_dataframe = {}
     plate_rows = ascii_uppercase
@@ -228,13 +228,13 @@ def volumes_dispatcher(
 
             all_dataframe[parameter_name] = dataframe
 
-        echo_instructions = volumes_array.copy()
+        volumes_wells = volumes_array.copy()
         names = ['{}{}'.format(
             plate_rows[(index + from_well) % 16],
             (index + from_well) // 16 + 1)
-                for index in echo_instructions.index]
+                for index in volumes_wells.index]
 
-        echo_instructions['well_name'] = names
+        volumes_wells['well_name'] = names
 
     if not vertical:
         from_well = plate_rows.index(starting_well[0]) * 24 + \
@@ -258,13 +258,13 @@ def volumes_dispatcher(
     return all_dataframe, volumes_wells
 
 
-def source_to_destination(
+def echo_instructions_generator(
         volumes_wells,
         desired_order=None,
         reset_index=True,
         check_zero=False):
     """
-    _summary_
+    Generate instructions matrix for the Echo robot
 
     Parameters
     ----------
@@ -317,11 +317,9 @@ def source_to_destination(
     return all_sources, echo_instructions
 
 
-def save_echo_instructions(
-    echo_instructions
-):
+def save_echo_instructions(echo_instructions):
     """
-    Save echo_instructions into a tsv file
+    Save instructions matrix in a tsv file
 
     Parameters
     ----------
