@@ -19,10 +19,10 @@ bash packages.sh
 
 # Usage
 
-Running the initial_set_generator from the CLI
+Running the plates_generator from the CLI
 
 ~~~bash
-python -m initial_set_generator <CFPS-parameters tsv file>
+python -m plates_generator <CFPS-parameters tsv file>
 ~~~
 
 Running the echo_instructor from the CLI
