@@ -1,5 +1,5 @@
 import sys
-from .initial_set_generator import (
+from .plates_generator import (
     input_importer,
     input_processor,
     levels_array_generator,
