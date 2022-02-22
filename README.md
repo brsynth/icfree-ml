@@ -31,10 +31,10 @@ Running the echo_instructor from the CLI
 python -m echo_instructor <initial_training_set tsv file> <normalizer_set tsv file> <autofluorescence tsv file>
 ~~~
 
-Running the plate_reader_data_processor from the CLI
+Running the fluorescence_processor from the CLI
 
 ~~~bash
-python -m plate_reader_data_processor
+python -m fluorescence_processor
 ~~~
 
 # Authors
