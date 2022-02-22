@@ -10,3 +10,6 @@
 # Byte-compiled
 __pycache__
 *.pyc
+
+# Frequently changing data folder
+/data/*
