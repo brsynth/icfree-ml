@@ -1,0 +1,8 @@
+name: icfree-ml
+channels:
+  - defaults
+dependencies:
+  - numpy
+  - pandas
+  - pydoe2
+  - brs_utils
