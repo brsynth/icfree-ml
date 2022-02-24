@@ -2,6 +2,7 @@ from argparse import (
     ArgumentParser
     )
 
+DEFAULT_SEED = randint()
 
 def build_args_parser(
         program,
@@ -23,6 +24,13 @@ def add_arguments(parser):
         'input',
         type=str,
         help='Path to a .tsv file containing CFPS parameters and features',
+    )
+
+    parser.add_argument(
+        '--seed',
+        type=int,
+        default=DEFAULT_SEED,
+        help='Seed to reproduce results',
     )
 
     # parser.add_argument(
