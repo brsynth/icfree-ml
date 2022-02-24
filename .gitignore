@@ -12,4 +12,4 @@ __pycache__
 *.pyc
 
 # Frequently changing data folder
-/data/*
+/data/.
