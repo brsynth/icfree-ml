@@ -9,7 +9,6 @@ from .echo_instructor import (
     save_echo_instructions
 )
 
-
 from .args import build_args_parser
 
 
@@ -23,53 +22,29 @@ def main():
     initial_set_concentrations = args.input1
     normalizer_set_concentrations = args.input2
     autofluorescence_set_concentrations = args.input3
-    # sample_volume = args.sample_volume
-    sample_volume = 10
+    sample_volume = args.sample_volume
 
-    cfps_parameters_df = input_importer(
+    input_importer_variables = input_importer(
         cfps_parameters,
         initial_set_concentrations,
         normalizer_set_concentrations,
-        autofluorescence_set_concentrations)[0]
+        autofluorescence_set_concentrations)
 
-    initial_set_concentrations_df = input_importer(
-        cfps_parameters,
-        initial_set_concentrations,
-        normalizer_set_concentrations,
-        autofluorescence_set_concentrations)[1]
+    cfps_parameters_df = input_importer_variables[0]
+    initial_set_concentrations_df = input_importer_variables[1]
+    normalizer_set_concentrations_df = input_importer_variables[2]
+    autofluorescence_set_concentrations_df = input_importer_variables[3]
 
-    normalizer_set_concentrations_df = input_importer(
-        cfps_parameters,
-        initial_set_concentrations,
-        normalizer_set_concentrations,
-        autofluorescence_set_concentrations)[2]
-
-    autofluorescence_set_concentrations_df = input_importer(
-        cfps_parameters,
-        initial_set_concentrations,
-        normalizer_set_concentrations,
-        autofluorescence_set_concentrations)[3]
-
-    initial_set_volumes_df = volumes_array_generator(
+    volumes_array_generator_variables = volumes_array_generator(
         cfps_parameters_df,
         initial_set_concentrations_df,
         normalizer_set_concentrations_df,
         autofluorescence_set_concentrations_df,
-        sample_volume)[0]
+        sample_volume)
 
-    normalizer_set_volumes_df = volumes_array_generator(
-        cfps_parameters_df,
-        initial_set_concentrations_df,
-        normalizer_set_concentrations_df,
-        autofluorescence_set_concentrations_df,
-        sample_volume)[1]
-
-    autofluorescence_set_volumes_df = volumes_array_generator(
-        cfps_parameters_df,
-        initial_set_concentrations_df,
-        normalizer_set_concentrations_df,
-        autofluorescence_set_concentrations_df,
-        sample_volume)[2]
+    initial_set_volumes_df = volumes_array_generator_variables[0]
+    normalizer_set_volumes_df = volumes_array_generator_variables[1]
+    autofluorescence_set_volumes_df = volumes_array_generator_variables[2]
 
     save_volumes_array(
         cfps_parameters_df,
