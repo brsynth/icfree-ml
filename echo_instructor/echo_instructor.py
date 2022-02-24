@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-
 from numpy import (
     fromiter,
     multiply
@@ -187,15 +186,21 @@ def save_volumes_array(
 
 
 def destination_plate_generator(
-        volumes_array,
+        initial_set_volumes_df,
+        normalizer_set_volumes_df,
+        autofluorescence_set_volumes_df,
         starting_well,
         vertical):
     """
-    Make a dataframe as a 384 well plate for each metabolite.
+    Generate an ensemble of destination plates as matrices
 
     Parameters
     ----------
-    volumes_array : DataFrame
+    initial_set_volumes_df: DataFrame
+        _description_
+    normalizer_set_volumes_df: DataFrame
+        _description_
+    autofluorescence_set_volumes_df: DataFrame
         _description_
     starting_well : str
         Name of the starter well to begin filling the 384 well-plate.
@@ -205,70 +210,95 @@ def destination_plate_generator(
 
     Returns
     -------
-    all_dataframe:
-        _description_
-
-    volumes_wells: DataFrame
+    destination_plates_dict: Dict
         _description_
     """
-    all_dataframe = {}
+    volumes_df_dict = {
+        'initial_set_volumes_df': initial_set_volumes_df,
+        'normalizer_set_volumes_df': normalizer_set_volumes_df,
+        'autofluorescence_set_volumes_df': autofluorescence_set_volumes_df}
+
+    volumes_wells_keys = [
+        'initial_volumes_wells',
+        'normalizer_volumes_wells',
+        'autofluorescence_volumes_wells']
+
     plate_rows = ascii_uppercase
     plate_rows = list(plate_rows[0:16])
 
-    if vertical:
-        from_well = plate_rows.index(starting_well[0]) + \
-            (int(starting_well[1:]) - 1) * 16
+    volumes_wells_list = []
+    all_dataframe = {}
 
-        for parameter_name in volumes_array.columns:
-            dataframe = DataFrame(0.0, index=plate_rows, columns=range(1, 25))
+    for volumes_df in volumes_df_dict.values():
+        if vertical:
+            from_well = plate_rows.index(starting_well[0]) + \
+                (int(starting_well[1:]) - 1) * 16
 
-            for index, value in enumerate(volumes_array[parameter_name]):
-                index += from_well
-                dataframe.iloc[index % 16, index // 16] = value
+            for parameter_name in volumes_df.columns:
+                dataframe = DataFrame(
+                    0.0,
+                    index=plate_rows,
+                    columns=range(1, 25))
 
-            all_dataframe[parameter_name] = dataframe
+                for index, value in enumerate(volumes_df[parameter_name]):
+                    index += from_well
+                    dataframe.iloc[index % 16, index // 16] = value
 
-        volumes_wells = volumes_array.copy()
-        names = ['{}{}'.format(
-            plate_rows[(index + from_well) % 16],
-            (index + from_well) // 16 + 1)
-                for index in volumes_wells.index]
+                all_dataframe[parameter_name] = dataframe
 
-        volumes_wells['well_name'] = names
+            volumes_wells = volumes_df.copy()
+            names = ['{}{}'.format(
+                plate_rows[(index + from_well) % 16],
+                (index + from_well) // 16 + 1)
+                    for index in volumes_df.index]
 
-    if not vertical:
-        from_well = plate_rows.index(starting_well[0]) * 24 + \
-            int(starting_well[1:]) - 1
+            volumes_wells['well_name'] = names
+            volumes_wells_list.append(volumes_wells)
 
-        for parameter_name in volumes_array.columns:
-            dataframe = DataFrame(0.0, index=plate_rows, columns=range(1, 25))
+        if not vertical:
+            from_well = plate_rows.index(starting_well[0]) * 24 + \
+                int(starting_well[1:]) - 1
 
-            for index, value in enumerate(volumes_array[parameter_name]):
-                index += from_well
-                dataframe.iloc[index // 24, index % 24] = value
+            for parameter_name in volumes_df.columns:
+                dataframe = DataFrame(
+                    0.0,
+                    index=plate_rows,
+                    columns=range(1, 25))
 
-            all_dataframe[parameter_name] = dataframe
+                for index, value in enumerate(volumes_df[parameter_name]):
+                    index += from_well
+                    dataframe.iloc[index // 24, index % 24] = value
 
-        volumes_wells = volumes_array.copy()
-        names = ['{}{}'.format(
-            plate_rows[index // 24],
-            index % 24 + 1) for index in volumes_wells.index]
-        volumes_wells['well_name'] = names
+                all_dataframe[parameter_name] = dataframe
 
-    return all_dataframe, volumes_wells
+            volumes_wells = volumes_df.copy()
+            names = ['{}{}'.format(
+                plate_rows[index // 24],
+                index % 24 + 1) for index in volumes_wells.index]
+            volumes_wells['well_name'] = names
+            volumes_wells_list.append(volumes_wells)
+
+    destination_plates_dict = dict(zip(volumes_wells_keys, volumes_wells_list))
+
+    return destination_plates_dict
 
 
 def echo_instructions_generator(
-        volumes_wells,
-        desired_order=None,
-        reset_index=True,
-        check_zero=False):
+            destination_plates_dict,
+            desired_order=None,
+            reset_index=True,
+            check_zero=False):
     """
     Generate instructions matrix for the Echo robot
 
     Parameters
     ----------
-        volumes_wells: _type_
+        destination_plates_dict: Dict
+            _description_
+
+    Returns
+    -------
+        echo_instructions_dict: Dict
             _description_
         desired_order: _type_
             _description_
@@ -276,37 +306,42 @@ def echo_instructions_generator(
             _description_
         check_zero: _type_
             _description_
-
-    Returns
-    -------
-        all_sources: _type_
-            _description_
-        echo_instructions: _type_
-            _description_
     """
     all_sources = {}
-    for parameter_name in volumes_wells.drop(columns=['well_name']):
-        transfers = {
-            'Source_Plate_Barcode': [],
-            'Source_Well': [],
-            'Destination_Plate_Barcode': [],
-            'Destination_Well': [],
-            'Transfer_Volume': []}
+    echo_instructions_dict = {}
+    echo_instructions_list = []
+    echo_instructions_dict_keys = [
+        'initial_instructions',
+        'normalizer_instructions',
+        'autofluorescence_instructions']
 
-        for index in range(len(volumes_wells)):
-            if volumes_wells.loc[index, parameter_name] > 0 or check_zero == False:
-                transfers['Source_Plate_Barcode'].append('Plate1')
-                transfers['Source_Well'].append(
-                    '{} well'.format(parameter_name))
-                transfers['Destination_Plate_Barcode'].append('destPlate1')
-                transfers['Destination_Well'].append(
-                    volumes_wells.loc[index, 'well_name'])
-                transfers['Transfer_Volume'].append(
-                    volumes_wells.loc[index, parameter_name])
-        transfers = DataFrame(transfers)
-        all_sources[parameter_name] = transfers
+    for destination_plate in destination_plates_dict.values():
 
-    echo_instructions = concat(all_sources.values())
+        for parameter_name in destination_plate.drop(columns=['well_name']):
+            transfers = {
+                'Source_Plate_Barcode': [],
+                'Source_Well': [],
+                'Destination_Plate_Barcode': [],
+                'Destination_Well': [],
+                'Transfer_Volume': []}
+
+            for index in range(len(destination_plate)):
+                if destination_plate.loc[index, parameter_name] > 0 or check_zero == False:
+                    transfers['Source_Plate_Barcode'].append('Plate1')
+                    transfers['Source_Well'].append(
+                        '{} well'.format(parameter_name))
+                    transfers['Destination_Plate_Barcode'].append('destPlate1')
+                    transfers['Destination_Well'].append(
+                        destination_plate.loc[index, 'well_name'])
+                    transfers['Transfer_Volume'].append(
+                        destination_plate.loc[index, parameter_name])
+            transfers = DataFrame(transfers)
+            all_sources[parameter_name] = transfers
+            echo_instructions = concat(all_sources.values())
+            echo_instructions_list.append(echo_instructions)
+
+    echo_instructions_dict = dict(
+        zip(echo_instructions_dict_keys, echo_instructions_list))
 
     if desired_order:
         echo_instructions = concat([all_sources[i] for i in desired_order])
@@ -314,20 +349,23 @@ def echo_instructions_generator(
     if reset_index:
         echo_instructions = echo_instructions.reset_index(drop=True)
 
-    return all_sources, echo_instructions
+    return echo_instructions_dict
 
 
-def save_echo_instructions(echo_instructions):
+def save_echo_instructions(echo_instructions_dict):
     """
     Save instructions matrix in a tsv file
 
     Parameters
     ----------
-        echo_instructions: _type_
+        echo_instructions_dict: Dict
             _description_
     """
+    keys = list(echo_instructions_dict.keys())
 
-    echo_instructions = echo_instructions.to_csv(
-        'data/echo_instructions/echo_instructions.tsv',
-        sep='\t',
-        index=False)
+    for key in keys:
+        for echo_instructions in echo_instructions_dict.values():
+            echo_instructions.to_csv(
+                'data/echo_instructions/' + key + '.tsv',
+                sep='\t',
+                index=False)
