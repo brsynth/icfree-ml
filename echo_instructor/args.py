@@ -43,11 +43,11 @@ def add_arguments(parser):
         help='Path to a .tsv file containing autofluorescence set',
     )
 
-    # parser.add_argument(
-    #     'sample_volume',
-    #     type=int,
-    #     help='Final sample volume in each well',
-    # )
+    parser.add_argument(
+        'sample_volume',
+        type=int,
+        help='Final sample volume in each well',
+    )
 
     # parser.add_argument(
     #     'output',
