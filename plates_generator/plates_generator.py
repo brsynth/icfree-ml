@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+from os import (
+    path as os_path
+)
 
 from numpy import (
     concatenate,
@@ -22,6 +25,10 @@ from pyDOE2 import (
     lhs
 )
 
+from .args import (
+    DEFAULT_SEED
+)
+
 # from typing import (
 #     Dict,
 #     List,
@@ -29,26 +36,27 @@ from pyDOE2 import (
 # )
 
 
-def input_importer(input_file) -> DataFrame:
+def input_importer(cfps_parameters) -> DataFrame:
     """
     Import tsv input into a dataframe
 
     Parameters
     ----------
     input_file : tsv file
-        tsv with list of CFPS parameters and relative features
+        tsv with list of cfps parameters and relative features
 
     Returns
     -------
-    input_df : DataFrame
-        Pandas dataframe populated with input_file data
+    cfps_parameters_df : DataFrame
+        Pandas dataframe populated with cfps_parameters data
     """
+    cfps_parameters_df = read_csv(
+                        cfps_parameters,
+                        sep='\t')
+    return cfps_parameters_df
 
-    input_df = read_csv(input_file, sep='\t')
-    return input_df
 
-
-def input_processor(input_df: DataFrame):
+def input_processor(cfps_parameters_df: DataFrame):
     """
     Determine variable and fixed parameters, and maximum concentrations.
 
@@ -74,17 +82,18 @@ def input_processor(input_df: DataFrame):
     maximum_fixed_concentrations : list
         N-maximum-concentrations list with fixed concentrations values.
     """
+    for status in cfps_parameters_df.columns:
 
-    for status in input_df.columns:
-
-        if (input_df[status] == 'fixed').any():
-            fixed_parameters = input_df[input_df['Status'] == 'fixed']
+        if (cfps_parameters_df[status] == 'fixed').any():
+            fixed_parameters = cfps_parameters_df[
+                cfps_parameters_df['Status'] == 'fixed']
             maximum_fixed_concentrations = list(
                 fixed_parameters['Maximum concentration'])
             fixed_parameters = array(fixed_parameters['Parameter'])
 
-        if (input_df[status] == 'variable').any():
-            variable_parameters = input_df[input_df['Status'] == 'variable']
+        if (cfps_parameters_df[status] == 'variable').any():
+            variable_parameters = cfps_parameters_df[
+                cfps_parameters_df['Status'] == 'variable']
             maximum_variable_concentrations = array(
                 variable_parameters['Maximum concentration'])
             variable_parameters = array(variable_parameters['Parameter'])
@@ -102,9 +111,11 @@ def input_processor(input_df: DataFrame):
 
 def levels_array_generator(
         n_variable_parameters,
-        n_ratios):
+        n_ratios,
+        seed: int = DEFAULT_SEED):
     """
-    LHS sampling and replace values in the sampling array with levels.
+    Generate sampling array.
+    Refactor sampling array with levels values.
 
     Parameters
     ----------
@@ -114,16 +125,19 @@ def levels_array_generator(
     n_ratios : int
         Number of concentration ratios for all factor
 
+    seed: int
+        Seed-number to controls the seed and random draws
+
     Returns
     -------
     levels_array : 2d-array
         N-by-samples array with uniformly spaced values between 0 and 1.
     """
-
     sampling = lhs(
         n_variable_parameters,
-        samples=100,
-        criterion='center')
+        samples=99,
+        criterion='center',
+        random_state=seed)
 
     levels = (1 / n_ratios)
     level_1 = levels*0
@@ -186,7 +200,6 @@ def variable_concentrations_array_generator(
     variable_concentrations_array : 2d-array
         N-by-samples array with variable concentrations values for each factor.
     """
-
     variable_concentrations_array = multiply(
         levels_array,
         maximum_variable_concentrations)
@@ -212,7 +225,6 @@ def fixed_concentrations_array_generator(
     fixed_concentrations_array : 2d-array
         N-by-samples array with fixed concentrations values for each factor.
     """
-
     nrows_variable_concentrations_array = shape(
         variable_concentrations_array)[0]
 
@@ -304,14 +316,17 @@ def initial_plates_generator(
 
     Returns
     -------
-    initial_set : dataframe
+    initial_set_df : dataframe
         Matrix generated from the concatenation of all samples.
 
-    normalizer_set : dataframe
+    normalizer_set_df : dataframe
         Duplicate of initial_set. 0 is assigned to the GOI-DNA column.
 
-    autofluorescence_set : dataframe
+    autofluorescence_set_df : dataframe
         Duplicate of normalizer_set. 0 is assigned to the GFP-DNA column.
+
+    all_parameters: List
+        List of the name of all cfps parameters
     """
 
     # all_concentrations_array = concatenate(
@@ -329,58 +344,76 @@ def initial_plates_generator(
             fixed_concentrations_array,),
         axis=1)
 
-    initial_set = DataFrame(initial_set_array)
+    initial_set_df = DataFrame(initial_set_array)
 
-    normalizer_set = initial_set.copy()
+    normalizer_set_df = initial_set_df.copy()
     all_parameters = input_df['Parameter'].tolist()
-    normalizer_set.columns = all_parameters
-    normalizer_set['GOI-DNA'] = normalizer_set['GOI-DNA']*0
+    normalizer_set_df.columns = all_parameters
+    normalizer_set_df['GOI-DNA'] = normalizer_set_df['GOI-DNA']*0
 
-    autolfuorescence_set = normalizer_set.copy()
-    autolfuorescence_set.columns = all_parameters
-    autolfuorescence_set['GFP-DNA'] = normalizer_set['GFP-DNA']*0
+    autolfuorescence_set_df = normalizer_set_df.copy()
+    autolfuorescence_set_df.columns = all_parameters
+    autolfuorescence_set_df['GFP-DNA'] = normalizer_set_df['GFP-DNA']*0
 
-    return initial_set, normalizer_set, autolfuorescence_set, all_parameters
+    return (initial_set_df,
+            normalizer_set_df,
+            autolfuorescence_set_df,
+            all_parameters)
 
 
 def save_intial_plates(
-        initial_set,
-        normalizer_set,
-        autolfuorescence_set,
+        initial_set_df,
+        normalizer_set_df,
+        autolfuorescence_set_df,
         all_parameters):
     """
     Save Pandas dataframes in tsv files
 
     Parameters
     ----------
-    input_df : dataframe
-        User csv input imported into dataframe.
+    initial_set_df : dataframe
+        Matrix generated from the concatenation of all samples.
 
-    full_concentrations_df : dataframe
-        An n-by-samples matrix generated from the concatenation of all samples.
+    normalizer_set_df : dataframe
+        Duplicate of initial_set. 0 is assigned to the GOI-DNA column.
 
-    Returns
-    -------
-    initial_training_set.csv : csv file
-        full_concentrations_df data in a csv file
+    autofluorescence_set_df : dataframe
+        Duplicate of normalizer_set. 0 is assigned to the GFP-DNA column.
+
+    all_parameters: List
+        List of the name of all cfps parameters
     """
+    file_path = os_path.dirname(os_path.realpath(__file__))
 
-    initial_set = initial_set.to_csv(
-        'data/initial_output/initial_training_set.tsv',
+    initial_set_df.to_csv(
+        os_path.join(
+            file_path,
+            '..',
+            'data',
+            'initial_output',
+            'initial_set.tsv'),
         sep='\t',
         header=all_parameters,
         index=False)
 
-    normalizer_set = normalizer_set.to_csv(
-        'data/initial_output/normalizer_set.tsv',
+    normalizer_set_df.to_csv(
+        os_path.join(
+            file_path,
+            '..',
+            'data',
+            'initial_output',
+            'normalizer_set.tsv'),
         sep='\t',
         header=all_parameters,
         index=False)
 
-    autolfuorescence_set = autolfuorescence_set.to_csv(
-        'data/initial_output/autofluorescence_set.tsv',
+    autolfuorescence_set_df.to_csv(
+        os_path.join(
+            file_path,
+            '..',
+            'data',
+            'initial_output',
+            'autolfuorescence_set.tsv'),
         sep='\t',
         header=all_parameters,
         index=False)
-
-    return initial_set, normalizer_set, autolfuorescence_set
