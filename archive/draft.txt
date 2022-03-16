@@ -1,0 +1,20 @@
+
+    # volumes_df_key_list = list(volumes_df_dict.keys())
+    # destination_plates_dict = dict.fromkeys(volumes_wells_keys)
+    # for volumes_wells in volumes_wells_list:
+    #     destination_plates_dict
+
+    #     dict[key] = value['volume_wells'] 
+        # destination_plates_dict = dict.fromkeys(volumes_df_key_list, volumes_wells)
+        # destination_plates_dict = dict(zip(volumes_wells_keys, volumes_wells))
+
+        # destination_plates_dict = dict(zip(volumes_wells_keys, volumes_wells))
+
+    # for volumes_wells in volumes_wells_dict:
+    # #     # destination_plates_dict[str(volumes_df_key)] = volumes_wells
+    # #     destination_plates_dict = dict.fromkeys(
+    # #         volumes_wells_keys,
+    # #         volumes_wells)
+    #     destination_plates_dict = dict.fromkeys(
+    #         volumes_wells_keys,
+    #         volumes_wells)
