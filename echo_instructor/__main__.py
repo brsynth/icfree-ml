@@ -4,8 +4,11 @@ from .echo_instructor import (
     input_importer,
     volumes_array_generator,
     save_volumes_array,
-    destination_plate_generator,
-    echo_instructions_generator,
+    samples_dispatcher,
+    multiple_destination_plate_generator,
+    multiple_echo_instructions_generator,
+    single_destination_plate_generator,
+    single_echo_instructions_generator,
     save_echo_instructions
 )
 
@@ -52,19 +55,22 @@ def main():
         normalizer_set_volumes_df,
         autofluorescence_set_volumes_df)
 
-    destination_plates_dict = destination_plate_generator(
+    samples_dispatcher_variables = samples_dispatcher(
+        initial_set_volumes_df,
+        normalizer_set_volumes_df,
+        autofluorescence_set_volumes_df)
+
+    master_plate_1_final = samples_dispatcher_variables[0]
+    master_plate_2_final = samples_dispatcher_variables[1]
+    master_plate_3_final = samples_dispatcher_variables[2]
+
+    multiple_destination_plates_dict = multiple_destination_plate_generator(
         initial_set_volumes_df,
         normalizer_set_volumes_df,
         autofluorescence_set_volumes_df,
         starting_well='A1',
         vertical=True)
 
-<<<<<<< Updated upstream
-    echo_instructions_dict = echo_instructions_generator(
-        destination_plates_dict)
-
-    save_echo_instructions(echo_instructions_dict)
-=======
     multiple_echo_instructions_dict = \
         multiple_echo_instructions_generator(multiple_destination_plates_dict)
 
@@ -81,7 +87,6 @@ def main():
     save_echo_instructions(
         multiple_echo_instructions_dict,
         single_echo_instructions_dict)
->>>>>>> Stashed changes
 
 
 if __name__ == "__main__":
