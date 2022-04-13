@@ -31,12 +31,6 @@ Running the echo_instructor from the CLI
 python -m echo_instructor <initial_training_set tsv file> <normalizer_set tsv file> <autofluorescence tsv file> <sample_volume>
 ~~~
 
-Running the fluorescence_processor from the CLI
-
-~~~bash
-python -m fluorescence_processor
-~~~
-
 # Authors
 
 Yorgo EL MOUBAYED
