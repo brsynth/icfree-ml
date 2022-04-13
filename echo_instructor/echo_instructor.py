@@ -25,7 +25,7 @@ def input_importer(
         normalizer_set_concentrations,
         autofluorescence_set_concentrations):
     """
-    Create pandas dataframes from tsv files.
+    Create pandas dataframes from tsv files
 
     Parameters
     ----------
@@ -78,7 +78,7 @@ def volumes_array_generator(
         autofluorescence_set_concentrations_df,
         sample_volume):
     """
-    Convert concentrations dataframes into volumes dataframes.
+    Convert concentrations dataframes into volumes dataframes
 
     Parameters
     ----------
@@ -137,7 +137,7 @@ def save_volumes_array(
         normalizer_set_volumes_df,
         autofluorescence_set_volumes_df):
     """
-    Save Pandas dataframes in tsv files.
+    Save Pandas dataframes in tsv files
 
     Parameters
     ----------
@@ -183,12 +183,30 @@ def save_volumes_array(
             autofluorescence_set_volumes)
 
 
-def samples_dispatcher(
+def samples_merger(
         initial_set_volumes_df,
         normalizer_set_volumes_df,
         autofluorescence_set_volumes_df):
-
     """
+    Merge and triplicate samples into a single dataframe
+
+    Parameters
+    ----------
+    initial_set_volumes_df : DataFrame
+        Initial set with volumes values.
+    normalizer_set_volumes_df : DataFrame
+        Normalizer set with volumes values.
+    autofluorescence_set_volumes_df : DataFrame
+        Autofluorescence set with volumes values.
+
+    Returns
+    -------
+    master_plate_1_final: DataFrame
+        _description_
+    master_plate_2_final: DataFrame
+        _description_
+    master_plate_3_final: DataFrame
+        _description_
     """
     initial_set_volumes_df_list = vsplit(
         initial_set_volumes_df,
@@ -260,6 +278,7 @@ def multiple_destination_plate_generator(
         vertical=True):
     """
     Generate an ensemble of destination plates as matrices
+
     Parameters
     ----------
     initial_set_volumes_df: DataFrame
@@ -448,11 +467,6 @@ def single_destination_plate_generator(
         volumes_wells_keys,
         volumes_wells_list))
 
-    # single_destination_plates_dict = {}
-    # for label, df in zip(volumes_wells_keys, volumes_wells_list):
-    #     df.reset_index(inplace=True)
-    #     single_destination_plates_dict[label] = df
-
     return single_destination_plates_dict
 
 
@@ -461,8 +475,8 @@ def multiple_echo_instructions_generator(
         desired_order=None,
         reset_index=True):
     """
-    Generate instructions matrices for the Echo robot.
-    Dispatches instructions on a multiple plate.
+    Generate instructions matrices for the Echo robot
+    Dispatch instructions on multiple plates
 
     Parameters
     ----------
@@ -529,8 +543,8 @@ def single_echo_instructions_generator(
         desired_order=None,
         reset_index=True):
     """
-    Generate instructions matrix for the Echo robot.
-    Merges instructions on a single triplicated plate.
+    Generate instructions matrix for the Echo robot
+    Merges instructions on a single triplicated plate
 
     Parameters
     ----------
@@ -597,6 +611,7 @@ def save_echo_instructions(
             single_echo_instructions_dict):
     """
     Save instructions matrices in tsv files
+
     Parameters
     ----------
         single_echo_instructions_dict: Dict

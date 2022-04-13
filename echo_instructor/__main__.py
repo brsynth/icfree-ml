@@ -4,7 +4,7 @@ from .echo_instructor import (
     input_importer,
     volumes_array_generator,
     save_volumes_array,
-    samples_dispatcher,
+    samples_merger,
     multiple_destination_plate_generator,
     multiple_echo_instructions_generator,
     single_destination_plate_generator,
@@ -55,14 +55,14 @@ def main():
         normalizer_set_volumes_df,
         autofluorescence_set_volumes_df)
 
-    samples_dispatcher_variables = samples_dispatcher(
+    samples_merger_variables = samples_merger(
         initial_set_volumes_df,
         normalizer_set_volumes_df,
         autofluorescence_set_volumes_df)
 
-    master_plate_1_final = samples_dispatcher_variables[0]
-    master_plate_2_final = samples_dispatcher_variables[1]
-    master_plate_3_final = samples_dispatcher_variables[2]
+    master_plate_1_final = samples_merger_variables[0]
+    master_plate_2_final = samples_merger_variables[1]
+    master_plate_3_final = samples_merger_variables[2]
 
     multiple_destination_plates_dict = multiple_destination_plate_generator(
         initial_set_volumes_df,
