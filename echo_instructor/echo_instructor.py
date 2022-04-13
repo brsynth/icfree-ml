@@ -214,7 +214,8 @@ def samples_dispatcher(
         master_plate_1,
         master_plate_1_duplicate,
         master_plate_1_triplicate),
-        axis=0)
+        axis=0,
+        ignore_index=True)
 
     master_plate_2 = concat((
         initial_set_volumes_df_list[1],
@@ -228,7 +229,8 @@ def samples_dispatcher(
         master_plate_2,
         master_plate_2_duplicate,
         master_plate_2_triplicate),
-        axis=0)
+        axis=0,
+        ignore_index=True)
 
     master_plate_3 = concat((
         initial_set_volumes_df_list[2],
@@ -242,7 +244,8 @@ def samples_dispatcher(
         master_plate_3,
         master_plate_3_duplicate,
         master_plate_3_triplicate),
-        axis=0)
+        axis=0,
+        ignore_index=True)
 
     return (master_plate_1_final,
             master_plate_2_final,
@@ -441,14 +444,14 @@ def single_destination_plate_generator(
             volumes_wells['well_name'] = names
             volumes_wells_list.append(volumes_wells)
 
-    # single_destination_plates_dict = dict(zip(
-    #     volumes_wells_keys,
-    #     volumes_wells_list))
+    single_destination_plates_dict = dict(zip(
+        volumes_wells_keys,
+        volumes_wells_list))
 
-    single_destination_plates_dict = {}
-    for label, df in zip(volumes_wells_keys, volumes_wells_list):
-        df.reset_index(inplace=True)
-        single_destination_plates_dict[label] = df
+    # single_destination_plates_dict = {}
+    # for label, df in zip(volumes_wells_keys, volumes_wells_list):
+    #     df.reset_index(inplace=True)
+    #     single_destination_plates_dict[label] = df
 
     return single_destination_plates_dict
 
