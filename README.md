@@ -1,7 +1,7 @@
 
 # Description
 
-Design of experiments (DoE) and machine learning modules for the iCFree project
+Design of experiments (DoE) and machine learning packages for the iCFree project
 
 # Installation
 
