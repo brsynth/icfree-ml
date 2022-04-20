@@ -475,7 +475,7 @@ def multiple_echo_instructions_generator(
         desired_order=None,
         reset_index=True):
     """
-    Generate and dispatch echo instructions on multiple plates
+    Generate and dispatch Echo® instructions on multiple plates
 
     Parameters
     ----------
@@ -542,7 +542,7 @@ def single_echo_instructions_generator(
         desired_order=None,
         reset_index=True):
     """
-    Generate and merge Echo instructions a single triplicated plate
+    Generate and merge Echo® instructions a single triplicated plate
 
     Parameters
     ----------
