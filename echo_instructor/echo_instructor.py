@@ -25,12 +25,12 @@ def input_importer(
         normalizer_set_concentrations,
         autofluorescence_set_concentrations):
     """
-    Create pandas dataframes from tsv files
+    Create dataframes from tsv files
 
     Parameters
     ----------
     cfps_parameters : tsv file
-        Tsv with list of CFPS parameters and relative features.
+        tsv with list of cfps parameters and relative features.
     initial_set_concentrations : tsv file
         Initial training set with concentrations values.
     normalizer_set_concentrations : tsv file
@@ -41,13 +41,13 @@ def input_importer(
     Returns
     -------
     cfps_parameters_df : DataFrame
-        Pandas dataframe populated with cfps_parameters data.
+        Dataframe populated with cfps_parameters data.
     initial_set_volumes_df : DataFrame
-        Pandas dataframe with initial_set_concentrations data.
+        Dataframe with initial_set_concentrations data.
     normalizer_set_volumes_df : DataFrame
-        Pandas dataframe with normalizer_set_concentrations data.
+        Dataframe with normalizer_set_concentrations data.
     autofluorescence_set_volumes_df : DataFrame
-        Pandas dataframe with autofluorescence_set_concentrations data.
+        Dataframe with autofluorescence_set_concentrations data.
     """
     cfps_parameters_df = read_csv(
         cfps_parameters,
@@ -83,13 +83,13 @@ def volumes_array_generator(
     Parameters
     ----------
     cfps_parameters_df : DataFrame
-        Pandas dataframe populated with cfps_parameters data.
+        Dataframe populated with cfps_parameters data.
     initial_set_volumes_df : DataFrame
-        Pandas dataframe with initial_set_concentrations data.
+        Dataframe with initial_set_concentrations data.
     normalizer_set_volumes_df : DataFrame
-        Pandas dataframe with normalizer_set_concentrations data.
+        Dataframe with normalizer_set_concentrations data.
     autofluorescence_set_volumes_df : DataFrame
-        Pandas dataframe with autofluorescence_set_concentrations data.
+        Dataframe with autofluorescence_set_concentrations data.
     sample_volume: int
         Final sample volume in each well.
 
@@ -137,7 +137,7 @@ def save_volumes_array(
         normalizer_set_volumes_df,
         autofluorescence_set_volumes_df):
     """
-    Save Pandas dataframes in tsv files
+    Save dataframes in tsv files
 
     Parameters
     ----------
@@ -277,7 +277,7 @@ def multiple_destination_plate_generator(
         starting_well='A1',
         vertical=True):
     """
-    Generate an ensemble of destination plates as matrices
+    Generate an ensemble of destination plates dataframes
 
     Parameters
     ----------
@@ -377,7 +377,7 @@ def single_destination_plate_generator(
         starting_well='A1',
         vertical=True):
     """
-    Generate an ensemble of destination plates as matrices
+    Generate a single destination plates datframe
 
     Parameters
     ----------
@@ -475,8 +475,7 @@ def multiple_echo_instructions_generator(
         desired_order=None,
         reset_index=True):
     """
-    Generate instructions matrices for the Echo robot
-    Dispatch instructions on multiple plates
+    Generate and dispatch echo instructions on multiple plates
 
     Parameters
     ----------
@@ -543,8 +542,7 @@ def single_echo_instructions_generator(
         desired_order=None,
         reset_index=True):
     """
-    Generate instructions matrix for the Echo robot
-    Merges instructions on a single triplicated plate
+    Generate and merge Echo instructions a single triplicated plate
 
     Parameters
     ----------
@@ -610,7 +608,7 @@ def save_echo_instructions(
             multiple_echo_instructions_dict,
             single_echo_instructions_dict):
     """
-    Save instructions matrices in tsv files
+    Save instructions in tsv files
 
     Parameters
     ----------
