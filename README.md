@@ -22,13 +22,14 @@ bash packages.sh
 Running the plates_generator from the CLI
 
 ~~~bash
-python -m plates_generator <CFPS-parameters tsv file>
+python -m plates_generator <cfps-parameters tsv file>
 ~~~
 
 Running the echo_instructor from the CLI
 
 ~~~bash
 python -m echo_instructor 
+<cfps-parameters tsv file> \ 
 <initial_training_set tsv file> \ 
 <normalizer_set tsv file> \ 
 <autofluorescence tsv file> \ 
