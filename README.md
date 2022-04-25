@@ -19,13 +19,13 @@ bash packages.sh
 
 # Usage
 
-Running the plates_generator from the CLI
+Running plates_generator from the CLI
 
 ~~~bash
 python -m plates_generator <cfps-parameters tsv file>
 ~~~
 
-Running the echo_instructor from the CLI
+Running echo_instructor from the CLI
 
 ~~~bash
 python -m echo_instructor 
