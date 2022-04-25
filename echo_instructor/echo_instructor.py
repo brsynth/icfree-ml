@@ -126,6 +126,15 @@ def volumes_array_generator(
         autofluorescence_set_concentrations_df,
         stock_concentrations_array)) * 0.0025
 
+    intial_set_volumes_df['Water'] = \
+        sample_volume - intial_set_volumes_df.sum(axis=1)
+
+    normalizer_set_volumes_df['Water'] = \
+        sample_volume - normalizer_set_volumes_df.sum(axis=1)
+
+    autofluorescence_set_volumes_df['Water'] = \
+        sample_volume - autofluorescence_set_volumes_df.sum(axis=1)
+
     return (intial_set_volumes_df,
             normalizer_set_volumes_df,
             autofluorescence_set_volumes_df)
@@ -160,6 +169,7 @@ def save_volumes_array(
         Autofluorescence set with volumes values.
     """
     all_parameters = cfps_parameters_df['Parameter'].tolist()
+    all_parameters.append('Water')
 
     initial_set_volumes = intial_set_volumes_df.to_csv(
         'data/volumes_output/intial_set_volumes.tsv',
@@ -170,7 +180,8 @@ def save_volumes_array(
     normalizer_set_volumes = normalizer_set_volumes_df.to_csv(
         'data/volumes_output/normalizer_set_volumes.tsv',
         sep='\t',
-        header=all_parameters)
+        header=all_parameters,
+        index=False)
 
     autofluorescence_set_volumes = autofluorescence_set_volumes_df.to_csv(
         'data/volumes_output/autofluorescence_set_volumes.tsv',
