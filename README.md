@@ -32,7 +32,7 @@ python -m echo_instructor
 <cfps-parameters tsv file> \ 
 <initial_training_set tsv file> \ 
 <normalizer_set tsv file> \ 
-<autofluorescence tsv file> \ 
+<autofluorescence_set tsv file> \ 
 <sample_volume> 
 ~~~
 
