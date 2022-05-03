@@ -69,7 +69,7 @@ def input_importer(
             initial_concentrations_df,
             normalizer_concentrations_df,
             autofluorescence_concentrations_df)
-
+  
 
 def volumes_array_generator(
         cfps_parameters_df,
@@ -514,20 +514,20 @@ def multiple_echo_instructions_generator(
 
         for parameter_name in destination_plate.drop(columns=['well_name']):
             transfers = {
-                'Source_Plate_Barcode': [],
-                'Source_Well': [],
-                'Destination_Plate_Barcode': [],
-                'Destination_Well': [],
-                'Transfer_Volume': []}
+                'Source Plate Name': [],
+                'Source Well': [],
+                'Destination Plate Name': [],
+                'Destination Well': [],
+                'Transfer Volume': []}
 
             for index in range(len(destination_plate)):
-                transfers['Source_Plate_Barcode'].append('Plate1')
-                transfers['Source_Well'].append(
+                transfers['Source Plate Name'].append('Plate1')
+                transfers['Source Well'].append(
                         '{} well'.format(parameter_name))
-                transfers['Destination_Plate_Barcode'].append('destPlate1')
-                transfers['Destination_Well'].append(
+                transfers['Destination Plate Name'].append('destPlate1')
+                transfers['Destination Well'].append(
                         destination_plate.loc[index, 'well_name'])
-                transfers['Transfer_Volume'].append(
+                transfers['Transfer Volume'].append(
                         destination_plate.loc[index, parameter_name])
             transfers = DataFrame(transfers)
             all_sources[parameter_name] = transfers
@@ -581,20 +581,20 @@ def single_echo_instructions_generator(
 
         for parameter_name in destination_plate.drop(columns=['well_name']):
             transfers = {
-                'Source_Plate_Barcode': [],
-                'Source_Well': [],
-                'Destination_Plate_Barcode': [],
-                'Destination_Well': [],
-                'Transfer_Volume': []}
+                'Source Plate Name': [],
+                'Source Well': [],
+                'Destination Plate Name': [],
+                'Destination Well': [],
+                'Transfer Volume': []}
 
             for index in range(len(destination_plate)):
-                transfers['Source_Plate_Barcode'].append('Plate1')
-                transfers['Source_Well'].append(
+                transfers['Source Plate Name'].append('Plate1')
+                transfers['Source Well'].append(
                         '{} well'.format(parameter_name))
-                transfers['Destination_Plate_Barcode'].append('destPlate1')
-                transfers['Destination_Well'].append(
+                transfers['Destination Plate Name'].append('destPlate1')
+                transfers['Destination Well'].append(
                         destination_plate.loc[index, 'well_name'])
-                transfers['Transfer_Volume'].append(
+                transfers['Transfer Volume'].append(
                         destination_plate.loc[index, parameter_name])
             transfers = DataFrame(transfers)
             all_sources[parameter_name] = transfers
