@@ -19,6 +19,58 @@ from string import (
 # )
 
 
+# def input_importer(
+#         cfps_parameters,
+#         initial_concentrations,
+#         normalizer_concentrations,
+#         autofluorescence_concentrations):
+#     """
+#     Create dataframes from tsv files
+
+#     Parameters
+#     ----------
+#     cfps_parameters : tsv file
+#         tsv with list of cfps parameters and relative features.
+#     initial_concentrations : tsv file
+#         Initial training set with concentrations values.
+#     normalizer_concentrations : tsv file
+#         Normalizer set with concentrations values.
+#     autofluorescence_concentrations : tsv file
+#         Autofluorescence set with concentrations values.
+
+#     Returns
+#     -------
+#     cfps_parameters_df : DataFrame
+#         Dataframe populated with cfps_parameters data.
+#     initial_volumes_df : DataFrame
+#         Dataframe with initial_set_concentrations data.
+#     normalizer_volumes_df : DataFrame
+#         Dataframe with normalizer_set_concentrations data.
+#     autofluorescence_volumes_df : DataFrame
+#         Dataframe with autofluorescence_set_concentrations data.
+#     """
+#     cfps_parameters_df = read_csv(
+#         cfps_parameters,
+#         sep='\t')
+
+#     initial_concentrations_df = read_csv(
+#         initial_concentrations,
+#         sep='\t')
+
+#     normalizer_concentrations_df = read_csv(
+#         normalizer_concentrations,
+#         sep='\t')
+
+#     autofluorescence_concentrations_df = read_csv(
+#         autofluorescence_concentrations,
+#         sep='\t')
+
+#     return (cfps_parameters_df,
+#             initial_concentrations_df,
+#             normalizer_concentrations_df,
+#             autofluorescence_concentrations_df)
+
+
 def input_importer(
         cfps_parameters,
         initial_concentrations,
@@ -53,145 +105,154 @@ def input_importer(
         cfps_parameters,
         sep='\t')
 
-    initial_concentrations_df = read_csv(
+    initial_volumes_df = read_csv(
         initial_concentrations,
         sep='\t')
 
-    normalizer_concentrations_df = read_csv(
+    normalizer_volumes_df = read_csv(
         normalizer_concentrations,
         sep='\t')
 
-    autofluorescence_concentrations_df = read_csv(
+    autofluorescence_volumes_df = read_csv(
         autofluorescence_concentrations,
         sep='\t')
 
+    # return (cfps_parameters_df,
+    #         initial_concentrations_df,
+    #         normalizer_concentrations_df,
+    #         autofluorescence_concentrations_df)
+
     return (cfps_parameters_df,
-            initial_concentrations_df,
-            normalizer_concentrations_df,
-            autofluorescence_concentrations_df)
-
-
-def volumes_array_generator(
-        cfps_parameters_df,
-        initial_concentrations_df,
-        normalizer_concentrations_df,
-        autofluorescence_concentrations_df,
-        sample_volume):
-    """
-    Convert concentrations dataframes into volumes dataframes
-
-    Parameters
-    ----------
-    cfps_parameters_df : DataFrame
-        Dataframe populated with cfps_parameters data.
-    initial_volumes_df : DataFrame
-        Dataframe with initial_concentrations data.
-    normalizer_volumes_df : DataFrame
-        Dataframe with normalizer_concentrations data.
-    autofluorescence_volumes_df : DataFrame
-        Dataframe with autofluorescence_concentrations data.
-    sample_volume: int
-        Final sample volume in each well.
-
-    Returns
-    -------
-    initial_volumes_df : DataFrame
-        Initial set with volumes values.
-    normalizer_volumes_df : DataFrame
-        Normalizer set with volumes values.
-    autofluorescence_volumes_df : DataFrame
-        Autofluorescence set with volumes values.
-    """
-    stock_concentrations_dict = dict(
-        cfps_parameters_df[['Parameter', 'Stock concentration']].to_numpy())
-
-    stock_concentrations_df = fromiter(
-        stock_concentrations_dict.values(),
-        dtype=float)
-
-    stock_concentrations_df = \
-        sample_volume / \
-        stock_concentrations_df / \
-        0.0025
-
-    initial_volumes_df = (multiply(
-        initial_concentrations_df,
-        stock_concentrations_df)) * 0.0025
-
-    normalizer_volumes_df = (multiply(
-        normalizer_concentrations_df,
-        stock_concentrations_df)) * 0.0025
-
-    autofluorescence_volumes_df = (multiply(
-        autofluorescence_concentrations_df,
-        stock_concentrations_df)) * 0.0025
-
-    initial_volumes_df['Water'] = \
-        sample_volume - initial_volumes_df.sum(axis=1)
-
-    normalizer_volumes_df['Water'] = \
-        sample_volume - normalizer_volumes_df.sum(axis=1)
-
-    autofluorescence_volumes_df['Water'] = \
-        sample_volume - autofluorescence_volumes_df.sum(axis=1)
-
-    return (initial_volumes_df,
+            initial_volumes_df,
             normalizer_volumes_df,
             autofluorescence_volumes_df)
 
+# def volumes_array_generator(
+#         cfps_parameters_df,
+#         initial_concentrations_df,
+#         normalizer_concentrations_df,
+#         autofluorescence_concentrations_df,
+#         sample_volume):
+#     """
+#     Convert concentrations dataframes into volumes dataframes
 
-def save_volumes_array(
-        cfps_parameters_df,
-        initial_volumes_df,
-        normalizer_volumes_df,
-        autofluorescence_volumes_df):
-    """
-    Save dataframes in tsv files
+#     Parameters
+#     ----------
+#     cfps_parameters_df : DataFrame
+#         Dataframe populated with cfps_parameters data.
+#     initial_volumes_df : DataFrame
+#         Dataframe with initial_concentrations data.
+#     normalizer_volumes_df : DataFrame
+#         Dataframe with normalizer_concentrations data.
+#     autofluorescence_volumes_df : DataFrame
+#         Dataframe with autofluorescence_concentrations data.
+#     sample_volume: int
+#         Final sample volume in each well.
 
-    Parameters
-    ----------
-    cfps_parameters_df : DataFrame
-        Pandas dataframe populated with cfps_parameters data.
-    initial_volumes_df : DataFrame
-        Initial set with volumes values.
-    normalizer_volumes_df : DataFrame
-        Normalizer set with volumes values.
-    autofluorescence_volumes_df : DataFrame
-        Autofluorescence set with volumes values.
+#     Returns
+#     -------
+#     initial_volumes_df : DataFrame
+#         Initial set with volumes values.
+#     normalizer_volumes_df : DataFrame
+#         Normalizer set with volumes values.
+#     autofluorescence_volumes_df : DataFrame
+#         Autofluorescence set with volumes values.
+#     """
+    # stock_concentrations_dict = dict(
+    #     cfps_parameters_df[['Parameter', 'Stock concentration']].to_numpy())
 
-    Returns
-    -------
-    initial_volumes : tsv file
-        Initial set with volumes values.
-    normalizer_volumes : tsv file
-        Normalizer set with volumes values.
-    autofluorescence_volumes : tsv file
-        Autofluorescence set with volumes values.
-    """
-    all_parameters = cfps_parameters_df['Parameter'].tolist()
-    all_parameters.append('Water')
+    # stock_concentrations_df = fromiter(
+    #     stock_concentrations_dict.values(),
+    #     dtype=float)
 
-    initial_volumes = initial_volumes_df.to_csv(
-        'data/volumes_output/initial_volumes.tsv',
-        sep='\t',
-        header=all_parameters,
-        index=False)
+    # stock_concentrations_df = \
+    #     sample_volume / \
+    #     stock_concentrations_df / \
+    #     0.0025
 
-    normalizer_volumes = normalizer_volumes_df.to_csv(
-        'data/volumes_output/normalizer_volumes.tsv',
-        sep='\t',
-        header=all_parameters,
-        index=False)
+    # initial_volumes_df = (multiply(
+    #     initial_concentrations_df,
+    #     stock_concentrations_df)) * 0.0025
 
-    autofluorescence_volumes = autofluorescence_volumes_df.to_csv(
-        'data/volumes_output/autofluorescence_volumes.tsv',
-        sep='\t',
-        header=all_parameters,
-        index=False)
+    # normalizer_volumes_df = (multiply(
+    #     normalizer_concentrations_df,
+    #     stock_concentrations_df)) * 0.0025
 
-    return (initial_volumes,
-            normalizer_volumes,
-            autofluorescence_volumes)
+    # autofluorescence_volumes_df = (multiply(
+    #     autofluorescence_concentrations_df,
+    #     stock_concentrations_df)) * 0.0025
+
+    # if sample_volume == sample_volume:
+    #     initial_volumes_df['Water'] = 0
+    #     normalizer_volumes_df['Water'] = 0
+    #     autofluorescence_volumes_df['Water'] = 0
+
+    # initial_volumes_df['Water'] = \
+    #     sample_volume - initial_volumes_df.sum(axis=1)
+
+    # normalizer_volumes_df['Water'] = \
+    #     sample_volume - normalizer_volumes_df.sum(axis=1)
+
+    # autofluorescence_volumes_df['Water'] = \
+    #     sample_volume - autofluorescence_volumes_df.sum(axis=1)
+
+    # return (initial_volumes_df,
+    #         normalizer_volumes_df,
+    #         autofluorescence_volumes_df)
+
+
+# def save_volumes_array(
+#         cfps_parameters_df,
+#         initial_volumes_df,
+#         normalizer_volumes_df,
+#         autofluorescence_volumes_df):
+#     """
+#     Save dataframes in tsv files
+
+#     Parameters
+#     ----------
+#     cfps_parameters_df : DataFrame
+#         Pandas dataframe populated with cfps_parameters data.
+#     initial_volumes_df : DataFrame
+#         Initial set with volumes values.
+#     normalizer_volumes_df : DataFrame
+#         Normalizer set with volumes values.
+#     autofluorescence_volumes_df : DataFrame
+#         Autofluorescence set with volumes values.
+
+#     Returns
+#     -------
+#     initial_volumes : tsv file
+#         Initial set with volumes values.
+#     normalizer_volumes : tsv file
+#         Normalizer set with volumes values.
+#     autofluorescence_volumes : tsv file
+#         Autofluorescence set with volumes values.
+#     """
+#     all_parameters = cfps_parameters_df['Parameter'].tolist()
+#     all_parameters.append('Water')
+
+#     initial_volumes = initial_volumes_df.to_csv(
+#         'data/volumes_output/initial_volumes.tsv',
+#         sep='\t',
+#         header=all_parameters,
+#         index=False)
+
+#     normalizer_volumes = normalizer_volumes_df.to_csv(
+#         'data/volumes_output/normalizer_volumes.tsv',
+#         sep='\t',
+#         header=all_parameters,
+#         index=False)
+
+#     autofluorescence_volumes = autofluorescence_volumes_df.to_csv(
+#         'data/volumes_output/autofluorescence_volumes.tsv',
+#         sep='\t',
+#         header=all_parameters,
+#         index=False)
+
+#     return (initial_volumes,
+#             normalizer_volumes,
+#             autofluorescence_volumes)
 
 
 def samples_merger(
@@ -514,20 +575,20 @@ def multiple_echo_instructions_generator(
 
         for parameter_name in destination_plate.drop(columns=['well_name']):
             transfers = {
-                'Source_Plate_Barcode': [],
-                'Source_Well': [],
-                'Destination_Plate_Barcode': [],
-                'Destination_Well': [],
-                'Transfer_Volume': []}
+                'Source Plate Name': [],
+                'Source Well': [],
+                'Destination Plate Name': [],
+                'Destination Well': [],
+                'Transfer Volume': []}
 
             for index in range(len(destination_plate)):
-                transfers['Source_Plate_Barcode'].append('Plate1')
-                transfers['Source_Well'].append(
+                transfers['Source Plate Name'].append('Plate1')
+                transfers['Source Well'].append(
                         '{} well'.format(parameter_name))
-                transfers['Destination_Plate_Barcode'].append('destPlate1')
-                transfers['Destination_Well'].append(
+                transfers['Destination Plate Name'].append('destPlate1')
+                transfers['Destination Well'].append(
                         destination_plate.loc[index, 'well_name'])
-                transfers['Transfer_Volume'].append(
+                transfers['Transfer Volume'].append(
                         destination_plate.loc[index, parameter_name])
             transfers = DataFrame(transfers)
             all_sources[parameter_name] = transfers
@@ -581,20 +642,20 @@ def single_echo_instructions_generator(
 
         for parameter_name in destination_plate.drop(columns=['well_name']):
             transfers = {
-                'Source_Plate_Barcode': [],
-                'Source_Well': [],
-                'Destination_Plate_Barcode': [],
-                'Destination_Well': [],
-                'Transfer_Volume': []}
+                'Source Plate Name': [],
+                'Source Well': [],
+                'Destination Plate Name': [],
+                'Destination Well': [],
+                'Transfer Volume': []}
 
             for index in range(len(destination_plate)):
-                transfers['Source_Plate_Barcode'].append('Plate1')
-                transfers['Source_Well'].append(
+                transfers['Source Plate Name'].append('Plate1')
+                transfers['Source Well'].append(
                         '{} well'.format(parameter_name))
-                transfers['Destination_Plate_Barcode'].append('destPlate1')
-                transfers['Destination_Well'].append(
+                transfers['Destination Plate Name'].append('destPlate1')
+                transfers['Destination Well'].append(
                         destination_plate.loc[index, 'well_name'])
-                transfers['Transfer_Volume'].append(
+                transfers['Transfer Volume'].append(
                         destination_plate.loc[index, parameter_name])
             transfers = DataFrame(transfers)
             all_sources[parameter_name] = transfers

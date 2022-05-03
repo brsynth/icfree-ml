@@ -56,6 +56,58 @@ def input_importer(cfps_parameters) -> DataFrame:
     return cfps_parameters_df
 
 
+# def input_processor(cfps_parameters_df: DataFrame):
+#     """
+#     Determine variable and fixed parameters, and maximum concentrations.
+
+#     Parameters
+#     ----------
+#     input_df : 2d-array
+#         N-by-samples array where values are uniformly spaced between 0 and 1.
+
+#     Returns
+#     -------
+#     fixed_parameters : 1d-array
+#         N-fixed-parameters array with all of the fixed parameters names.
+
+#     variable_parameters : 1d-array
+#         N-variable-parameters array with all of the variable parameters names.
+
+#     n_variable_parameters : int
+#         Number of variable parameters.
+
+#     maximum_variable_concentrations : 1d-array
+#         N-maximum-concentrations array with variable concentrations values.
+
+#     maximum_fixed_concentrations : list
+#         N-maximum-concentrations list with fixed concentrations values.
+#     """
+#     for status in cfps_parameters_df.columns:
+
+#         if (cfps_parameters_df[status] == 'fixed').any():
+#             fixed_parameters = cfps_parameters_df[
+#                 cfps_parameters_df['Status'] == 'fixed']
+#             maximum_fixed_concentrations = list(
+#                 fixed_parameters['Maximum concentration'])
+#             fixed_parameters = array(fixed_parameters['Parameter'])
+
+#         if (cfps_parameters_df[status] == 'variable').any():
+#             variable_parameters = cfps_parameters_df[
+#                 cfps_parameters_df['Status'] == 'variable']
+#             maximum_variable_concentrations = array(
+#                 variable_parameters['Maximum concentration'])
+#             variable_parameters = array(variable_parameters['Parameter'])
+#             n_variable_parameters = shape(variable_parameters)[0]
+#             maximum_variable_concentrations = reshape(
+#                 maximum_variable_concentrations,
+#                 (1, n_variable_parameters))
+
+#     return (n_variable_parameters,
+#             maximum_fixed_concentrations,
+#             fixed_parameters,
+#             maximum_variable_concentrations,
+#             variable_parameters)
+
 def input_processor(cfps_parameters_df: DataFrame):
     """
     Determine variable and fixed parameters, and maximum concentrations.
@@ -88,14 +140,14 @@ def input_processor(cfps_parameters_df: DataFrame):
             fixed_parameters = cfps_parameters_df[
                 cfps_parameters_df['Status'] == 'fixed']
             maximum_fixed_concentrations = list(
-                fixed_parameters['Maximum concentration'])
+                fixed_parameters['Maximum volume'])
             fixed_parameters = array(fixed_parameters['Parameter'])
 
         if (cfps_parameters_df[status] == 'variable').any():
             variable_parameters = cfps_parameters_df[
                 cfps_parameters_df['Status'] == 'variable']
             maximum_variable_concentrations = array(
-                variable_parameters['Maximum concentration'])
+                variable_parameters['Maximum volume'])
             variable_parameters = array(variable_parameters['Parameter'])
             n_variable_parameters = shape(variable_parameters)[0]
             maximum_variable_concentrations = reshape(
@@ -349,16 +401,18 @@ def initial_plates_generator(
     normalizer_set_df = initial_set_df.copy()
     all_parameters = input_df['Parameter'].tolist()
     normalizer_set_df.columns = all_parameters
-    normalizer_set_df['GOI-DNA'] = normalizer_set_df['GOI-DNA']*0
+    # normalizer_set_df['GOI-DNA'] = normalizer_set_df['GOI-DNA']*0
 
     autolfuorescence_set_df = normalizer_set_df.copy()
     autolfuorescence_set_df.columns = all_parameters
-    autolfuorescence_set_df['GFP-DNA'] = normalizer_set_df['GFP-DNA']*0
+    # autolfuorescence_set_df['GFP-DNA'] = normalizer_set_df['GFP-DNA']*0
 
     return (initial_set_df,
             normalizer_set_df,
             autolfuorescence_set_df,
             all_parameters)
+
+    # return initial_set_df
 
 
 def save_intial_plates(
@@ -413,7 +467,7 @@ def save_intial_plates(
             '..',
             'data',
             'initial_output',
-            'autolfuorescence_set.tsv'),
+            'autofluorescence_set.tsv'),
         sep='\t',
         header=all_parameters,
         index=False)
