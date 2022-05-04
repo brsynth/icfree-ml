@@ -14,10 +14,6 @@ from string import (
     ascii_uppercase
 )
 
-# from typing import (
-#     Tuple
-# )
-
 
 def input_importer(
         cfps_parameters,
@@ -69,7 +65,7 @@ def input_importer(
             initial_concentrations_df,
             normalizer_concentrations_df,
             autofluorescence_concentrations_df)
-  
+
 
 def volumes_array_generator(
         cfps_parameters_df,
@@ -112,19 +108,19 @@ def volumes_array_generator(
     stock_concentrations_df = \
         sample_volume / \
         stock_concentrations_df / \
-        0.0025
+        2.5
 
     initial_volumes_df = (multiply(
         initial_concentrations_df,
-        stock_concentrations_df)) * 0.0025
+        stock_concentrations_df)) * 2.5
 
     normalizer_volumes_df = (multiply(
         normalizer_concentrations_df,
-        stock_concentrations_df)) * 0.0025
+        stock_concentrations_df)) * 2.5
 
     autofluorescence_volumes_df = (multiply(
         autofluorescence_concentrations_df,
-        stock_concentrations_df)) * 0.0025
+        stock_concentrations_df)) * 2.5
 
     initial_volumes_df['Water'] = \
         sample_volume - initial_volumes_df.sum(axis=1)
@@ -513,30 +509,31 @@ def multiple_echo_instructions_generator(
     for destination_plate in multiple_destination_plates_dict.values():
 
         for parameter_name in destination_plate.drop(columns=['well_name']):
-            transfers = {
+            worklist = {
                 'Source Plate Name': [],
                 'Source Well': [],
                 'Destination Plate Name': [],
                 'Destination Well': [],
-                'Transfer Volume': []}
+                'Transfer Volume': [],
+                'Sample ID': []}
 
             for index in range(len(destination_plate)):
-                transfers['Source Plate Name'].append('Plate1')
-                transfers['Source Well'].append(
-                        '{} well'.format(parameter_name))
-                transfers['Destination Plate Name'].append('destPlate1')
-                transfers['Destination Well'].append(
+                worklist['Source Plate Name'].append('Source[1]')
+                worklist['Source Well'].append(parameter_name)
+                worklist['Destination Plate Name'].append('Destination[1]')
+                worklist['Destination Well'].append(
                         destination_plate.loc[index, 'well_name'])
-                transfers['Transfer Volume'].append(
+                worklist['Transfer Volume'].append(
                         destination_plate.loc[index, parameter_name])
-            transfers = DataFrame(transfers)
-            all_sources[parameter_name] = transfers
+                worklist['Sample ID'].append(parameter_name)
+
+            worklist = DataFrame(worklist)
+            all_sources[parameter_name] = worklist
             echo_instructions = concat(all_sources.values())
 
         multiple_echo_instructions_list.append(echo_instructions)
         multiple_echo_instructions_dict = dict(
-            zip(
-                multiple_echo_instructions_dict_keys,
+            zip(multiple_echo_instructions_dict_keys,
                 multiple_echo_instructions_list))
 
     if desired_order:
@@ -580,30 +577,31 @@ def single_echo_instructions_generator(
     for destination_plate in single_destination_plates_dict.values():
 
         for parameter_name in destination_plate.drop(columns=['well_name']):
-            transfers = {
+            worklist = {
                 'Source Plate Name': [],
                 'Source Well': [],
                 'Destination Plate Name': [],
                 'Destination Well': [],
-                'Transfer Volume': []}
+                'Transfer Volume': [],
+                'Sample ID': []}
 
             for index in range(len(destination_plate)):
-                transfers['Source Plate Name'].append('Plate1')
-                transfers['Source Well'].append(
-                        '{} well'.format(parameter_name))
-                transfers['Destination Plate Name'].append('destPlate1')
-                transfers['Destination Well'].append(
+                worklist['Source Plate Name'].append('Source[1]')
+                worklist['Source Well'].append(parameter_name)
+                worklist['Destination Plate Name'].append('Destination[1]')
+                worklist['Destination Well'].append(
                         destination_plate.loc[index, 'well_name'])
-                transfers['Transfer Volume'].append(
+                worklist['Transfer Volume'].append(
                         destination_plate.loc[index, parameter_name])
-            transfers = DataFrame(transfers)
-            all_sources[parameter_name] = transfers
+                worklist['Sample ID'].append(parameter_name)
+
+            worklist = DataFrame(worklist)
+            all_sources[parameter_name] = worklist
             echo_instructions = concat(all_sources.values())
 
         single_echo_instructions_list.append(echo_instructions)
         single_echo_instructions_dict = dict(
-            zip(
-                single_echo_instructions_dict_keys,
+            zip(single_echo_instructions_dict_keys,
                 single_echo_instructions_list))
 
     if desired_order:
