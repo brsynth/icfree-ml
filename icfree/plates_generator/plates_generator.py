@@ -2,18 +2,21 @@
 # coding: utf-8
 
 from os import (
-    path as os_path
+    path as os_path,
+    mkdir as os_mkdir
 )
 
 from numpy import (
     concatenate,
     array,
     asarray,
+    arange,
     shape,
     reshape,
     multiply,
     full,
-    stack
+    stack,
+    digitize
 )
 
 from pandas import (
@@ -26,7 +29,9 @@ from pyDOE2 import (
 )
 
 from .args import (
-    DEFAULT_SEED
+    DEFAULT_SEED,
+    DEFAULT_OUTPUT_FOLDER,
+    DEFAULT_DOE_VALUES
 )
 
 # from typing import (
@@ -111,7 +116,7 @@ def input_processor(cfps_parameters_df: DataFrame):
 
 def levels_array_generator(
         n_variable_parameters,
-        n_ratios,
+        doe_ratios: int = DEFAULT_DOE_VALUES,
         seed: int = DEFAULT_SEED):
     """
     Generate sampling array.
@@ -122,7 +127,7 @@ def levels_array_generator(
     n_variable_parameters : int
         Number of variable parameters.
 
-    n_ratios : int
+    doe_ratios : int
         Number of concentration ratios for all factor
 
     seed: int
@@ -139,46 +144,21 @@ def levels_array_generator(
         criterion='center',
         random_state=seed)
 
-    levels = (1 / n_ratios)
-    level_1 = levels*0
-    level_2 = levels*1
-    level_3 = levels*3
-    level_4 = levels*4
-    level_5 = levels*5
-
     levels_list = []
 
+    gap = (doe_ratios-1)
     for sample in sampling:
-        new_sample = []
-
-        for parameter in sample:
-
-            if parameter >= 0 and parameter < 0.2:
-                new_sample.append(level_1)
-                continue
-
-            if parameter >= 0.2 and parameter < 0.4:
-                new_sample.append(level_2)
-                continue
-
-            if parameter >= 0.4 and parameter < 0.6:
-                new_sample.append(level_3)
-                continue
-
-            if parameter >= 0.6 and parameter < 0.8:
-                new_sample.append(level_4)
-                continue
-
-            if parameter >= 0.8 and parameter <= 1:
-                new_sample.append(level_5)
-                continue
+        ## Digitize sample values
+        # set bins
+        bins = [x for x in arange(1/gap, 1.0, 1/gap)]+[1.0]
+        # digitize
+        new_sample = digitize(sample, bins=bins)
+        # normalize
+        new_sample = [param / gap for param in new_sample]
 
         levels_list.append(new_sample)
 
-    levels_array = asarray(
-        levels_list)
-
-    return levels_array
+    return asarray(levels_list)
 
 
 def variable_concentrations_array_generator(
@@ -351,21 +331,22 @@ def initial_plates_generator(
     normalizer_set_df.columns = all_parameters
     normalizer_set_df['GOI-DNA'] = normalizer_set_df['GOI-DNA']*0
 
-    autolfuorescence_set_df = normalizer_set_df.copy()
-    autolfuorescence_set_df.columns = all_parameters
-    autolfuorescence_set_df['GFP-DNA'] = normalizer_set_df['GFP-DNA']*0
+    autofluorescence_set_df = normalizer_set_df.copy()
+    autofluorescence_set_df.columns = all_parameters
+    autofluorescence_set_df['GFP-DNA'] = normalizer_set_df['GFP-DNA']*0
 
     return (initial_set_df,
             normalizer_set_df,
-            autolfuorescence_set_df,
+            autofluorescence_set_df,
             all_parameters)
 
 
 def save_intial_plates(
         initial_set_df,
         normalizer_set_df,
-        autolfuorescence_set_df,
-        all_parameters):
+        autofluorescence_set_df,
+        all_parameters,
+        output_folder: str = DEFAULT_OUTPUT_FOLDER):
     """
     Save Pandas dataframes in tsv files
 
@@ -382,15 +363,17 @@ def save_intial_plates(
 
     all_parameters: List
         List of the name of all cfps parameters
+    
+    output_folder: str
+        Path where store output files
     """
-    file_path = os_path.dirname(os_path.realpath(__file__))
+
+    if not os_path.exists(output_folder):
+        os_mkdir(output_folder)
 
     initial_set_df.to_csv(
         os_path.join(
-            file_path,
-            '..',
-            'data',
-            'initial_output',
+            output_folder,
             'initial_set.tsv'),
         sep='\t',
         header=all_parameters,
@@ -398,22 +381,16 @@ def save_intial_plates(
 
     normalizer_set_df.to_csv(
         os_path.join(
-            file_path,
-            '..',
-            'data',
-            'initial_output',
+            output_folder,
             'normalizer_set.tsv'),
         sep='\t',
         header=all_parameters,
         index=False)
 
-    autolfuorescence_set_df.to_csv(
+    autofluorescence_set_df.to_csv(
         os_path.join(
-            file_path,
-            '..',
-            'data',
-            'initial_output',
-            'autolfuorescence_set.tsv'),
+            output_folder,
+            'autofluorescence_set.tsv'),
         sep='\t',
         header=all_parameters,
         index=False)

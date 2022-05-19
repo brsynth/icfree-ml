@@ -43,16 +43,15 @@ def main():
     # logger = create_logger(parser.prog, args.log)
     # check_results(gg, logger=logger)
 
-    input_file = args.input
+    input_file = args.cfps
     input_df = input_importer(input_file)
 
     input_processor_variables = input_processor(input_df)
     n_variable_parameters = input_processor_variables[0]
-    n_ratios = 5
 
     levels_array = levels_array_generator(
         n_variable_parameters,
-        n_ratios,
+        args.doe_ratios,
         seed=args.seed)
 
     maximum_variable_concentrations = input_processor_variables[3]
@@ -75,14 +74,15 @@ def main():
 
     initial_set = initial_plates_generator_variables[0]
     normalizer_set = initial_plates_generator_variables[1]
-    autolfuorescence_set = initial_plates_generator_variables[2]
+    autofluorescence_set = initial_plates_generator_variables[2]
     all_parameters = initial_plates_generator_variables[3]
 
     save_intial_plates(
         initial_set,
         normalizer_set,
-        autolfuorescence_set,
-        all_parameters)
+        autofluorescence_set,
+        all_parameters,
+        args.output_folder)
 
 
 if __name__ == "__main__":

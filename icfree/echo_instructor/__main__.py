@@ -21,11 +21,12 @@ def main():
         description='Generates instructions for the Echo robot')
 
     args = parser.parse_args()
-    cfps_parameters = args.input
-    initial_concentrations = args.input1
-    normalizer_concentrations = args.input2
-    autofluorescence_concentrations = args.input3
+    cfps_parameters = args.cfps
+    initial_concentrations = args.init_tset
+    normalizer_concentrations = args.norm_set
+    autofluorescence_concentrations = args.autofluo_set
     sample_volume = args.sample_volume
+    output_folder = args.output_folder
 
     input_importer_variables = input_importer(
         cfps_parameters,
@@ -53,7 +54,8 @@ def main():
         cfps_parameters_df,
         initial_volumes_df,
         normalizer_volumes_df,
-        autofluorescence_volumes_df)
+        autofluorescence_volumes_df,
+        output_folder)
 
     samples_merger_variables = samples_merger(
         initial_volumes_df,
@@ -86,7 +88,8 @@ def main():
 
     save_echo_instructions(
         multiple_echo_instructions_dict,
-        single_echo_instructions_dict)
+        single_echo_instructions_dict,
+        output_folder)
 
 
 if __name__ == "__main__":

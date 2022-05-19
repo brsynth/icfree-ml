@@ -1,3 +1,8 @@
+from os import (
+    path as os_path,
+    mkdir as os_mkdir
+)
+
 from numpy import (
     fromiter,
     multiply,
@@ -12,6 +17,11 @@ from pandas import (
 
 from string import (
     ascii_uppercase
+)
+
+from .args import (
+    DEFAULT_OUTPUT_FOLDER,
+    DEFAULT_SAMPLE_VOLUME
 )
 
 
@@ -72,7 +82,7 @@ def volumes_array_generator(
         initial_concentrations_df,
         normalizer_concentrations_df,
         autofluorescence_concentrations_df,
-        sample_volume):
+        sample_volume: int = DEFAULT_SAMPLE_VOLUME):
     """
     Convert concentrations dataframes into volumes dataframes
 
@@ -140,7 +150,8 @@ def save_volumes_array(
         cfps_parameters_df,
         initial_volumes_df,
         normalizer_volumes_df,
-        autofluorescence_volumes_df):
+        autofluorescence_volumes_df,
+        output_folder: str = DEFAULT_OUTPUT_FOLDER):
     """
     Save dataframes in tsv files
 
@@ -154,6 +165,8 @@ def save_volumes_array(
         Normalizer set with volumes values.
     autofluorescence_volumes_df : DataFrame
         Autofluorescence set with volumes values.
+    output_folder: str
+        Path where store output files
 
     Returns
     -------
@@ -164,23 +177,29 @@ def save_volumes_array(
     autofluorescence_volumes : tsv file
         Autofluorescence set with volumes values.
     """
+    if not os_path.exists(output_folder):
+        os_mkdir(output_folder)
+    output_subfolder = os_path.join(output_folder, 'volumes_output')
+    if not os_path.exists(output_subfolder):
+        os_mkdir(output_subfolder)
+
     all_parameters = cfps_parameters_df['Parameter'].tolist()
     all_parameters.append('Water')
 
     initial_volumes = initial_volumes_df.to_csv(
-        'data/volumes_output/initial_volumes.tsv',
+        os_path.join(output_subfolder, 'initial_volumes.tsv'),
         sep='\t',
         header=all_parameters,
         index=False)
 
     normalizer_volumes = normalizer_volumes_df.to_csv(
-        'data/volumes_output/normalizer_volumes.tsv',
+        os_path.join(output_subfolder, 'normalizer_volumes.tsv'),
         sep='\t',
         header=all_parameters,
         index=False)
 
     autofluorescence_volumes = autofluorescence_volumes_df.to_csv(
-        'data/volumes_output/autofluorescence_volumes.tsv',
+        os_path.join(output_subfolder, 'autofluorescence_volumes.tsv'),
         sep='\t',
         header=all_parameters,
         index=False)
@@ -614,8 +633,9 @@ def single_echo_instructions_generator(
 
 
 def save_echo_instructions(
-            multiple_echo_instructions_dict,
-            single_echo_instructions_dict):
+        multiple_echo_instructions_dict,
+        single_echo_instructions_dict,
+        output_folder: str = DEFAULT_OUTPUT_FOLDER):
     """
     Save instructions in tsv files
 
@@ -623,9 +643,30 @@ def save_echo_instructions(
     ----------
         single_echo_instructions_dict: Dict
             _description_
+
         multiple_echo_instructions_dict: Dict
-            _description_
+            _description_    
+
+        output_folder: str
+            Path where store output files
     """
+
+    if not os_path.exists(output_folder):
+        os_mkdir(output_folder)
+    output_subfolder = os_path.join(output_folder, 'echo_instructions')
+    if not os_path.exists(output_subfolder):
+        os_mkdir(output_subfolder)
+    output_subfolder_mul = os_path.join(
+        output_folder, 'echo_instructions', 'multiple'
+    )
+    if not os_path.exists(output_subfolder_mul):
+        os_mkdir(output_subfolder_mul)
+    output_subfolder_sin = os_path.join(
+        output_folder, 'echo_instructions', 'single'
+    )
+    if not os_path.exists(output_subfolder_sin):
+        os_mkdir(output_subfolder_sin)
+
     # keys = list(echo_instructions_dict.keys())
 
     # for key in keys:
@@ -638,13 +679,19 @@ def save_echo_instructions(
     for key, value in multiple_echo_instructions_dict.items():
         key_index = list(multiple_echo_instructions_dict.keys()).index(key)
         value.to_csv(
-            'data/echo_instructions/multiple/' + str(key_index) + '.tsv',
+            os_path.join(
+                output_subfolder_mul,
+                f'{str(key_index)}.tsv'
+            ),
             sep='\t',
             index=False)
 
     for key, value in single_echo_instructions_dict.items():
         key_index = list(single_echo_instructions_dict.keys()).index(key)
         value.to_csv(
-            'data/echo_instructions/single/' + str(key_index) + '.tsv',
+            os_path.join(
+                output_subfolder_sin,
+                f'{str(key_index)}.tsv'
+            ),
             sep='\t',
             index=False)
