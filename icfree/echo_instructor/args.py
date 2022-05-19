@@ -1,7 +1,9 @@
 from argparse import (
     ArgumentParser
     )
+from os import getcwd as os_getcwd
 
+DEFAULT_OUTPUT_FOLDER = os_getcwd()
 
 def build_args_parser(
         program,
@@ -20,25 +22,25 @@ def build_args_parser(
 def add_arguments(parser):
 
     parser.add_argument(
-        'input',
+        'cfps',
         type=str,
         help='Path to a .tsv file containing CFPS parameters and features',
     )
 
     parser.add_argument(
-        'input1',
+        'init_tset',
         type=str,
         help='Path to a .tsv file containing initial training set',
     )
 
     parser.add_argument(
-        'input2',
+        'norm_set',
         type=str,
         help='Path to a .tsv file containing normalizer set',
     )
 
     parser.add_argument(
-        'input3',
+        'autofluo_set',
         type=str,
         help='Path to a .tsv file containing autofluorescence set',
     )
@@ -49,10 +51,11 @@ def add_arguments(parser):
         help='Final sample volume in each well',
     )
 
-    # parser.add_argument(
-    #     'output',
-    #     type=str,
-    #     help='Path to the csv output',
-    # )
+    parser.add_argument(
+        '-of', '--output-folder',
+        type=str,
+        default=DEFAULT_OUTPUT_FOLDER,
+        help='Output folder to write output files',
+    )
 
     return parser

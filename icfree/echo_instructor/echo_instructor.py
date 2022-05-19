@@ -1,3 +1,8 @@
+from os import (
+    path as os_path,
+    mkdir as os_mkdir
+)
+
 from numpy import (
     fromiter,
     multiply,
@@ -12,6 +17,10 @@ from pandas import (
 
 from string import (
     ascii_uppercase
+)
+
+from .args import (
+    DEFAULT_OUTPUT_FOLDER
 )
 
 
@@ -614,8 +623,9 @@ def single_echo_instructions_generator(
 
 
 def save_echo_instructions(
-            multiple_echo_instructions_dict,
-            single_echo_instructions_dict):
+        multiple_echo_instructions_dict,
+        single_echo_instructions_dict,
+        output_folder: str = DEFAULT_OUTPUT_FOLDER):
     """
     Save instructions in tsv files
 
@@ -623,9 +633,27 @@ def save_echo_instructions(
     ----------
         single_echo_instructions_dict: Dict
             _description_
+
         multiple_echo_instructions_dict: Dict
-            _description_
+            _description_    
+
+        output_folder: str
+            Path where store output files
     """
+
+    if not os_path.exists(output_folder):
+        os_mkdir(output_folder)
+    output_subfolder_mul = os_path.join(
+        output_folder, 'echo_instructions', 'multiple'
+    )
+    if not os_path.exists(output_subfolder_mul):
+        os_mkdir(output_subfolder_mul)
+    output_subfolder_sin = os_path.join(
+        output_folder, 'echo_instructions', 'single'
+    )
+    if not os_path.exists(output_subfolder_sin):
+        os_mkdir(output_subfolder_sin)
+
     # keys = list(echo_instructions_dict.keys())
 
     # for key in keys:
@@ -638,13 +666,19 @@ def save_echo_instructions(
     for key, value in multiple_echo_instructions_dict.items():
         key_index = list(multiple_echo_instructions_dict.keys()).index(key)
         value.to_csv(
-            'data/echo_instructions/multiple/' + str(key_index) + '.tsv',
+            os_path.join(
+                output_subfolder_mul,
+                f'{str(key_index)}.tsv'
+            ),
             sep='\t',
             index=False)
 
     for key, value in single_echo_instructions_dict.items():
         key_index = list(single_echo_instructions_dict.keys()).index(key)
         value.to_csv(
-            'data/echo_instructions/single/' + str(key_index) + '.tsv',
+            os_path.join(
+                output_subfolder_sin,
+                f'{str(key_index)}.tsv'
+            ),
             sep='\t',
             index=False)
