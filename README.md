@@ -14,7 +14,7 @@ cd icfree-ml
 ~~~
 
 ~~~bash
-bash packages.sh
+conda env create -f environment.yml
 ~~~
 
 # Usage
@@ -22,13 +22,13 @@ bash packages.sh
 Running plates_generator from the CLI
 
 ~~~bash
-python -m plates_generator <cfps-parameters tsv file>
+python -m icfree.plates_generator <cfps-parameters tsv file>
 ~~~
 
 Running echo_instructor from the CLI
 
 ~~~bash
-python -m echo_instructor 
+python -m icfree.echo_instructor 
 <cfps-parameters tsv file> \ 
 <initial_training_set tsv file> \ 
 <normalizer_set tsv file> \ 
