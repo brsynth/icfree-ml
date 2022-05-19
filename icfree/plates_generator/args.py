@@ -27,7 +27,7 @@ def build_args_parser(
 def add_arguments(parser):
 
     parser.add_argument(
-        'input',
+        'cfps',
         type=str,
         help='Path to a .tsv file containing cfps parameters and features',
     )

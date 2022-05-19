@@ -43,7 +43,7 @@ def main():
     # logger = create_logger(parser.prog, args.log)
     # check_results(gg, logger=logger)
 
-    input_file = args.input
+    input_file = args.cfps
     input_df = input_importer(input_file)
 
     input_processor_variables = input_processor(input_df)
