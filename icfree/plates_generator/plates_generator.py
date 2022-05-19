@@ -10,11 +10,13 @@ from numpy import (
     concatenate,
     array,
     asarray,
+    arange,
     shape,
     reshape,
     multiply,
     full,
-    stack
+    stack,
+    digitize
 )
 
 from pandas import (
@@ -28,7 +30,8 @@ from pyDOE2 import (
 
 from .args import (
     DEFAULT_SEED,
-    DEFAULT_OUTPUT_FOLDER
+    DEFAULT_OUTPUT_FOLDER,
+    DEFAULT_DOE_VALUES
 )
 
 # from typing import (
@@ -113,7 +116,7 @@ def input_processor(cfps_parameters_df: DataFrame):
 
 def levels_array_generator(
         n_variable_parameters,
-        n_ratios,
+        doe_ratios: int = DEFAULT_DOE_VALUES,
         seed: int = DEFAULT_SEED):
     """
     Generate sampling array.
@@ -124,7 +127,7 @@ def levels_array_generator(
     n_variable_parameters : int
         Number of variable parameters.
 
-    n_ratios : int
+    doe_ratios : int
         Number of concentration ratios for all factor
 
     seed: int
@@ -141,46 +144,21 @@ def levels_array_generator(
         criterion='center',
         random_state=seed)
 
-    levels = (1 / n_ratios)
-    level_1 = levels*0
-    level_2 = levels*1
-    level_3 = levels*3
-    level_4 = levels*4
-    level_5 = levels*5
-
     levels_list = []
 
+    gap = (doe_ratios-1)
     for sample in sampling:
-        new_sample = []
-
-        for parameter in sample:
-
-            if parameter >= 0 and parameter < 0.2:
-                new_sample.append(level_1)
-                continue
-
-            if parameter >= 0.2 and parameter < 0.4:
-                new_sample.append(level_2)
-                continue
-
-            if parameter >= 0.4 and parameter < 0.6:
-                new_sample.append(level_3)
-                continue
-
-            if parameter >= 0.6 and parameter < 0.8:
-                new_sample.append(level_4)
-                continue
-
-            if parameter >= 0.8 and parameter <= 1:
-                new_sample.append(level_5)
-                continue
+        ## Digitize sample values
+        # set bins
+        bins = [x for x in arange(1/gap, 1.0, 1/gap)]+[1.0]
+        # digitize
+        new_sample = digitize(sample, bins=bins)
+        # normalize
+        new_sample = [param / gap for param in new_sample]
 
         levels_list.append(new_sample)
 
-    levels_array = asarray(
-        levels_list)
-
-    return levels_array
+    return asarray(levels_list)
 
 
 def variable_concentrations_array_generator(
