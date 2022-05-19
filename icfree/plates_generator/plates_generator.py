@@ -353,20 +353,20 @@ def initial_plates_generator(
     normalizer_set_df.columns = all_parameters
     normalizer_set_df['GOI-DNA'] = normalizer_set_df['GOI-DNA']*0
 
-    autolfuorescence_set_df = normalizer_set_df.copy()
-    autolfuorescence_set_df.columns = all_parameters
-    autolfuorescence_set_df['GFP-DNA'] = normalizer_set_df['GFP-DNA']*0
+    autofluorescence_set_df = normalizer_set_df.copy()
+    autofluorescence_set_df.columns = all_parameters
+    autofluorescence_set_df['GFP-DNA'] = normalizer_set_df['GFP-DNA']*0
 
     return (initial_set_df,
             normalizer_set_df,
-            autolfuorescence_set_df,
+            autofluorescence_set_df,
             all_parameters)
 
 
 def save_intial_plates(
         initial_set_df,
         normalizer_set_df,
-        autolfuorescence_set_df,
+        autofluorescence_set_df,
         all_parameters,
         output_folder: str = DEFAULT_OUTPUT_FOLDER):
     """
@@ -409,10 +409,10 @@ def save_intial_plates(
         header=all_parameters,
         index=False)
 
-    autolfuorescence_set_df.to_csv(
+    autofluorescence_set_df.to_csv(
         os_path.join(
             output_folder,
-            'autolfuorescence_set.tsv'),
+            'autofluorescence_set.tsv'),
         sep='\t',
         header=all_parameters,
         index=False)

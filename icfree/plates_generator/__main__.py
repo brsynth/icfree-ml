@@ -75,13 +75,13 @@ def main():
 
     initial_set = initial_plates_generator_variables[0]
     normalizer_set = initial_plates_generator_variables[1]
-    autolfuorescence_set = initial_plates_generator_variables[2]
+    autofluorescence_set = initial_plates_generator_variables[2]
     all_parameters = initial_plates_generator_variables[3]
 
     save_intial_plates(
         initial_set,
         normalizer_set,
-        autolfuorescence_set,
+        autofluorescence_set,
         all_parameters,
         args.output_folder)
 
