@@ -4,6 +4,7 @@ from argparse import (
 from os import getcwd as os_getcwd
 
 DEFAULT_OUTPUT_FOLDER = os_getcwd()
+DEFAULT_SAMPLE_VOLUME = 10000
 
 def build_args_parser(
         program,
@@ -46,9 +47,10 @@ def add_arguments(parser):
     )
 
     parser.add_argument(
-        'sample_volume',
+        '-v', '--sample_volume',
         type=int,
-        help='Final sample volume in each well',
+        default=DEFAULT_SAMPLE_VOLUME,
+        help='Final sample volume in each well (nL)',
     )
 
     parser.add_argument(

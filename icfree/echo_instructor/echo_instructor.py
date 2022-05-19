@@ -20,7 +20,8 @@ from string import (
 )
 
 from .args import (
-    DEFAULT_OUTPUT_FOLDER
+    DEFAULT_OUTPUT_FOLDER,
+    DEFAULT_SAMPLE_VOLUME
 )
 
 
@@ -81,7 +82,7 @@ def volumes_array_generator(
         initial_concentrations_df,
         normalizer_concentrations_df,
         autofluorescence_concentrations_df,
-        sample_volume):
+        sample_volume: int = DEFAULT_SAMPLE_VOLUME):
     """
     Convert concentrations dataframes into volumes dataframes
 
@@ -149,7 +150,8 @@ def save_volumes_array(
         cfps_parameters_df,
         initial_volumes_df,
         normalizer_volumes_df,
-        autofluorescence_volumes_df):
+        autofluorescence_volumes_df,
+        output_folder: str = DEFAULT_OUTPUT_FOLDER):
     """
     Save dataframes in tsv files
 
@@ -163,6 +165,8 @@ def save_volumes_array(
         Normalizer set with volumes values.
     autofluorescence_volumes_df : DataFrame
         Autofluorescence set with volumes values.
+    output_folder: str
+        Path where store output files
 
     Returns
     -------
@@ -173,23 +177,29 @@ def save_volumes_array(
     autofluorescence_volumes : tsv file
         Autofluorescence set with volumes values.
     """
+    if not os_path.exists(output_folder):
+        os_mkdir(output_folder)
+    output_subfolder = os_path.join(output_folder, 'volumes_output')
+    if not os_path.exists(output_subfolder):
+        os_mkdir(output_subfolder)
+
     all_parameters = cfps_parameters_df['Parameter'].tolist()
     all_parameters.append('Water')
 
     initial_volumes = initial_volumes_df.to_csv(
-        'data/volumes_output/initial_volumes.tsv',
+        os_path.join(output_subfolder, 'initial_volumes.tsv'),
         sep='\t',
         header=all_parameters,
         index=False)
 
     normalizer_volumes = normalizer_volumes_df.to_csv(
-        'data/volumes_output/normalizer_volumes.tsv',
+        os_path.join(output_subfolder, 'normalizer_volumes.tsv'),
         sep='\t',
         header=all_parameters,
         index=False)
 
     autofluorescence_volumes = autofluorescence_volumes_df.to_csv(
-        'data/volumes_output/autofluorescence_volumes.tsv',
+        os_path.join(output_subfolder, 'autofluorescence_volumes.tsv'),
         sep='\t',
         header=all_parameters,
         index=False)
@@ -643,6 +653,9 @@ def save_echo_instructions(
 
     if not os_path.exists(output_folder):
         os_mkdir(output_folder)
+    output_subfolder = os_path.join(output_folder, 'echo_instructions')
+    if not os_path.exists(output_subfolder):
+        os_mkdir(output_subfolder)
     output_subfolder_mul = os_path.join(
         output_folder, 'echo_instructions', 'multiple'
     )
