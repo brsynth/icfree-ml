@@ -82,7 +82,8 @@ def main():
         initial_set,
         normalizer_set,
         autolfuorescence_set,
-        all_parameters)
+        all_parameters,
+        args.output_folder)
 
 
 if __name__ == "__main__":
