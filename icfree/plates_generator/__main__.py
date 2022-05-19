@@ -48,11 +48,10 @@ def main():
 
     input_processor_variables = input_processor(input_df)
     n_variable_parameters = input_processor_variables[0]
-    n_ratios = 5
 
     levels_array = levels_array_generator(
         n_variable_parameters,
-        n_ratios,
+        args.doe_ratios,
         seed=args.seed)
 
     maximum_variable_concentrations = input_processor_variables[3]

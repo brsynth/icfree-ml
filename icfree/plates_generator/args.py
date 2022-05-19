@@ -9,6 +9,7 @@ from os import getcwd as os_getcwd
 
 DEFAULT_SEED = randint(0, 1)
 DEFAULT_OUTPUT_FOLDER = os_getcwd()
+DEFAULT_DOE_VALUES = 5
 
 def build_args_parser(
         program,
@@ -36,14 +37,21 @@ def add_arguments(parser):
         '-of', '--output-folder',
         type=str,
         default=DEFAULT_OUTPUT_FOLDER,
-        help='Output folder to write output files',
+        help=f'Output folder to write output files (default: {DEFAULT_OUTPUT_FOLDER})',
+    )
+
+    parser.add_argument(
+        '-r', '--doe-ratios',
+        type=int,
+        default=DEFAULT_DOE_VALUES,
+        help=f'Number of concentration ratios for all factor when performing the DoE (default: {DEFAULT_DOE_VALUES})',
     )
 
     parser.add_argument(
         '-s', '--seed',
         type=int,
         default=DEFAULT_SEED,
-        help='Seed to reproduce results',
+        help=f'Seed to reproduce results (default: {DEFAULT_SEED})',
     )
 
     return parser
