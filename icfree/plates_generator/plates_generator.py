@@ -27,7 +27,8 @@ from pyDOE2 import (
 )
 
 from .args import (
-    DEFAULT_SEED
+    DEFAULT_SEED,
+    DEFAULT_OUTPUT_FOLDER
 )
 
 # from typing import (
@@ -367,7 +368,7 @@ def save_intial_plates(
         normalizer_set_df,
         autolfuorescence_set_df,
         all_parameters,
-        output_folder: str):
+        output_folder: str = DEFAULT_OUTPUT_FOLDER):
     """
     Save Pandas dataframes in tsv files
 
