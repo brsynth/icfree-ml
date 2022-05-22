@@ -7,16 +7,22 @@ from os import (
 )
 
 from numpy import (
+    argmin as np_argmin,
     concatenate,
     array,
-    asarray,
+    asarray as np_asarray,
+    ndarray as np_ndarray,
+    frompyfunc as np_frompyfunc,
+    abs as np_abs,
+    append as np_append,
     arange,
     shape,
     reshape,
     multiply,
     full,
     stack,
-    digitize
+    inf as np_inf,
+    set_printoptions as np_set_printoptions
 )
 
 from pandas import (
@@ -24,22 +30,23 @@ from pandas import (
     DataFrame
 )
 
-from pyDOE2 import (
-    lhs
+from pyDOE2 import lhs
+
+from typing import *
+
+from logging import (
+    Logger,
+    getLogger
 )
 
 from .args import (
     DEFAULT_SEED,
     DEFAULT_OUTPUT_FOLDER,
-    DEFAULT_DOE_VALUES
+    DEFAULT_DOE_NB_CONCENTRATIONS,
+    DEFAULT_DOE_NB_SAMPLES
 )
 
-# from typing import (
-#     Dict,
-#     List,
-#     Tuple
-# )
-
+np_set_printoptions(threshold=np_inf)
 
 def input_importer(cfps_parameters) -> DataFrame:
     """
@@ -116,19 +123,28 @@ def input_processor(cfps_parameters_df: DataFrame):
 
 def levels_array_generator(
         n_variable_parameters,
-        doe_ratios: int = DEFAULT_DOE_VALUES,
-        seed: int = DEFAULT_SEED):
+        doe_nb_concentrations: int = DEFAULT_DOE_NB_CONCENTRATIONS,
+        doe_concentrations: np_ndarray = None,
+        doe_nb_samples: int = DEFAULT_DOE_NB_SAMPLES,
+        seed: int = DEFAULT_SEED,
+        logger: Logger = getLogger(__name__)):
     """
     Generate sampling array.
-    Refactor sampling array with levels values.
+    Refactor sampling array with rounded values.
 
     Parameters
     ----------
     n_variable_parameters : int
         Number of variable parameters.
 
-    doe_ratios : int
+    doe_nb_concentrations : int
         Number of concentration ratios for all factor
+    
+    doe_concentrations: np_ndarray
+        Possible concentration values (between 0.0 and 1.0) for all factors
+    
+    doe_nb_samples: int
+        Number of samples to generate for all factors
 
     seed: int
         Seed-number to controls the seed and random draws
@@ -140,25 +156,28 @@ def levels_array_generator(
     """
     sampling = lhs(
         n_variable_parameters,
-        samples=99,
+        samples=doe_nb_samples,
         criterion='center',
         random_state=seed)
 
-    levels_list = []
+    logger.debug(f'LHS: {sampling}')
 
-    gap = (doe_ratios-1)
-    for sample in sampling:
-        ## Digitize sample values
-        # set bins
-        bins = [x for x in arange(1/gap, 1.0, 1/gap)]+[1.0]
-        # digitize
-        new_sample = digitize(sample, bins=bins)
-        # normalize
-        new_sample = [param / gap for param in new_sample]
+    # Discretize LHS values
+    def rounder(values):
+        def f(x):
+            idx = np_argmin(np_abs(values - x))
+            return values[idx]
+        return np_frompyfunc(f, 1, 1)
+    if doe_concentrations is None:
+        doe_concentrations = np_append(
+            arange(0.0, 1.0, 1/(doe_nb_concentrations-1)),
+            1.0
+        )
+    logger.debug(f'ROUNDED VALUES: {doe_concentrations}')
+    rounded_sampling = rounder(np_asarray(doe_concentrations))(sampling)
+    logger.debug(f'ROUNDED LHS: {rounded_sampling}')
 
-        levels_list.append(new_sample)
-
-    return asarray(levels_list)
+    return np_asarray(rounded_sampling)
 
 
 def variable_concentrations_array_generator(
