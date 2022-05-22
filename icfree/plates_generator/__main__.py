@@ -9,18 +9,11 @@ from .plates_generator import (
     save_intial_plates,
 )
 
-# from brs_utils import (
-#     create_logger
-# )
+from brs_utils import (
+    create_logger
+)
 
 from .args import build_args_parser
-
-# from typing import *
-
-# from logging import (
-#     Logger,
-#     getLogger
-# )
 
 # def check_results(
 #     result_files: Dict,
@@ -40,7 +33,7 @@ def main():
     args = parser.parse_args()
 
     # Create logger
-    # logger = create_logger(parser.prog, args.log)
+    logger = create_logger(parser.prog, args.log)
     # check_results(gg, logger=logger)
 
     input_file = args.cfps
@@ -50,9 +43,12 @@ def main():
     n_variable_parameters = input_processor_variables[0]
 
     levels_array = levels_array_generator(
-        n_variable_parameters,
-        args.doe_ratios,
-        seed=args.seed)
+        n_variable_parameters=n_variable_parameters,
+        doe_nb_concentrations=args.doe_nb_concentrations,
+        doe_concentrations=args.doe_concentrations,
+        doe_nb_samples=args.doe_nb_samples,
+        seed=args.seed,
+        logger=logger)
 
     maximum_variable_concentrations = input_processor_variables[3]
     variable_concentrations_array = variable_concentrations_array_generator(
