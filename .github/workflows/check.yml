@@ -30,4 +30,4 @@ jobs:
         # if: failure()
         with:
           name: Security report
-          path: output/security_report.txt
+          path: security_report.txt
