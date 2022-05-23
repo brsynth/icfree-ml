@@ -27,12 +27,13 @@ jobs:
     steps:
       - name: Checkout package repository
         uses: actions/checkout@v3
-      - name: Set up Python
-        uses: actions/setup-python@v3
+      - name: Deploying miniconda
+        uses: conda-incubator/setup-miniconda@v2
         with:
-          python-version: '3.x'
-      - name: Install dependencies and Run tests
+          miniconda-version: "latest"
+          environment-file: environment.yaml
+          activate-environment: test
+      - name: Building & Testing conda package
         run: |
-          conda env create --file environment.yaml --name test
-          conda run -n test --no-capture-output conda install -c conda-forge -y python pytest pytest-cov pytest-mock
+          conda install -y python pytest pytest-cov pytest-mock
           python -m pytest --cov
