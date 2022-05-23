@@ -33,7 +33,6 @@ jobs:
           python-version: '3.x'
       - name: Install dependencies and Run tests
         run: |
-          # $CONDA is an environment variable pointing to the root of the miniconda directory
-          $CONDA/bin/conda env create --file environment.yaml --name test
-          $CONDA/bin/conda run -n test --no-capture-output conda install -c conda-forge -y python pytest pytest-cov pytest-mock
+          conda env create --file environment.yaml --name test
+          conda run -n test --no-capture-output conda install -c conda-forge -y python pytest pytest-cov pytest-mock
           python -m pytest --cov
