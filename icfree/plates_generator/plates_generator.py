@@ -141,7 +141,10 @@ def levels_array_generator(
         Number of concentration ratios for all factor
     
     doe_concentrations: np_ndarray
-        Possible concentration values (between 0.0 and 1.0) for all factors
+        Possible concentration values (between 0.0 and 1.0) for all factors.
+        If no list is passed, a default list will be built,
+        e.g. if doe_nb_concentrations = 5 the list of considered
+        discrete conentrations will be: 0.0 0.25 0.5 0.75 1.0
     
     doe_nb_samples: int
         Number of samples to generate for all factors
