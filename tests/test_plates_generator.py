@@ -1,4 +1,5 @@
 from unittest import TestCase
+
 from os import path as os_path
 from pickle import load as pickle_load
 from numpy.testing import assert_array_equal
@@ -6,6 +7,7 @@ from numpy import (
     append as np_append,
     arange as np_arange,
 )
+
 from icfree.plates_generator.plates_generator import levels_array_generator
 
 

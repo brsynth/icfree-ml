@@ -20,20 +20,16 @@ jobs:
     strategy:
       matrix:
         os: ["ubuntu", "macos", "windows"]
-    defaults:
-      run:
-        shell: bash -l {0}
 
     steps:
       - name: Checkout package repository
-        uses: actions/checkout@v2
-      - name: Deploying miniconda
-        uses: conda-incubator/setup-miniconda@v2
+        uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v3
         with:
-          miniconda-version: "latest"
-          environment-file: environment.yaml
-          activate-environment: test
-      - name: Installing tools
-        run: conda install -c conda-forge -y python pytest pytest-mock
-      - name: Running tests
-        run: python -m pytest
+          python-version: '3.x'
+      - name: Test with pytest
+        run: |
+          pip install pytest
+          pip install pytest-cov
+          python -m pytest tests --cov
