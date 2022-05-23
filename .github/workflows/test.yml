@@ -33,7 +33,7 @@ jobs:
           miniconda-version: "latest"
           environment-file: environment.yaml
           activate-environment: test
-      - name: Building & Testing conda package
-        run: |
-          conda install -c conda-forge -y python pytest pytest-mock
-          python -m pytest
+      - name: Installing tools
+        run: conda install -c conda-forge -y python pytest pytest-mock
+      - name: Running tests
+        run: python -m pytest
