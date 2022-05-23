@@ -44,6 +44,7 @@ from .args import (
     DEFAULT_DOE_NB_SAMPLES
 )
 
+# To print numpy arrays in full
 np_set_printoptions(threshold=np_inf)
 
 
