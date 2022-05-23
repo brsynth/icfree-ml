@@ -27,6 +27,10 @@ jobs:
     steps:
       - name: Checkout package repository
         uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: '3.x'
       - name: Install dependencies and Run tests
         run: |
           # $CONDA is an environment variable pointing to the root of the miniconda directory
