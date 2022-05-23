@@ -28,9 +28,9 @@ jobs:
         run: pip install flake8
       - name: Lint with flake8
         run: flake8 .
-        continue-on-error: true
+#        continue-on-error: true
       - name: Install bandit
         run: pip install bandit
-      - name: Lint with flake8
+      - name: Check security issues with bandit
         run: bandit .
-        continue-on-error: true
+#        continue-on-error: true

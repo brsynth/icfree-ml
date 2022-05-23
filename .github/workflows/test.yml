@@ -27,11 +27,9 @@ jobs:
     steps:
       - name: Checkout package repository
         uses: actions/checkout@v3
-      - name: Install dependencies
+      - name: Install dependencies and Run tests
         run: |
           # $CONDA is an environment variable pointing to the root of the miniconda directory
           $CONDA/bin/conda env update --file environment.yml --name base
           $CONDA/bin/conda install -c conda-forge -y python pytest pytest-cov pytest-mock
-      - name: Testing
-        run: |
           python -m pytest --cov
