@@ -32,8 +32,6 @@ from pandas import (
 
 from pyDOE2 import lhs
 
-from typing import *
-
 from logging import (
     Logger,
     getLogger
@@ -47,6 +45,7 @@ from .args import (
 )
 
 np_set_printoptions(threshold=np_inf)
+
 
 def input_importer(cfps_parameters) -> DataFrame:
     """
@@ -139,13 +138,13 @@ def levels_array_generator(
 
     doe_nb_concentrations : int
         Number of concentration ratios for all factor
-    
+
     doe_concentrations: np_ndarray
         Possible concentration values (between 0.0 and 1.0) for all factors.
         If no list is passed, a default list will be built,
         e.g. if doe_nb_concentrations = 5 the list of considered
         discrete conentrations will be: 0.0 0.25 0.5 0.75 1.0
-    
+
     doe_nb_samples: int
         Number of samples to generate for all factors
 
@@ -385,7 +384,7 @@ def save_intial_plates(
 
     all_parameters: List
         List of the name of all cfps parameters
-    
+
     output_folder: str
         Path where store output files
     """

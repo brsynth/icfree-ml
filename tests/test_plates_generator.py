@@ -8,6 +8,7 @@ from numpy import (
 )
 from icfree.plates_generator.plates_generator import levels_array_generator
 
+
 class Test(TestCase):
 
     DATA_FOLDER = os_path.join(
@@ -34,7 +35,7 @@ class Test(TestCase):
             os_path.join(
                 self.OUTPUT_FOLDER,
                 'sampling_array.pickle'
-            ), 'rb') as f:
+                ), 'rb') as f:
             ref_sampling_array = pickle_load(f)
         assert_array_equal(
             sampling_array,
@@ -61,7 +62,7 @@ class Test(TestCase):
             os_path.join(
                 self.OUTPUT_FOLDER,
                 'sampling_array.pickle'
-            ), 'rb') as f:
+                ), 'rb') as f:
             ref_sampling_array = pickle_load(f)
         assert_array_equal(
             sampling_array,

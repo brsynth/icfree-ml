@@ -645,7 +645,7 @@ def save_echo_instructions(
             _description_
 
         multiple_echo_instructions_dict: Dict
-            _description_    
+            _description_
 
         output_folder: str
             Path where store output files

@@ -13,6 +13,7 @@ DEFAULT_OUTPUT_FOLDER = os_getcwd()
 DEFAULT_DOE_NB_CONCENTRATIONS = 5
 DEFAULT_DOE_NB_SAMPLES = 99
 
+
 def build_args_parser(
         program,
         description):
@@ -39,28 +40,32 @@ def add_arguments(parser):
         '-of', '--output-folder',
         type=str,
         default=DEFAULT_OUTPUT_FOLDER,
-        help=f'Output folder to write output files (default: {DEFAULT_OUTPUT_FOLDER})',
+        help=('Output folder to write output files'
+              f' (default: {DEFAULT_OUTPUT_FOLDER})')
     )
 
     parser.add_argument(
         '--doe-nb-concentrations',
         type=int,
         default=DEFAULT_DOE_NB_CONCENTRATIONS,
-        help=f'Number of concentration values for all factors when performing the DoE (default: {DEFAULT_DOE_NB_CONCENTRATIONS})',
+        help=('Number of concentration values for all factors when performing'
+              f' the DoE (default: {DEFAULT_DOE_NB_CONCENTRATIONS})')
     )
 
     parser.add_argument(
         '--doe-concentrations',
         nargs='+',
         type=float,
-        help=f'Concentration values (between 0.0 and 1.0) for all factors when performing the DoE',
+        help=('Concentration values (between 0.0 and 1.0)'
+              ' for all factors when performing the DoE')
     )
 
     parser.add_argument(
         '--doe-nb-samples',
         type=int,
         default=DEFAULT_DOE_NB_SAMPLES,
-        help=f'Number of samples to generate for all factors when performing the DoE (default: {DEFAULT_DOE_NB_SAMPLES})',
+        help=('Number of samples to generate for all factors'
+              f' when performing the DoE (default: {DEFAULT_DOE_NB_SAMPLES})')
     )
 
     parser.add_argument(
