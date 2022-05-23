@@ -1,6 +1,6 @@
 name: icfree-ml
 channels:
-  - defaults
+  - conda-forge
 dependencies:
   - numpy
   - pandas

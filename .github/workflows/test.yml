@@ -27,7 +27,6 @@ jobs:
     steps:
       - name: Checkout package repository
         uses: actions/checkout@v2
-
       - name: Deploying miniconda
         uses: conda-incubator/setup-miniconda@v2
         with:
