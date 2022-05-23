@@ -24,16 +24,16 @@ jobs:
       - name: Updating conda
         run: conda update --all -y
       - name: Installing make
-        run: conda install -y make
-      - name: Checkout CI/CD Toolkit
-        uses: actions/checkout@v2
-        with:
-          repository: breakthewall/cicd-toolkit
-          path: cicd-toolkit
-          persist-credentials: false
-          fetch-depth: 0
-      - name: Checking package
+        run: conda install -c conda-forge -y flake8 bandit
+      - name: Running flake
         run: |
-          cd cicd-toolkit
-          make check-buildenv env=check
-          conda run -n check make check
+          # stop the build if there are Python syntax errors or undefined names
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+          flake8 . --count --ignore=E272,E501,E266,E241,E226,E251,E303,E221 --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+          # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+          flake8 . --count --ignore=E272,E501,E266,E241,E226,E251,E303,E221,E122,E211,E302 --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+      - name: Running bandit
+        run: |
+          	# -lll to only catch the higher level security issues
+	          bandit -r -lll .
