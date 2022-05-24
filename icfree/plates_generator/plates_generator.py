@@ -68,32 +68,52 @@ def input_importer(cfps_parameters) -> DataFrame:
     return cfps_parameters_df
 
 
-def input_processor(cfps_parameters_df: DataFrame):
+def input_processor(cfps_parameters_df: DataFrame, logger: Logger = getLogger(__name__)):
     """
     Determine variable and fixed parameters, and maximum concentrations.
 
     Parameters
     ----------
-    input_df : 2d-array
+    input_df: 2d-array
         N-by-samples array where values are uniformly spaced between 0 and 1.
 
     Returns
     -------
-    fixed_parameters : 1d-array
-        N-fixed-parameters array with all of the fixed parameters names.
+    parameters: dict
+        Dictionnary of parameters.
+        First level is indexed on 'Status' column.
+        Second level is indexed on 'Parameter' column.
 
-    variable_parameters : 1d-array
-        N-variable-parameters array with all of the variable parameters names.
+    # fixed_parameters: 1d-array
+    #     N-fixed-parameters array with all of the fixed parameters names.
 
-    n_variable_parameters : int
-        Number of variable parameters.
+    # variable_parameters: 1d-array
+    #     N-variable-parameters array with all of the variable parameters names.
 
-    maximum_variable_concentrations : 1d-array
-        N-maximum-concentrations array with variable concentrations values.
+    # n_variable_parameters: int
+    #     Number of variable parameters.
 
-    maximum_fixed_concentrations : list
-        N-maximum-concentrations list with fixed concentrations values.
+    # maximum_variable_concentrations: 1d-array
+    #     N-maximum-concentrations array with variable concentrations values.
+
+    # maximum_fixed_concentrations: list
+    #     N-maximum-concentrations list with fixed concentrations values.
     """
+    parameters = {}
+
+    # For each different value of 'Status' column
+    for status in cfps_parameters_df['Status'].unique():
+        # Create a dict indexed on 'Parameter' value
+        parameters[status] = cfps_parameters_df[
+            cfps_parameters_df['Status'] == status
+        ].loc[
+            :, cfps_parameters_df.columns!='Status'
+        ].set_index('Parameter').T.to_dict('dict')
+
+    logger.debug(f'PARAMETERS: {parameters}')
+
+    return parameters
+
     for status in cfps_parameters_df.columns:
 
         if (cfps_parameters_df[status] == 'fixed').any():
@@ -122,12 +142,13 @@ def input_processor(cfps_parameters_df: DataFrame):
 
 
 def levels_array_generator(
-        n_variable_parameters,
-        doe_nb_concentrations: int = DEFAULT_DOE_NB_CONCENTRATIONS,
-        doe_concentrations: np_ndarray = None,
-        doe_nb_samples: int = DEFAULT_DOE_NB_SAMPLES,
-        seed: int = DEFAULT_SEED,
-        logger: Logger = getLogger(__name__)):
+    n_variable_parameters,
+    doe_nb_concentrations: int = DEFAULT_DOE_NB_CONCENTRATIONS,
+    doe_concentrations: np_ndarray = None,
+    doe_nb_samples: int = DEFAULT_DOE_NB_SAMPLES,
+    seed: int = DEFAULT_SEED,
+    logger: Logger = getLogger(__name__)
+):
     """
     Generate sampling array.
     Refactor sampling array with rounded values.
@@ -202,10 +223,10 @@ def variable_concentrations_array_generator(
     variable_concentrations_array : 2d-array
         N-by-samples array with variable concentrations values for each factor.
     """
-    variable_concentrations_array = multiply(
+    return multiply(
         levels_array,
-        maximum_variable_concentrations)
-    return variable_concentrations_array
+        maximum_variable_concentrations
+    )
 
 
 def fixed_concentrations_array_generator(
@@ -299,9 +320,11 @@ def fixed_concentrations_array_generator(
 
 
 def initial_plates_generator(
-        variable_concentrations_array,
-        fixed_concentrations_array,
-        input_df):
+    variable_concentrations_array,
+    fixed_concentrations_array,
+    input_df,
+    logger: Logger = getLogger(__name__)
+):
     """
     Concatenate variable and fixed concentrations array with control array.
 
@@ -341,21 +364,32 @@ def initial_plates_generator(
     #         maximum_concentrations_sample),
     #     axis=0)
 
+    all_parameters = input_df['Parameter'].tolist()
+    logger.debug(f'PARAMETERS: {all_parameters}')
+
     initial_set_array = concatenate(
         (variable_concentrations_array,
             fixed_concentrations_array,),
         axis=1)
-
     initial_set_df = DataFrame(initial_set_array)
+    logger.debug(f'INITIAL SET: {initial_set_df}')
 
     normalizer_set_df = initial_set_df.copy()
-    all_parameters = input_df['Parameter'].tolist()
     normalizer_set_df.columns = all_parameters
     normalizer_set_df['GOI-DNA'] = normalizer_set_df['GOI-DNA']*0
+    logger.debug(f'NORMALIZER SET: {normalizer_set_df}')
 
     autofluorescence_set_df = normalizer_set_df.copy()
     autofluorescence_set_df.columns = all_parameters
     autofluorescence_set_df['GFP-DNA'] = normalizer_set_df['GFP-DNA']*0
+    logger.debug(f'BACKGROUND SET: {autofluorescence_set_df}')
+
+    return {
+        'parameters': all_parameters,
+        'initial': initial_set_df,
+        'normalizer': normalizer_set_df,
+        'background': autofluorescence_set_df
+    }
 
     return (initial_set_df,
             normalizer_set_df,
