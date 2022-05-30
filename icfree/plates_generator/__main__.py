@@ -48,9 +48,6 @@ def main():
         logger=logger
     )
 
-    # from numpy import asarray
-    # partial_levels = asarray([[0., 0.], [0., 1.], [1., 1.]])
-
     ## Convert into concentrations
     # read the maximum concentration for each variable parameter
     max_conc = [
@@ -58,26 +55,20 @@ def main():
         for v in parameters['doe'].values()
     ]
     # convert
-    doe_concentrations_array = levels_to_concentrations(
+    doe_concentrations = levels_to_concentrations(
         doe_levels,
         max_conc,
         logger=logger
     )
+
+    ## Generate plate
     # read the maximum concentration for each fixed parameter
     partial_max_conc = [
         v['Maximum concentration']
         for v in parameters['partial'].values()
     ]
-    # # convert
-    # partial_concentrations_array = levels_to_concentrations(
-    #     partial_levels,
-    #     max_conc,
-    #     logger=logger
-    # )
-
-    ## Generate plate
     plates = plates_generator(
-        doe_concentrations_array,
+        doe_concentrations,
         partial_max_conc,
         input_df,
         logger=logger

@@ -7,6 +7,8 @@ from os import (
 )
 
 from numpy import (
+    round as np_round,
+    double as np_double,
     argmin as np_argmin,
     concatenate,
     array,
@@ -19,8 +21,6 @@ from numpy import (
     shape,
     reshape,
     multiply,
-    full,
-    stack,
     inf as np_inf,
     set_printoptions as np_set_printoptions
 )
@@ -208,6 +208,7 @@ def doe_levels_generator(
 def levels_to_concentrations(
     levels_array,
     maximum_concentrations,
+    decimals: int = 3,
     logger: Logger = getLogger(__name__)
 ):
     """
@@ -223,16 +224,21 @@ def levels_to_concentrations(
 
     Returns
     -------
-    concentrations_array : 2d-array
+    concentrations : 2d-array
         N-by-samples array with concentrations values for each factor.
     """
     logger.debug(f'LEVELS ARRAY:\n{levels_array}')
     logger.debug(f'MAXIMUM CONCENTRATIONS:\n{maximum_concentrations}')
-    return multiply(
+    concentrations = multiply(
         levels_array,
         maximum_concentrations
     )
-
+    concentrations =  np_round(
+        concentrations.astype(np_double),
+        decimals
+    )
+    logger.debug(f'CONCENTRATIONS:\n{concentrations}')
+    return concentrations
 
 # def fixed_concentrations_array_generator(
 #         variable_concentrations_array,
