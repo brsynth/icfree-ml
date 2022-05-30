@@ -2,11 +2,10 @@ import sys
 from .plates_generator import (
     input_importer,
     input_processor,
-    levels_array_generator,
-    variable_concentrations_array_generator,
-    fixed_concentrations_array_generator,
-    initial_plates_generator,
-    save_intial_plates,
+    doe_levels_generator,
+    levels_to_concentrations,
+    plates_generator,
+    save_plates,
 )
 
 from brs_utils import (
@@ -36,12 +35,12 @@ def main():
     logger = create_logger(parser.prog, args.log)
 
     ## Read input file
-    input_df = input_importer(args.cfps)
+    input_df = input_importer(args.cfps, logger=logger)
     parameters = input_processor(input_df, logger=logger)
 
     ## Process to the sampling
-    levels_array = levels_array_generator(
-        n_variable_parameters=len(parameters['variable']),
+    doe_levels = doe_levels_generator(
+        n_variable_parameters=len(parameters['doe']),
         doe_nb_concentrations=args.doe_nb_concentrations,
         doe_concentrations=args.doe_concentrations,
         doe_nb_samples=args.doe_nb_samples,
@@ -49,42 +48,47 @@ def main():
         logger=logger
     )
 
+    # from numpy import asarray
+    # partial_levels = asarray([[0., 0.], [0., 1.], [1., 1.]])
+
     ## Convert into concentrations
     # read the maximum concentration for each variable parameter
-    max_variable_con = [
+    max_conc = [
         v['Maximum concentration']
-        for v in parameters['variable'].values()
+        for v in parameters['doe'].values()
     ]
     # convert
-    variable_concentrations_array = variable_concentrations_array_generator(
-        levels_array,
-        max_variable_con
+    doe_concentrations_array = levels_to_concentrations(
+        doe_levels,
+        max_conc,
+        logger=logger
     )
     # read the maximum concentration for each fixed parameter
-    max_fixed_conc = [
+    partial_max_conc = [
         v['Maximum concentration']
-        for v in parameters['fixed'].values()
+        for v in parameters['partial'].values()
     ]
-    # convert
-    fixed_concentrations_array = fixed_concentrations_array_generator(
-        variable_concentrations_array,
-        max_fixed_conc
-    )
+    # # convert
+    # partial_concentrations_array = levels_to_concentrations(
+    #     partial_levels,
+    #     max_conc,
+    #     logger=logger
+    # )
 
     ## Generate plate
-    plates_generator = initial_plates_generator(
-        variable_concentrations_array,
-        fixed_concentrations_array,
+    plates = plates_generator(
+        doe_concentrations_array,
+        partial_max_conc,
         input_df,
         logger=logger
     )
 
     ## Write to disk
-    save_intial_plates(
-        plates_generator['initial'],
-        plates_generator['normalizer'],
-        plates_generator['background'],
-        plates_generator['parameters'],
+    save_plates(
+        plates['initial'],
+        plates['normalizer'],
+        plates['background'],
+        plates['parameters'],
         args.output_folder
     )
 

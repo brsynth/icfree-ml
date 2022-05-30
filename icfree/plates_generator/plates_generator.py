@@ -48,7 +48,7 @@ from .args import (
 np_set_printoptions(threshold=np_inf)
 
 
-def input_importer(cfps_parameters) -> DataFrame:
+def input_importer(cfps_parameters, logger: Logger = getLogger(__name__)) -> DataFrame:
     """
     Import tsv input into a dataframe
 
@@ -65,6 +65,7 @@ def input_importer(cfps_parameters) -> DataFrame:
     cfps_parameters_df = read_csv(
                         cfps_parameters,
                         sep='\t')
+    logger.debug(f'CFPs parameters dataframe: {cfps_parameters_df}')
     return cfps_parameters_df
 
 
@@ -141,7 +142,7 @@ def input_processor(cfps_parameters_df: DataFrame, logger: Logger = getLogger(__
             variable_parameters)
 
 
-def levels_array_generator(
+def doe_levels_generator(
     n_variable_parameters,
     doe_nb_concentrations: int = DEFAULT_DOE_NB_CONCENTRATIONS,
     doe_concentrations: np_ndarray = None,
@@ -197,74 +198,78 @@ def levels_array_generator(
             arange(0.0, 1.0, 1/(doe_nb_concentrations-1)),
             1.0
         )
-    logger.debug(f'ROUNDED VALUES: {doe_concentrations}')
+    logger.debug(f'ROUNDED VALUES:\n{doe_concentrations}')
     rounded_sampling = rounder(np_asarray(doe_concentrations))(sampling)
-    logger.debug(f'ROUNDED LHS: {rounded_sampling}')
+    logger.debug(f'ROUNDED LHS:\n{rounded_sampling}')
 
     return np_asarray(rounded_sampling)
 
 
-def variable_concentrations_array_generator(
-        levels_array,
-        maximum_variable_concentrations):
+def levels_to_concentrations(
+    levels_array,
+    maximum_concentrations,
+    logger: Logger = getLogger(__name__)
+):
     """
-    Multiply levels array by maximum variable concentrations array.
+    Multiply levels array by maximum concentrations array.
 
     Parameters
     ----------
     levels_array : 2d-array
         N-by-samples array with uniformly spaced values between 0 and 1.
 
-    maximum_variable_concentrations : 1d-array
+    maximum_concentrations : 1d-array
         N-maximum-concentrations array with values for each variable factor.
 
     Returns
     -------
-    variable_concentrations_array : 2d-array
-        N-by-samples array with variable concentrations values for each factor.
+    concentrations_array : 2d-array
+        N-by-samples array with concentrations values for each factor.
     """
+    logger.debug(f'LEVELS ARRAY:\n{levels_array}')
+    logger.debug(f'MAXIMUM CONCENTRATIONS:\n{maximum_concentrations}')
     return multiply(
         levels_array,
-        maximum_variable_concentrations
+        maximum_concentrations
     )
 
 
-def fixed_concentrations_array_generator(
-        variable_concentrations_array,
-        maximum_fixed_concentrations):
-    """
-    Generate fixed concentrations array
+# def fixed_concentrations_array_generator(
+#         variable_concentrations_array,
+#         maximum_fixed_concentrations):
+#     """
+#     Generate fixed concentrations array
 
-    Parameters
-    ----------
-    variable_concentrations_array : 2d-array
-        N-by-samples array with variable concentrations values for each factor.
+#     Parameters
+#     ----------
+#     variable_concentrations_array : 2d-array
+#         N-by-samples array with variable concentrations values for each factor.
 
-    maximum_fixed_concentrations : list
-        N-maximum-concentrations list with values for each variable factor.
+#     maximum_fixed_concentrations : list
+#         N-maximum-concentrations list with values for each variable factor.
 
-    Returns
-    -------
-    fixed_concentrations_array : 2d-array
-        N-by-samples array with fixed concentrations values for each factor.
-    """
-    nrows_variable_concentrations_array = shape(
-        variable_concentrations_array)[0]
+#     Returns
+#     -------
+#     fixed_concentrations_array : 2d-array
+#         N-by-samples array with fixed concentrations values for each factor.
+#     """
+#     nrows_variable_concentrations_array = shape(
+#         variable_concentrations_array)[0]
 
-    fixed_concentrations_array_list = []
+#     fixed_concentrations_array_list = []
 
-    for maximum_fixed_concentration in maximum_fixed_concentrations:
-        fixed_concentrations_array = full(
-            nrows_variable_concentrations_array,
-            maximum_fixed_concentration)
+#     for maximum_fixed_concentration in maximum_fixed_concentrations:
+#         fixed_concentrations_array = full(
+#             nrows_variable_concentrations_array,
+#             maximum_fixed_concentration)
 
-        fixed_concentrations_array_list.append(
-            fixed_concentrations_array)
+#         fixed_concentrations_array_list.append(
+#             fixed_concentrations_array)
 
-    fixed_concentrations_array = stack(
-        fixed_concentrations_array_list, axis=-1)
+#     fixed_concentrations_array = stack(
+#         fixed_concentrations_array_list, axis=-1)
 
-    return fixed_concentrations_array
+#     return fixed_concentrations_array
 
 
 # def maximum_concentrations_sample_generator(input_df):
@@ -319,9 +324,9 @@ def fixed_concentrations_array_generator(
 #     return control_concentrations_array
 
 
-def initial_plates_generator(
-    variable_concentrations_array,
-    fixed_concentrations_array,
+def plates_generator(
+    doe_concentrations,
+    partial_concentrations,
     input_df,
     logger: Logger = getLogger(__name__)
 ):
@@ -330,10 +335,10 @@ def initial_plates_generator(
 
     Parameters
     ----------
-    variable_concentrations_array : 2d-array
+    doe_concentrations : 2d-array
         N-by-samples array with variable concentrations values for each factor.
 
-    fixed_concentrations_array : 2d-array
+    partial_concentrations : 2d-array
         N-fixed-concentrations array with values for each factor.
 
     maximum_concentrations_sample : 1d-array
@@ -364,25 +369,30 @@ def initial_plates_generator(
     #         maximum_concentrations_sample),
     #     axis=0)
 
+    initial_set_array = [
+        concatenate((concentrations, partial_concentrations))
+        for concentrations in doe_concentrations
+    ]
+
     all_parameters = input_df['Parameter'].tolist()
-    logger.debug(f'PARAMETERS: {all_parameters}')
+    logger.debug(f'PARAMETERS:\n{all_parameters}')
 
-    initial_set_array = concatenate(
-        (variable_concentrations_array,
-            fixed_concentrations_array,),
-        axis=1)
+    # Create initial set with partial concentrations
     initial_set_df = DataFrame(initial_set_array)
-    logger.debug(f'INITIAL SET: {initial_set_df}')
+    initial_set_df.columns = all_parameters
+    logger.debug(f'INITIAL SET:\n{initial_set_df}')
 
+    # Create normalizer set with GOI to 0
     normalizer_set_df = initial_set_df.copy()
     normalizer_set_df.columns = all_parameters
     normalizer_set_df['GOI-DNA'] = normalizer_set_df['GOI-DNA']*0
-    logger.debug(f'NORMALIZER SET: {normalizer_set_df}')
+    logger.debug(f'NORMALIZER SET:\n{normalizer_set_df}')
 
+    # Create normalizer set with GFP to 0
     autofluorescence_set_df = normalizer_set_df.copy()
     autofluorescence_set_df.columns = all_parameters
     autofluorescence_set_df['GFP-DNA'] = normalizer_set_df['GFP-DNA']*0
-    logger.debug(f'BACKGROUND SET: {autofluorescence_set_df}')
+    logger.debug(f'BACKGROUND SET:\n{autofluorescence_set_df}')
 
     return {
         'parameters': all_parameters,
@@ -391,13 +401,8 @@ def initial_plates_generator(
         'background': autofluorescence_set_df
     }
 
-    return (initial_set_df,
-            normalizer_set_df,
-            autofluorescence_set_df,
-            all_parameters)
 
-
-def save_intial_plates(
+def save_plates(
         initial_set_df,
         normalizer_set_df,
         autofluorescence_set_df,
