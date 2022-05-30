@@ -24,17 +24,17 @@ from numpy import (
     inf as np_inf,
     set_printoptions as np_set_printoptions
 )
-
 from pandas import (
     read_csv,
     DataFrame
 )
-
 from pyDOE2 import lhs
-
 from logging import (
     Logger,
     getLogger
+)
+from typing import (
+    Dict
 )
 
 from .args import (
@@ -48,7 +48,10 @@ from .args import (
 np_set_printoptions(threshold=np_inf)
 
 
-def input_importer(cfps_parameters, logger: Logger = getLogger(__name__)) -> DataFrame:
+def input_importer(
+    cfps_parameters,
+    logger: Logger = getLogger(__name__)
+) -> DataFrame:
     """
     Import tsv input into a dataframe
 
@@ -69,7 +72,10 @@ def input_importer(cfps_parameters, logger: Logger = getLogger(__name__)) -> Dat
     return cfps_parameters_df
 
 
-def input_processor(cfps_parameters_df: DataFrame, logger: Logger = getLogger(__name__)):
+def input_processor(
+    cfps_parameters_df: DataFrame,
+    logger: Logger = getLogger(__name__)
+) -> Dict:
     """
     Determine variable and fixed parameters, and maximum concentrations.
 
@@ -84,21 +90,6 @@ def input_processor(cfps_parameters_df: DataFrame, logger: Logger = getLogger(__
         Dictionnary of parameters.
         First level is indexed on 'Status' column.
         Second level is indexed on 'Parameter' column.
-
-    # fixed_parameters: 1d-array
-    #     N-fixed-parameters array with all of the fixed parameters names.
-
-    # variable_parameters: 1d-array
-    #     N-variable-parameters array with all of the variable parameters names.
-
-    # n_variable_parameters: int
-    #     Number of variable parameters.
-
-    # maximum_variable_concentrations: 1d-array
-    #     N-maximum-concentrations array with variable concentrations values.
-
-    # maximum_fixed_concentrations: list
-    #     N-maximum-concentrations list with fixed concentrations values.
     """
     parameters = {}
 
@@ -108,7 +99,7 @@ def input_processor(cfps_parameters_df: DataFrame, logger: Logger = getLogger(__
         parameters[status] = cfps_parameters_df[
             cfps_parameters_df['Status'] == status
         ].loc[
-            :, cfps_parameters_df.columns!='Status'
+            :, cfps_parameters_df.columns != 'Status'
         ].set_index('Parameter').T.to_dict('dict')
 
     logger.debug(f'PARAMETERS: {parameters}')
@@ -233,101 +224,12 @@ def levels_to_concentrations(
         levels_array,
         maximum_concentrations
     )
-    concentrations =  np_round(
+    concentrations = np_round(
         concentrations.astype(np_double),
         decimals
     )
     logger.debug(f'CONCENTRATIONS:\n{concentrations}')
     return concentrations
-
-# def fixed_concentrations_array_generator(
-#         variable_concentrations_array,
-#         maximum_fixed_concentrations):
-#     """
-#     Generate fixed concentrations array
-
-#     Parameters
-#     ----------
-#     variable_concentrations_array : 2d-array
-#         N-by-samples array with variable concentrations values for each factor.
-
-#     maximum_fixed_concentrations : list
-#         N-maximum-concentrations list with values for each variable factor.
-
-#     Returns
-#     -------
-#     fixed_concentrations_array : 2d-array
-#         N-by-samples array with fixed concentrations values for each factor.
-#     """
-#     nrows_variable_concentrations_array = shape(
-#         variable_concentrations_array)[0]
-
-#     fixed_concentrations_array_list = []
-
-#     for maximum_fixed_concentration in maximum_fixed_concentrations:
-#         fixed_concentrations_array = full(
-#             nrows_variable_concentrations_array,
-#             maximum_fixed_concentration)
-
-#         fixed_concentrations_array_list.append(
-#             fixed_concentrations_array)
-
-#     fixed_concentrations_array = stack(
-#         fixed_concentrations_array_list, axis=-1)
-
-#     return fixed_concentrations_array
-
-
-# def maximum_concentrations_sample_generator(input_df):
-#     """
-#     Generate control sample with all factors at maximum concentration
-
-#     Parameters
-#     ----------
-#     input_df : dataframe
-#         User csv input imported into a dataframe.
-
-#     Returns
-#     -------
-#     maximum_concentrations_sample : 1d-array
-#         N-maximum-concentrations array with values for all factor.
-#     """
-
-#     maximum_concentrations_dict = dict(
-#         input_df[['Parameter', 'Maximum concentration']].to_numpy())
-#     maximum_concentrations_sample = fromiter(
-#         maximum_concentrations_dict.values(),
-#         dtype=float)
-
-#     nrows_maximum_concentrations_sample = shape(
-#         maximum_concentrations_sample)[0]
-
-#     maximum_concentrations_sample = reshape(
-#         maximum_concentrations_sample,
-#         (1, nrows_maximum_concentrations_sample))
-
-#     return maximum_concentrations_sample
-
-
-# def control_concentrations_array_generator():
-#     """
-#     Concatenate all control samples into a single array
-#     Template in case more controls are needed
-#
-#     Parameters
-#     ----------
-#     maximum_concentrations_sample : 1d-array
-#         N-maximum-concentrations array with maximum concentrations values.
-#
-#     Returns
-#     -------
-#     control_concentrations_array : nd-array
-#         N-by-samples array. Concatenation of all control samples.
-#     """
-
-#     control_concentrations_array = concatenate(
-#         (), axis=0)
-#     return control_concentrations_array
 
 
 def plates_generator(

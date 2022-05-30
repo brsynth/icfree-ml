@@ -31,14 +31,14 @@ def main():
 
     args = parser.parse_args()
 
-    # Create logger
+    # CREATE LOGGER
     logger = create_logger(parser.prog, args.log)
 
-    ## Read input file
+    # READ INPUT FILE
     input_df = input_importer(args.cfps, logger=logger)
     parameters = input_processor(input_df, logger=logger)
 
-    ## Process to the sampling
+    # PROCESS TO THE SAMPLING
     doe_levels = doe_levels_generator(
         n_variable_parameters=len(parameters['doe']),
         doe_nb_concentrations=args.doe_nb_concentrations,
@@ -48,21 +48,21 @@ def main():
         logger=logger
     )
 
-    ## Convert into concentrations
-    # read the maximum concentration for each variable parameter
+    # CONVERT INTO CONENTRATIONS
+    # Read the maximum concentration for each variable parameter
     max_conc = [
         v['Maximum concentration']
         for v in parameters['doe'].values()
     ]
-    # convert
+    # Convert
     doe_concentrations = levels_to_concentrations(
         doe_levels,
         max_conc,
         logger=logger
     )
 
-    ## Generate plate
-    # read the maximum concentration for each fixed parameter
+    # GENERATE PLATE
+    # Read the maximum concentration for each fixed parameter
     partial_max_conc = [
         v['Maximum concentration']
         for v in parameters['partial'].values()
@@ -74,7 +74,7 @@ def main():
         logger=logger
     )
 
-    ## Write to disk
+    # Write to disk
     save_plates(
         plates['initial'],
         plates['normalizer'],
