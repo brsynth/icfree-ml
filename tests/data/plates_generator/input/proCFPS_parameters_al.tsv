@@ -1,0 +1,20 @@
+Parameter	Status	Maximum concentration	Stock concentration
+Mg-glutamate	variable	4	168
+k-glutamate	variable	80	3360
+CoA	variable	0.26	210
+3-PGA	variable	30	1400
+NTP	variable	1.5	630
+NAD	variable	0.33	138.6
+Folinic acid	variable	0.068	28.56
+Spermidine	variable	1	420
+tRNA	variable	0.2	84
+Amino acids	variable	1.5	6
+Extract	fixed	30	30
+CAMP                   variable               0.75                   200
+HEPES	fixed	50	2100
+GFP-DNA	fixed	50	300
+PEG                    fixed                  2                      200
+Promoter	fixed	10	300
+RBS                    fixed                  10                     200
+
+
