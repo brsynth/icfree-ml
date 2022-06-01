@@ -2,11 +2,10 @@ import sys
 from .plates_generator import (
     input_importer,
     input_processor,
-    levels_array_generator,
-    variable_concentrations_array_generator,
-    fixed_concentrations_array_generator,
-    initial_plates_generator,
-    save_intial_plates,
+    doe_levels_generator,
+    levels_to_concentrations,
+    plates_generator,
+    save_plates,
 )
 
 from brs_utils import (
@@ -32,53 +31,57 @@ def main():
 
     args = parser.parse_args()
 
-    # Create logger
+    # CREATE LOGGER
     logger = create_logger(parser.prog, args.log)
-    # check_results(gg, logger=logger)
 
-    input_file = args.cfps
-    input_df = input_importer(input_file)
+    # READ INPUT FILE
+    input_df = input_importer(args.cfps, logger=logger)
+    parameters = input_processor(input_df, logger=logger)
 
-    input_processor_variables = input_processor(input_df)
-    n_variable_parameters = input_processor_variables[0]
-
-    levels_array = levels_array_generator(
-        n_variable_parameters=n_variable_parameters,
+    # PROCESS TO THE SAMPLING
+    doe_levels = doe_levels_generator(
+        n_variable_parameters=len(parameters['doe']),
         doe_nb_concentrations=args.doe_nb_concentrations,
         doe_concentrations=args.doe_concentrations,
         doe_nb_samples=args.doe_nb_samples,
         seed=args.seed,
-        logger=logger)
+        logger=logger
+    )
 
-    maximum_variable_concentrations = input_processor_variables[3]
-    variable_concentrations_array = variable_concentrations_array_generator(
-                                    levels_array,
-                                    maximum_variable_concentrations)
+    # CONVERT INTO CONENTRATIONS
+    # Read the maximum concentration for each variable parameter
+    max_conc = [
+        v['Maximum concentration']
+        for v in parameters['doe'].values()
+    ]
+    # Convert
+    doe_concentrations = levels_to_concentrations(
+        doe_levels,
+        max_conc,
+        logger=logger
+    )
 
-    maximum_fixed_concentrations = input_processor_variables[1]
-    fixed_concentrations_array = fixed_concentrations_array_generator(
-                                variable_concentrations_array,
-                                maximum_fixed_concentrations)
+    # GENERATE PLATE
+    # Read the maximum concentration for each fixed parameter
+    partial_max_conc = [
+        v['Maximum concentration']
+        for v in parameters['partial'].values()
+    ]
+    plates = plates_generator(
+        doe_concentrations,
+        partial_max_conc,
+        input_df,
+        logger=logger
+    )
 
-    # maximum_concentrations_sample = maximum_concentrations_sample_generator(
-    #                             input_df)[0]
-
-    initial_plates_generator_variables = initial_plates_generator(
-        variable_concentrations_array,
-        fixed_concentrations_array,
-        input_df)
-
-    initial_set = initial_plates_generator_variables[0]
-    normalizer_set = initial_plates_generator_variables[1]
-    autofluorescence_set = initial_plates_generator_variables[2]
-    all_parameters = initial_plates_generator_variables[3]
-
-    save_intial_plates(
-        initial_set,
-        normalizer_set,
-        autofluorescence_set,
-        all_parameters,
-        args.output_folder)
+    # Write to disk
+    save_plates(
+        plates['initial'],
+        plates['normalizer'],
+        plates['background'],
+        plates['parameters'],
+        args.output_folder
+    )
 
 
 if __name__ == "__main__":
