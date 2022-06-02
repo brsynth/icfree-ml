@@ -163,7 +163,7 @@ def volumes_array_generator(
         dtype=float)
 
     stock_concentrations_df = \
-        round(sample_volume / stock_concentrations_df / 2.5)
+        round(sample_volume / stock_concentrations_df / 2.5, 0)
 
     initial_volumes_df = (multiply(
         initial_concentrations_df,
