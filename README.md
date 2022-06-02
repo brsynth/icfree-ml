@@ -31,9 +31,8 @@ Running echo_instructor from the CLI
 python -m icfree.echo_instructor 
 <cfps-parameters tsv file> \ 
 <initial_training_set tsv file> \ 
-<normalizer_set tsv file> \ 
-<autofluorescence_set tsv file> \ 
-<sample_volume> 
+-v <sample_volume> \
+-of <output_folder>
 ~~~
 
 # Authors
