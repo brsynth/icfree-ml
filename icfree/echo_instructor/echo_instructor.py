@@ -689,8 +689,8 @@ def save_echo_instructions(
     output_subfolder_mul = os_path.join(
         output_folder, 'echo_instructions', 'multiple'
     )
-    # if not os_path.exists(output_subfolder_mul):
-    #     os_mkdir(output_subfolder_mul)
+    if not os_path.exists(output_subfolder_mul):
+        os_mkdir(output_subfolder_mul)
     # output_subfolder_sin = os_path.join(
     #     output_folder, 'echo_instructions', 'single'
     # )
