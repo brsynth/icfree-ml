@@ -8,31 +8,36 @@ from os import (
 
 from numpy import (
     round as np_round,
-    double as np_double,
     argmin as np_argmin,
-    concatenate,
-    array,
+    concatenate as np_concatenate,
     asarray as np_asarray,
-    ndarray as np_ndarray,
     frompyfunc as np_frompyfunc,
-    abs as np_abs,
     append as np_append,
-    arange,
-    shape,
-    reshape,
-    multiply,
+    arange as np_arange,
+    set_printoptions as np_set_printoptions,
+    double as np_double,
+    abs as np_abs,
+    multiply as np_multiply,
     inf as np_inf,
-    set_printoptions as np_set_printoptions
+    ndarray as np_ndarray,
+    full as np_full,
+    shape as np_shape
 )
+
 from pandas import (
     read_csv,
     DataFrame
 )
-from pyDOE2 import lhs
+
+from pyDOE2 import (
+    lhs
+)
+
 from logging import (
     Logger,
     getLogger
 )
+
 from typing import (
     Dict
 )
@@ -68,7 +73,9 @@ def input_importer(
     cfps_parameters_df = read_csv(
                         cfps_parameters,
                         sep='\t')
+
     logger.debug(f'CFPs parameters dataframe: {cfps_parameters_df}')
+
     return cfps_parameters_df
 
 
@@ -105,32 +112,6 @@ def input_processor(
     logger.debug(f'PARAMETERS: {parameters}')
 
     return parameters
-
-    for status in cfps_parameters_df.columns:
-
-        if (cfps_parameters_df[status] == 'fixed').any():
-            fixed_parameters = cfps_parameters_df[
-                cfps_parameters_df['Status'] == 'fixed']
-            maximum_fixed_concentrations = list(
-                fixed_parameters['Maximum concentration'])
-            fixed_parameters = array(fixed_parameters['Parameter'])
-
-        if (cfps_parameters_df[status] == 'variable').any():
-            variable_parameters = cfps_parameters_df[
-                cfps_parameters_df['Status'] == 'variable']
-            maximum_variable_concentrations = array(
-                variable_parameters['Maximum concentration'])
-            variable_parameters = array(variable_parameters['Parameter'])
-            n_variable_parameters = shape(variable_parameters)[0]
-            maximum_variable_concentrations = reshape(
-                maximum_variable_concentrations,
-                (1, n_variable_parameters))
-
-    return (n_variable_parameters,
-            maximum_fixed_concentrations,
-            fixed_parameters,
-            maximum_variable_concentrations,
-            variable_parameters)
 
 
 def doe_levels_generator(
@@ -186,7 +167,7 @@ def doe_levels_generator(
         return np_frompyfunc(f, 1, 1)
     if doe_concentrations is None:
         doe_concentrations = np_append(
-            arange(0.0, 1.0, 1/(doe_nb_concentrations-1)),
+            np_arange(0.0, 1.0, 1/(doe_nb_concentrations-1)),
             1.0
         )
     logger.debug(f'ROUNDED VALUES:\n{doe_concentrations}')
@@ -220,7 +201,7 @@ def levels_to_concentrations(
     """
     logger.debug(f'LEVELS ARRAY:\n{levels_array}')
     logger.debug(f'MAXIMUM CONCENTRATIONS:\n{maximum_concentrations}')
-    concentrations = multiply(
+    concentrations = np_multiply(
         levels_array,
         maximum_concentrations
     )
@@ -229,12 +210,14 @@ def levels_to_concentrations(
         decimals
     )
     logger.debug(f'CONCENTRATIONS:\n{concentrations}')
+
     return concentrations
 
 
 def plates_generator(
     doe_concentrations,
-    partial_concentrations,
+    bc_concentrations,
+    const_concentrations,
     input_df,
     logger: Logger = getLogger(__name__)
 ):
@@ -243,11 +226,15 @@ def plates_generator(
 
     Parameters
     ----------
-    doe_concentrations : 2d-array
-        N-by-samples array with variable concentrations values for each factor.
+    doe_concentrations : 1d-array
+        Array with variable concentrations values for each factor.
 
-    partial_concentrations : 2d-array
-        N-fixed-concentrations array with values for each factor.
+    bc_concentrations : 1d-array
+        Array with values for each factor which are fully combined
+        with bin values (0 or max. conc.).
+
+    const_concentrations : 1d-array
+        Array with constant values for each factor.
 
     maximum_concentrations_sample : 1d-array
         N-maximum-concentrations array with values for all factor.
@@ -277,9 +264,21 @@ def plates_generator(
     #         maximum_concentrations_sample),
     #     axis=0)
 
+    logger.debug(f'DOE_CONCENTRATIONS: {doe_concentrations}')
+    logger.debug(f'BC_CONCENTRATIONS: {bc_concentrations}')
+    logger.debug(f'CONST_CONCENTRATIONS: {const_concentrations}')
+    logger.debug(f'INPUT_DF: {input_df}')
+
+    # Add constant parameters
     initial_set_array = [
-        concatenate((concentrations, partial_concentrations))
+        np_concatenate((concentrations, const_concentrations))
         for concentrations in doe_concentrations
+    ]
+
+    # Add combinatorial parameters
+    initial_set_array = [
+        np_concatenate((concentrations, bc_concentrations))
+        for concentrations in initial_set_array
     ]
 
     all_parameters = input_df['Parameter'].tolist()
@@ -293,7 +292,8 @@ def plates_generator(
     # Create normalizer set with GOI to 0
     normalizer_set_df = initial_set_df.copy()
     normalizer_set_df.columns = all_parameters
-    normalizer_set_df['GOI-DNA'] = normalizer_set_df['GOI-DNA']*0
+    if 'GOI-DNA' in normalizer_set_df.keys():
+        normalizer_set_df['GOI-DNA'] = normalizer_set_df['GOI-DNA']*0
     logger.debug(f'NORMALIZER SET:\n{normalizer_set_df}')
 
     # Create normalizer set with GFP to 0
@@ -336,7 +336,6 @@ def save_plates(
     output_folder: str
         Path where store output files
     """
-
     if not os_path.exists(output_folder):
         os_mkdir(output_folder)
 
