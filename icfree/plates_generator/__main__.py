@@ -48,7 +48,7 @@ def main():
             seed=args.seed,
             logger=logger
         )
-    except KeyError as e:
+    except KeyError:
         logger.error('There is no \'doe\' status in the input file')
         exit(1)
 
