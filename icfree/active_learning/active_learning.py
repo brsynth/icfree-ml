@@ -1,23 +1,36 @@
-import csv
-import copy
+#!/usr/bin/env python
+# coding: utf-8
 
-from time import (
-    time
+from os import (
+    path as os_path,
+    mkdir as os_mkdir
+)
+
+import copy
+import time
+
+from csv import (
+    DictWriter
 )
 
 from numpy import (
-    concatenate,
-    amax,
-    reshape,
-    array_equiv,
-    mean,
-    std,
-    empty,
-    argmax,
-    genfromtxt
+    concatenate as np_concatenate,
+    mean as np_mean,
+    std as np_std,
+    # empty as np_empty,
+    argmax as np_argmax
+)
+
+from pandas import (
+    read_csv,
+    concat
 )
 
 import matplotlib.pyplot as plt
+
+from sklearn.model_selection import (
+    KFold
+)
 
 from sklearn.metrics import (
     r2_score
@@ -27,191 +40,99 @@ from sklearn.neural_network import (
     MLPRegressor
 )
 
-from plates_generator import (
-    
+from icfree.plates_generator.plates_generator import (
+    input_importer,
+    input_processor,
+    doe_levels_generator,
+    levels_to_concentrations
 )
 
-# Importing data
-folder_for_data = "/Users/yorgo/Documents/GitHub/icfree-ml/tests/data/gold_regressor"
 
-plate_1 = "{}/plate_AL_1_raw_yield_and_std.csv".format(folder_for_data)
-plate_1_array = genfromtxt(
-    plate_1,
-    delimiter=',',
-    skip_header=1,
-    dtype="float")
-
-plate_2 = "{}/plate_AL_2_raw_yield_and_std.csv".format(folder_for_data)
-plate_2_array = genfromtxt(
-    plate_2,
-    delimiter=',',
-    skip_header=1,
-    dtype="float")
-
-plate_3 = "{}/plate_AL_3_raw_yield_and_std.csv".format(folder_for_data)
-plate_3_array = genfromtxt(
-    plate_3,
-    delimiter=',',
-    skip_header=1,
-    dtype="float")
-
-plate_4 = "{}/plate_AL_4_raw_yield_and_std.csv".format(folder_for_data)
-plate_4_array = genfromtxt(
-    plate_4,
-    delimiter=',',
-    skip_header=1,
-    dtype="float")
-
-plate_5 = "{}/plate_AL_5_raw_yield_and_std.csv".format(folder_for_data)
-plate_5_array = genfromtxt(
-    plate_5,
-    delimiter=',',
-    skip_header=1,
-    dtype="float")
-
-plate_6 = "{}/plate_AL_6_raw_yield_and_std.csv".format(folder_for_data)
-plate_6_array = genfromtxt(
-    plate_6,
-    delimiter=',',
-    skip_header=1,
-    dtype="float")
-
-plate_7 = "{}/plate_AL_7_raw_yield_and_std.csv".format(folder_for_data)
-plate_7_array = genfromtxt(
-    plate_7,
-    delimiter=',',
-    skip_header=1,
-    dtype="float")
-
-plate_8 = "{}/plate_AL_8_raw_yield_and_std.csv".format(folder_for_data)
-plate_8_array = genfromtxt(
-    plate_8,
-    delimiter=',',
-    skip_header=1,
-    dtype="float")
-
-plate_9 = "{}/plate_AL_9_raw_yield_and_std.csv".format(folder_for_data)
-plate_9_array = genfromtxt(
-    plate_9,
-    delimiter=',',
-    skip_header=1,
-    dtype="float")
-
-plate_10 = "{}/plate_AL_10_raw_yield_and_std.csv".format(folder_for_data)
-plate_10_array = genfromtxt(
-    plate_10,
-    delimiter=',',
-    skip_header=1,
-    dtype="float")
-
-
-def data_from_iteration(iteration_number):
+def dataset_generator(
+        data_folder,
+        files_number):
     """
-    Get data from the selected number of iterations.
+    Merge experimental data into a single dataset
+
+    Args:
+        data_folder (_type_): _description_
+        files_number (_type_): _description_
+
+    Returns:
+        _type_: _description_
     """
-    all_plates_list = [
-        plate_1_array,
-        plate_2_array,
-        plate_3_array,
-        plate_4_array,
-        plate_5_array,
-        plate_6_array,
-        plate_7_array,
-        plate_8_array,
-        plate_9_array,
-        plate_10_array
-        ]
+    experimental_data = [read_csv(
+        data_folder.format(i))
+        for i in range(1, files_number)]
 
-    selected_plates = all_plates_list[0:iteration_number]
-    current_data = concatenate(selected_plates, axis=0)
+    dataset = concat(experimental_data, ignore_index=True)
+    dataset = dataset.to_numpy()
 
-    return current_data
+    return dataset
 
 
-data = data_from_iteration(3)
-print(data.shape)
-
-# Defining tested concentrations and volumes
-# Maximum concentrations for each component
-extract_max = 30
-mg_gluta_max = 4
-K_gluta_max = 80
-aa_max = 1.5
-peg_max = 2
-hepes_max = 50
-trna_max = 0.2
-coa_max = 0.26
-nad_max = 0.33
-camp_max = 0.75
-folinic_acid_max = 0.068
-spemidine_max = 1
-pga_max = 30
-nucleo_mix_max = 1.5
-DNA_max = 50
-promoter_max = 10
-RBS_max = 10
-
-# Concentration data: tested concentrations for each reagent
-mg_gluta_conc = [0.1, 0.3, 0.5, 1]
-K_gluta_conc = [0.1, 0.3, 0.5, 1]
-aa_conc = [0.1, 0.3, 0.5, 1]
-trna_conc = [0.1, 0.3, 0.5, 1]
-coa_conc = [0.1, 0.3, 0.5, 1]
-nad_conc = [0.1, 0.3, 0.5, 1]
-camp_conc = [0.1, 0.3, 0.5, 1]
-folinic_acid_conc = [0.1, 0.3, 0.5, 1]
-spermidine_conc = [0.1, 0.3, 0.5, 1]
-pga_conc = [0.1, 0.3, 0.5, 1]
-nucleo_conc = [0.1, 0.3, 0.5, 1]
-
-# Reshaping data for following tests
-initial_max = []  # This stores maximum values for normalisation later on.
-X_data, y_data, y_std_data = data[:, 0:11], data[:, 11], data[:, 12]
-
-for i in range(X_data.shape[1]):
-    initial_max.append(copy.deepcopy(max(X_data[:, i])))
-    X_data[:, i] = X_data[:, i]/max(X_data[:, i])
-
-print(initial_max)
-
-# Maximum yield attained at those iterations
-best_of = amax(y_data)
-print(best_of)
-
-
-def present_in_array_index(new_sample, array, size=11):
+def dataset_processor(dataset):
     """
-    Verify if a sample is present in an array.
+    Parse and extract features from dataset
+
+    Args:
+        dataset (_type_): _description_
+
+    Returns:
+        _type_: _description_
     """
-    present = False
-    new_sample = reshape(array(new_sample), (1, size))
-    for i in range(array.shape[0]):
-        if array_equiv(array[i, :], new_sample):
-            present = True
-            break
+    # Store maximum values for normalisation
+    initial_max = []
 
-    return present, i
+    X_data = dataset[:, 0:11]
+    y_data = dataset[:, 11]
+    y_std_data = dataset[:, 12]
+
+    for i in range(X_data.shape[1]):
+        initial_max.append(copy.deepcopy(max(X_data[:, i])))
+        X_data[:, i] = X_data[:, i]/max(X_data[:, i])
+
+    return (initial_max,
+            X_data,
+            y_data,
+            y_std_data)
 
 
-def setup_model(X,
-                y,
-                models_number=10,
-                visualize=True,
-                model_name="test"):
+def create_single_regressor(
+        X,
+        y,
+        models_number=10,
+        visualize=True,
+        model_name="root-model"):
+    """
+    _summary_
 
-    # Training model
+    Args:
+        X (_type_): _description_
+        y (_type_): _description_
+        models_number (int, optional): _description_. Defaults to 10.
+        visualize (bool, optional): _description_. Defaults to True.
+        model_name (str, optional): _description_. Defaults to "root-model".
+
+    Returns:
+        _type_: _description_
+    """
+    # Train the model
     for i in range(models_number):
         X_train = X
         y_train = y
+
         MLP = MLPRegressor(
             hidden_layer_sizes=(10, 100, 100, 20),
+            activation="relu",
             solver="adam",
             max_iter=20000,
             early_stopping=True,
             learning_rate="adaptive")
+
         MLP.fit(X_train, y_train.flatten())
 
-    # Evaluating model
+    # Evaluate and visualize the output of the model
     y_pred = MLP.predict(X)
     score = r2_score(y, y_pred)
 
@@ -222,106 +143,161 @@ def setup_model(X,
         fig, ax = plt.subplots()
         ax.scatter(y, y_pred, edgecolors=(0, 0, 0))
         ax.plot([y.min(), y.max()], [y.min(), y.max()], 'k--', lw=4)
-        ax.set_xlabel('Measured')
+        ax.set_xlabel("Measured")
         ax.set_title(
             "Model prediction for model {}: {}".format(model_name, score))
-        ax.set_ylabel('Predicted')
+        ax.set_ylabel("Predicted")
         plt.show()
 
-    return MLP, score
+    return (MLP, score)
 
 
-# Ensemble Model Training
-training_start_time = time.time()
-MLP_ensemble = []
-n = 6
-
-for i in range(n):
-    model, score = setup_model(
+def create_ensemble_regressor(
         X_data,
         y_data,
-        models_number=n,
-        visualize=True,
-        model_name=i)
-    MLP_ensemble.append(model)
+        y_std_data,
+        ensemble_size=5):
+    """
+    _summary_
 
-training_end_time = time.time()
+    Args:
+        X_data (_type_): _description_
+        y_data (_type_): _description_
+        y_std_data (_type_): _description_
+        ensemble_size (int, optional): _description_. Defaults to 5.
 
-# See what the models do
-for i in range(len(MLP_ensemble)):
-    model = MLP_ensemble[i]
-    y_pred = model.predict(X_data)
+    Returns:
+        _type_: _description_
+    """
+    # Train the ensemble of models
+    training_start_time = time.time()
+    MLP_ensemble = []
+
+    for i in range(ensemble_size):
+        model, score = create_single_regressor(
+            X_data,
+            y_data,
+            models_number=10,
+            visualize=True,
+            model_name=i)
+
+        MLP_ensemble.append(model)
+
+    training_end_time = time.time()
+
+    # Evaluate and visualize the ouputs of models
+    for i in range(len(MLP_ensemble)):
+        model = MLP_ensemble[i]
+        y_pred = model.predict(X_data)
+        score = r2_score(y_data, y_pred)
+        fig, ax = plt.subplots()
+        ax.scatter(y_data, y_pred, edgecolors=(0, 0, 0))
+        ax.errorbar(y_data, y_pred, xerr=y_std_data, ls="none")
+        ax.plot(
+            [y_data.min(), y_data.max()],
+            [y_data.min(), y_data.max()],
+            "k--",
+            lw=4)
+        ax.set_xlabel("Measured")
+        ax.set_title("Model prediction for model {}: {}".format(i, score))
+        ax.set_ylabel("Predicted")
+        plt.show()
+
+    all_predictions = None
+    for model in MLP_ensemble:
+        y_pred = model.predict(X_data)
+        # answer_array_pred = y_pred.reshape(X_data.shape[0], -1)
+        if all_predictions is None:
+            all_predictions = y_pred.reshape(X_data.shape[0], -1)
+        else:
+            all_predictions = np_concatenate((
+                all_predictions,
+                y_pred.reshape(X_data.shape[0], -1)),
+                axis=1)
+
+    y_pred = np_mean(all_predictions, axis=1)
+    y_pred_std = np_std(all_predictions, axis=1)
     score = r2_score(y_data, y_pred)
+
     fig, ax = plt.subplots()
     ax.scatter(y_data, y_pred, edgecolors=(0, 0, 0))
-    ax.errorbar(
-        y_data, y_pred, xerr=y_std_data,
-        ls='none')
+    ax.errorbar(y_data, y_pred, xerr=y_std_data, yerr=y_pred_std, ls="none")
     ax.plot(
-        [y_data.min(), y_data.max()],
-        [y_data.min(), y_data.max()],
-        'k--',
-        lw=4)
-    ax.set_xlabel('Measured')
-    ax.set_title("Model prediction for model {}: {}".format(i, score))
-    ax.set_ylabel('Predicted')
+            [y_data.min(), y_data.max()],
+            [y_data.min(), y_data.max()],
+            'k--',
+            lw=4)
+    ax.set_xlabel("Measured")
+    ax.set_title("Model prediction for ensemble of models: {}".format(score))
+    ax.set_ylabel("Predicted")
     plt.show()
 
-all_predictions = None
-for model in MLP_ensemble:
-    y_pred = model.predict(X_data)
-    answer_array_pred = y_pred.reshape(X_data.shape[0], -1)
-    if all_predictions is None:
-        all_predictions = y_pred.reshape(X_data.shape[0], -1)
-    else:
-        all_predictions = concatenate((
-            all_predictions,
-            y_pred.reshape(X_data.shape[0], -1)),
-            axis=1)
+    return (MLP_ensemble,
+            training_start_time,
+            training_end_time)
 
-y_pred = mean(all_predictions, axis=1)
-y_pred_std = std(all_predictions, axis=1)
-score = r2_score(y_data, y_pred)
 
-fig, ax = plt.subplots()
-ax.scatter(y_data, y_pred, edgecolors=(0, 0, 0))
-ax.errorbar(
-    y_data, y_pred, xerr=y_std_data,
-    yerr=y_pred_std,
-    ls='none')
-ax.plot(
-        [y_data.min(), y_data.max()],
-        [y_data.min(), y_data.max()],
-        'k--',
-        lw=4)
-ax.set_xlabel('Measured')
-ax.set_title("Model prediction for ensemble of models: {}".format(score))
-ax.set_ylabel('Predicted')
-plt.show()
+def active_learning_array_generator(cfps_parameters):
+    """
+    _summary_
 
-# Include levels_array_generator() and return active_learning_array
+    Args:
+        cfps_parameters (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
+    cfps_parameters_df = input_importer(cfps_parameters)
+    parameters = input_processor(cfps_parameters_df)
+    doe_levels = doe_levels_generator(
+            n_variable_parameters=len(parameters['doe']),
+            doe_nb_concentrations=5,
+            doe_concentrations=[0.1, 0.4, 0.6, 0.8, 1.0],
+            doe_nb_samples=100,
+            seed=2,
+        )
+
+    max_conc = [
+            v['Maximum concentration']
+            for v in parameters['doe'].values()
+        ]
+
+    active_learning_array = levels_to_concentrations(
+            doe_levels,
+            max_conc,
+        )
+
+    return (cfps_parameters_df, active_learning_array)
 
 
 def select_best_predictions_from_ensemble_model(
             ensemble_of_models,
-            array_to_avoid,
-            total_sampling_size=1000,
+            active_learning_array,
+            initial_max,
             sample_size=500,
             exploitation=1,
             exploration=1.41,
             normalisation=True,
-            initial_max=initial_max,
-            verbose=True):
+            verbose=True,
+            ):
     """
-    """
-    # Random concentrations to test
-    active_learning_array = generate_random_grid(
-        array_to_avoid,
-        sample_size=total_sampling_size,
-        normalisation=normalisation)
+    _summary_
 
-    # Predicting the full random grid
-    answer_array_pred = empty
+    Args:
+        ensemble_of_models (_type_): _description_
+        active_learning_array (_type_): _description_
+        initial_max (_type_): _description_
+        sample_size (int, optional): _description_. Defaults to 500.
+        exploitation (int, optional): _description_. Defaults to 1.
+        exploration (float, optional): _description_. Defaults to 1.41.
+        normalisation (bool, optional): _description_. Defaults to True.
+        verbose (bool, optional): _description_. Defaults to True.
+
+    Returns:
+        _type_: _description_
+    """
+    # Predict the full grid
+    # answer_array_pred = np_empty
     all_predictions = None
 
     if verbose:
@@ -329,14 +305,14 @@ def select_best_predictions_from_ensemble_model(
 
     for model in ensemble_of_models:
         y_pred = model.predict(active_learning_array)
-        answer_array_pred = y_pred.reshape(
-            active_learning_array.shape[0], -1)
+        # answer_array_pred = y_pred.reshape(
+        #     active_learning_array.shape[0], -1)
 
         if all_predictions is None:
             all_predictions = y_pred.reshape(
                 active_learning_array.shape[0], -1)
         else:
-            all_predictions = concatenate((
+            all_predictions = np_concatenate((
                 all_predictions,
                 y_pred.reshape(active_learning_array.shape[0], -1)),
                 axis=1)
@@ -345,8 +321,8 @@ def select_best_predictions_from_ensemble_model(
         print("Finished ensemble predictions")
 
     # Get mean and std for the predicted array
-    y_pred = mean(all_predictions, axis=1)
-    y_pred_std = std(all_predictions, axis=1)
+    y_pred = np_mean(all_predictions, axis=1)
+    y_pred_std = np_std(all_predictions, axis=1)
 
     # Array to maximise, while balancing between exploration and exploitation
     array_to_maximise = copy.deepcopy(
@@ -358,7 +334,7 @@ def select_best_predictions_from_ensemble_model(
     # Uncertainty and yield
     conditions_list_pure_exploitation = []
     for count in range(sample_size):
-        i = argmax(y_pred)
+        i = np_argmax(y_pred)
         conditions_list_pure_exploitation.append(int(i))
         if verbose:
             print("Maximising sample {} is yield: {}, std = {}".format(
@@ -369,7 +345,7 @@ def select_best_predictions_from_ensemble_model(
 
     conditions_list_pure_exploration = []
     for count in range(sample_size):
-        i = argmax(y_pred_std)
+        i = np_argmax(y_pred_std)
         conditions_list_pure_exploration.append(int(i))
         if verbose:
             print("Maximising sample {} is yield: {}, std = {}".format(
@@ -380,7 +356,7 @@ def select_best_predictions_from_ensemble_model(
 
     conditions_list = []
     for count in range(sample_size):
-        i = argmax(array_to_maximise)
+        i = np_argmax(array_to_maximise)
         conditions_list.append(int(i))
         if verbose:
             print("Maximising sample {} is yield: {}, std = {}".format(
@@ -394,93 +370,213 @@ def select_best_predictions_from_ensemble_model(
             active_learning_array[:, i] = \
                 active_learning_array[:, i] * initial_max[i]
     else:
-        active_learning_array = active_learning_array
+        conditions_to_test = active_learning_array[conditions_list, :]
 
-    conditions_to_test = active_learning_array[conditions_list, :]
-    conditions_to_test_exploration = \
-        active_learning_array[conditions_list_pure_exploration, :]
-    conditions_to_test_exploitation = \
-        active_learning_array[conditions_list_pure_exploitation, :]
+        conditions_to_test_exploration = \
+            active_learning_array[conditions_list_pure_exploration, :]
+
+        conditions_to_test_exploitation = \
+            active_learning_array[conditions_list_pure_exploitation, :]
 
     return (conditions_to_test,
             conditions_to_test_exploration,
             conditions_to_test_exploitation)
 
 
-def export_array_of_elements_of_interest(array, file_place):
+def save_conditions_to_test(
+        cfps_parameters_df,
+        conditions_to_test,
+        conditions_to_test_exploration,
+        conditions_to_test_exploitation,
+        global_score,
+        global_score_std,
+        output_folder):
     """
-    Export an array as a csv in the destined place
+    Save dataframes in tsv files
+
+    Args:
+        cfps_parameters_df (_type_): _description_
+        conditions_to_test (_type_): _description_
+        conditions_to_test_exploration (_type_): _description_
+        conditions_to_test_exploitation (_type_): _description_
+        global_score (_type_): _description_
+        global_score_std (_type_): _description_
+        output_folder (_type_): _description_
     """
-    fieldnames = [
-        "nad",
-        "folinic_acid",
-        "DNA",
-        "coa",
-        "RBS",
-        "peg",
-        "nucleo_mix",
-        "spermidin",
-        "pga",
-        "aa",
-        "trna",
-        "mg_gluta",
-        "hepes",
-        "camp",
-        "K_gluta",
-        "promoter"]
+    all_parameters = cfps_parameters_df['Parameter'].tolist()
 
-    export_as_list = []
+    if not os_path.exists(output_folder):
+        os_mkdir(output_folder)
 
-    for row in array:
-        new_dict = {}
-        new_dict["nad"] = round(float(row[0]), 5)
-        new_dict["folinic_acid"] = round(float(row[1]), 5)
-        new_dict["DNA"] = 50
-        new_dict["coa"] = round(float(row[2]), 5)
-        new_dict["RBS"] = 10
-        new_dict["peg"] = 2
-        new_dict["nucleo_mix"] = round(float(row[3]), 5)
-        new_dict["spermidin"] = round(float(row[4]), 5)
-        new_dict["pga"] = round(float(row[5]), 5)
-        new_dict["aa"] = round(float(row[6]), 5)
-        new_dict["trna"] = round(float(row[7]), 5)
-        new_dict["mg_gluta"] = round(float(row[8]), 4)
-        new_dict["hepes"] = 50
-        new_dict["camp"] = round(float(row[9]), 4)
-        new_dict["K_gluta"] = round(float(row[10]), 4)
-        new_dict["promoter"] = 10
-        export_as_list.append(new_dict)
+    conditions_to_test.to_csv(
+        os_path.join(
+            output_folder,
+            'conditions_to_test.tsv'),
+        sep='\t',
+        header=all_parameters,
+        index=False)
 
-    with open(file_place, "w") as csv_handle:
-        csv_writer = csv.DictWriter(
-            csv_handle,
-            fieldnames,
-            restval='',
-            extrasaction='ignore')
-        csv_writer.writeheader()
-        for result in export_as_list:
-            csv_writer.writerow(result)
+    conditions_to_test_exploration.to_csv(
+        os_path.join(
+            output_folder,
+            'conditions_to_test_exploration.tsv'),
+        sep='\t',
+        header=all_parameters,
+        index=False)
+
+    conditions_to_test_exploitation.to_csv(
+        os_path.join(
+            output_folder,
+            'conditions_to_test_exploitation.tsv'),
+        sep='\t',
+        header=all_parameters,
+        index=False)
 
 
-conditions_to_test, \
-    conditions_to_test_exploration, \
-    conditions_to_test_exploitation = \
-    select_best_predictions_from_ensemble_model(
-        ensemble_of_models=MLP_ensemble,
-        array_to_avoid=X_data,
-        total_sampling_size=1000,
-        verbose=False,
-        sample_size=50)
+def model_statistics_generator(
+        X_data,
+        y_data,
+        y_std_data,
+        iteration_number,
+        folder_to_save,
+        dataset,
+        ensemble_size=25,
+        nbr_fold=5):
+    """
+    _summary_
 
-base_name = "showcase_AL"
+    Args:
+        X_data (_type_): _description_
+        y_data (_type_): _description_
+        y_std_data (_type_): _description_
+        iteration_number (_type_): _description_
+        folder_to_save (_type_): _description_
+        dataset (_type_): _description_
+        ensemble_size (int, optional): _description_. Defaults to 25.
+        nbr_fold (int, optional): _description_. Defaults to 5.
 
-export_array_of_elements_of_interest(
-    conditions_to_test, file_place="{}.csv".format(base_name))
+    Returns:
+        _type_: _description_
+    """
+    # Extract model number of layers.
+    dictionnary_of_models = {2: 0, 3: 0, 4: 0, 5: 0, 6: 0}
 
-export_array_of_elements_of_interest(
-    conditions_to_test_exploration,
-    file_place="{}_exploration.csv".format(base_name))
+    kf = KFold(n_splits=nbr_fold, shuffle=True)
+    scores_on_folds = []
+    fold_number = 0
 
-export_array_of_elements_of_interest(
-    conditions_to_test_exploitation,
-    file_place="{}_exploitation.csv".format(base_name))
+    for train_index, test_index in kf.split(X_data):
+        fold_number = fold_number + 1
+        X_train, X_test = X_data[train_index], X_data[test_index]
+        y_train, y_test = y_data[train_index], y_data[test_index]
+        y_std_train = y_std_data[train_index]
+        y_std_test = y_std_data[test_index]
+
+        # Training ensemble of models
+        ensemble_models = []
+        for n in range(ensemble_size):
+            MLP, score = create_single_regressor(
+                X_train,
+                y_train,
+                models_number=10,
+                visualize=True,
+                model_name=n)
+
+            ensemble_models.append(MLP)
+
+        # Analysing the models
+        for model in ensemble_models:
+            dictionnary_of_models[model.n_layers_] = \
+                dictionnary_of_models[model.n_layers_] + 1
+        print(dictionnary_of_models)
+
+        # Evaluating the models
+        all_predictions = None
+        for model in ensemble_models:
+            y_pred = model.predict(X_test)
+            answer_array_pred = y_pred.reshape(X_test.shape[0], -1)
+            if all_predictions is None:
+                all_predictions = y_pred.reshape(X_test.shape[0], -1)
+            else:
+                all_predictions = np_concatenate(
+                        (all_predictions,
+                            y_pred.reshape(X_test.shape[0], -1)), axis=1)
+
+        y_pred = np_mean(all_predictions, axis=1)
+        y_pred_std = np_std(all_predictions, axis=1)
+
+        score = r2_score(y_test, y_pred)
+        fig, ax = plt.subplots()
+        ax.scatter(y_test, y_pred, edgecolors=(0, 0, 0))
+        ax.errorbar(
+            y_test,
+            y_pred,
+            xerr=y_std_test,
+            yerr=y_pred_std,
+            ls="none")
+        ax.plot([
+                y_test.min(),
+                y_test.max()],
+                [y_test.min(),
+                y_test.max()],
+                'k--',
+                lw=4)
+        ax.set_xlabel("Measured")
+        ax.set_title("R squared is: {}".format(score))
+        ax.set_ylabel("Predicted")
+        name_for_plotting = folder_to_save
+        + '/' + "iteration_{}".format(iteration_number)
+        + "fold_{}".format(fold_number) + ".png"
+
+        plt.savefig(name_for_plotting)
+        plt.show()
+        scores_on_folds.append(score)
+
+    global_score = np_mean(scores_on_folds)
+    global_score_std = np_std(scores_on_folds)
+
+    iteration_results = {}
+    for iteration in range(1, 11):
+        dataset = dataset_generator(iteration)
+        X_data = dataset[:, 0:11]
+        y_data = dataset[:, 11]
+        y_std_data = dataset[:, 12]
+
+        for i in range(X_data.shape[1]):
+            X_data[:, i] = X_data[:, i]/max(X_data[:, i])
+
+        iteration_results["{}".format(iteration)] = \
+            global_score, \
+            global_score_std
+
+    print("For iteration {}, global score is ({}, {})".format(
+            iteration,
+            global_score,
+            global_score_std))
+
+    return (global_score, global_score_std, iteration_results)
+
+
+def save_model_statistics(
+        iteration_results,
+        output_folder):
+    """
+    Save models statistics in a csv file
+
+    Args:
+        iteration_results (_type_): _description_
+        output_folder (_type_): _description_
+    """
+    with open(
+            "{}/iteration_results.csv".format(output_folder),
+            "w") as csv_writer:
+        headers = ["iteration", "score", "scores_std"]
+        writer = DictWriter(csv_writer, headers)
+        writer.writeheader()
+        for key, value in iteration_results.items():
+            row = {}
+            global_score, global_score_std = value
+            row["score"] = global_score
+            row["scores_std"] = global_score_std
+            row["iteration"] = key
+            writer.writerow(row)
