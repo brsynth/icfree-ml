@@ -19,9 +19,7 @@ from numpy import (
     abs as np_abs,
     multiply as np_multiply,
     inf as np_inf,
-    ndarray as np_ndarray,
-    full as np_full,
-    shape as np_shape
+    ndarray as np_ndarray
 )
 
 from pandas import (
