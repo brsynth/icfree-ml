@@ -1,7 +1,6 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
 
-
 # C extensions
 *.so
 
@@ -92,6 +91,9 @@ venv.bak/
 # Spyder project settings
 .spyderproject
 .spyproject
+
+# vscode settings
+.vscode/
 
 # Rope project settings
 .ropeproject
