@@ -469,7 +469,7 @@ def model_statistics_generator(
         fold_number = fold_number + 1
         X_train, X_test = X_data[train_index], X_data[test_index]
         y_train, y_test = y_data[train_index], y_data[test_index]
-        y_std_train = y_std_data[train_index]
+        # y_std_train = y_std_data[train_index]
         y_std_test = y_std_data[test_index]
 
         # Training ensemble of models
@@ -494,7 +494,7 @@ def model_statistics_generator(
         all_predictions = None
         for model in ensemble_models:
             y_pred = model.predict(X_test)
-            answer_array_pred = y_pred.reshape(X_test.shape[0], -1)
+            # answer_array_pred = y_pred.reshape(X_test.shape[0], -1)
             if all_predictions is None:
                 all_predictions = y_pred.reshape(X_test.shape[0], -1)
             else:

@@ -23,17 +23,12 @@ from numpy import (
     arange as np_arange
 )
 from json import (
-    load as json_load,
-    dumps as json_dumps
+    load as json_load
 )
 
 from icfree.plates_generator.plates_generator import (
     input_importer,
-    input_processor,
-    doe_levels_generator,
-    levels_to_concentrations,
-    plates_generator,
-    save_plates
+    doe_levels_generator
 )
 
 
