@@ -1,9 +1,11 @@
 from argparse import (
     ArgumentParser
     )
+
 from random import (
     randint
 )
+
 from os import getcwd as os_getcwd
 from brs_utils import add_logger_args
 from icfree._version import __version__
