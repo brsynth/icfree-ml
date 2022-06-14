@@ -116,13 +116,11 @@ def volumes_array_generator(
         dtype=float)
 
     stock_concentrations_df = \
-        sample_volume / \
-        stock_concentrations_df / \
-        2.5
+        sample_volume / stock_concentrations_df
 
-    initial_volumes_df = (multiply(
+    initial_volumes_df = round(multiply(
         initial_concentrations_df,
-        stock_concentrations_df)) * 2.5
+        stock_concentrations_df) / 2.5, 0) * 2.5
 
     normalizer_volumes_df = (multiply(
         normalizer_concentrations_df,
@@ -648,22 +646,24 @@ def save_echo_instructions(
             _description_
 
         output_folder: str
-            Path where store output files
+            Path to output storage folder
     """
-
     if not os_path.exists(output_folder):
         os_mkdir(output_folder)
     output_subfolder = os_path.join(output_folder, 'echo_instructions')
+
     if not os_path.exists(output_subfolder):
         os_mkdir(output_subfolder)
     output_subfolder_mul = os_path.join(
         output_folder, 'echo_instructions', 'multiple'
     )
+
     if not os_path.exists(output_subfolder_mul):
         os_mkdir(output_subfolder_mul)
     output_subfolder_sin = os_path.join(
         output_folder, 'echo_instructions', 'single'
     )
+
     if not os_path.exists(output_subfolder_sin):
         os_mkdir(output_subfolder_sin)
 
