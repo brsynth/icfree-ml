@@ -39,14 +39,18 @@ def main():
     parameters = input_processor(input_df, logger=logger)
 
     # PROCESS TO THE SAMPLING
-    doe_levels = doe_levels_generator(
-        n_variable_parameters=len(parameters['doe']),
-        doe_nb_concentrations=args.doe_nb_concentrations,
-        doe_concentrations=args.doe_concentrations,
-        doe_nb_samples=args.doe_nb_samples,
-        seed=args.seed,
-        logger=logger
-    )
+    try:
+        doe_levels = doe_levels_generator(
+            n_variable_parameters=len(parameters['doe']),
+            doe_nb_concentrations=args.doe_nb_concentrations,
+            doe_concentrations=args.doe_concentrations,
+            doe_nb_samples=args.doe_nb_samples,
+            seed=args.seed,
+            logger=logger
+        )
+    except KeyError as e:
+        logger.error('There is no \'doe\' status in the input file')
+        exit(1)
 
     # CONVERT INTO CONENTRATIONS
     # Read the maximum concentration for each variable parameter
@@ -63,14 +67,25 @@ def main():
 
     # GENERATE PLATE
     # Read the maximum concentration for each fixed parameter
-    partial_max_conc = [
-        v['Maximum concentration']
-        for v in parameters['partial'].values()
-    ]
+    try:
+        bc_concentrations = [
+            v['Maximum concentration']
+            for v in parameters['full_bin_comb'].values()
+        ]
+    except KeyError:
+        bc_concentrations = []
+    try:
+        const_concentrations = [
+            v['Maximum concentration']
+            for v in parameters['const'].values()
+        ]
+    except KeyError:
+        const_concentrations = []
     plates = plates_generator(
-        doe_concentrations,
-        partial_max_conc,
-        input_df,
+        doe_concentrations=doe_concentrations,
+        bc_concentrations=bc_concentrations,
+        const_concentrations=const_concentrations,
+        input_df=input_df,
         logger=logger
     )
 
