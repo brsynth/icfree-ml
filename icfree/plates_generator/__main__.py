@@ -67,31 +67,24 @@ def main():
 
     # GENERATE PLATE
     # Read the maximum concentration for each dna parameter
+    dna_concentrations = {
+        v: dna_param[v]['Maximum concentration']
+        for status, dna_param in parameters.items()
+        for v in dna_param
+        if status.startswith('dna')
+    }
     try:
-        dna_concentrations = [
-            dna_param[v]['Maximum concentration']
-            for status,dna_param in parameters.items()
-            for v in dna_param
-            if status.startswith('dna')
-        ]
-    except (KeyError, ValueError) as e:
-        logger.debug(e)
-        logger.warning('There is no status starting with \'dna\' in the input file')
-        logger.debug(f'{parameters.keys()}')
-        logger.warning('Using default values for DNA concentrations')
-        dna_concentrations = []
-    try:
-        const_concentrations = [
-            v['Maximum concentration']
-            for v in parameters['const'].values()
-        ]
+        const_concentrations = {
+            k: v['Maximum concentration']
+            for k, v in parameters['const'].items()
+        }
     except KeyError:
-        const_concentrations = []
+        const_concentrations = {}
     plates = plates_generator(
         doe_concentrations=doe_concentrations,
         const_concentrations=const_concentrations,
         dna_concentrations=dna_concentrations,
-        input_df=input_df,
+        parameters={k: list(v.keys()) for k, v in parameters.items()},
         logger=logger
     )
 

@@ -216,7 +216,7 @@ def plates_generator(
     doe_concentrations,
     dna_concentrations,
     const_concentrations,
-    input_df,
+    parameters,
     logger: Logger = getLogger(__name__)
 ):
     """
@@ -236,6 +236,9 @@ def plates_generator(
 
     maximum_concentrations_sample : 1d-array
         N-maximum-concentrations array with values for all factor.
+
+    parameters: dict
+        Dictionnary of all parameters.
 
     Returns
     -------
@@ -265,44 +268,52 @@ def plates_generator(
     logger.debug(f'DOE_CONCENTRATIONS:\n{doe_concentrations}')
     logger.debug(f'CONST_CONCENTRATIONS: {const_concentrations}')
     logger.debug(f'DNA_CONCENTRATIONS: {dna_concentrations}')
-    logger.debug(f'INPUT_DF:\n{input_df}')
+    logger.debug(f'PARAMETERS:\n{parameters}')
 
+    headers = parameters['doe']
     # Add constant parameters
     initial_set_array = [
-        np_concatenate((concentrations, const_concentrations))
+        np_concatenate((concentrations, list(const_concentrations.values())))
         for concentrations in doe_concentrations
     ]
+    headers += parameters['const']
 
     # Add combinatorial parameters
     initial_set_array = [
-        np_concatenate((concentrations, dna_concentrations))
+        np_concatenate((concentrations, list(dna_concentrations.values())))
         for concentrations in initial_set_array
     ]
-    
-    all_parameters = input_df['Parameter'].tolist()
-    logger.debug(f'PARAMETERS:\n{all_parameters}')
+    headers += sum(
+        [
+            v for k, v
+            in parameters.items()
+            if k.startswith('dna')],
+        []
+    )
 
     # Create initial set with partial concentrations
     initial_set_df = DataFrame(initial_set_array)
-    initial_set_df.columns = all_parameters
+    initial_set_df.columns = headers
     logger.debug(f'INITIAL SET:\n{initial_set_df}')
 
     # Create normalizer set with GOI to 0
     normalizer_set_df = initial_set_df.copy()
-    normalizer_set_df.columns = all_parameters
-    if 'fluo' in normalizer_set_df.keys():
-        normalizer_set_df['GOI-DNA'] = normalizer_set_df['GOI-DNA']*0
+    normalizer_set_df.columns = headers
+    if 'dna_fluo' in parameters:
+        normalizer_set_df[parameters['dna_fluo']] *= 0
     logger.debug(f'NORMALIZER SET:\n{normalizer_set_df}')
 
     # Create normalizer set with GFP to 0
     autofluorescence_set_df = normalizer_set_df.copy()
-    autofluorescence_set_df.columns = all_parameters
-    if 'GFP-DNA' in normalizer_set_df.keys():
-        autofluorescence_set_df['GFP-DNA'] = normalizer_set_df['GFP-DNA']*0
+    autofluorescence_set_df.columns = headers
+    if 'dna_goi' in parameters:
+        autofluorescence_set_df[parameters['dna_goi']] *= 0
     logger.debug(f'BACKGROUND SET:\n{autofluorescence_set_df}')
 
+    logger.debug(f'HEADERS: {headers}')
+
     return {
-        'parameters': all_parameters,
+        'parameters': headers,
         'initial': initial_set_df,
         'normalizer': normalizer_set_df,
         'background': autofluorescence_set_df
