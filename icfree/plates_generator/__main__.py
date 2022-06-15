@@ -53,7 +53,7 @@ def main():
         exit(1)
 
     # CONVERT INTO CONCENTRATIONS
-    # Read the maximum concentration for each variable parameter
+    # Read the maximum concentration for each parameter involved in DoE
     max_conc = [
         v['Maximum concentration']
         for v in parameters['doe'].values()
@@ -73,6 +73,7 @@ def main():
         for v in dna_param
         if status.startswith('dna')
     }
+    # Read the maximum concentration for each constant parameter
     try:
         const_concentrations = {
             k: v['Maximum concentration']
@@ -80,6 +81,7 @@ def main():
         }
     except KeyError:
         const_concentrations = {}
+    # Generate the plates
     plates = plates_generator(
         doe_concentrations=doe_concentrations,
         const_concentrations=const_concentrations,
@@ -88,7 +90,7 @@ def main():
         logger=logger
     )
 
-    # Write to disk
+    # WRITE TO DISK
     save_plates(
         plates['initial'],
         plates['normalizer'],

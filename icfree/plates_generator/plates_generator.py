@@ -238,7 +238,7 @@ def plates_generator(
         N-maximum-concentrations array with values for all factor.
 
     parameters: dict
-        Dictionnary of all parameters.
+        Dictionnary of cfps parameters.
 
     Returns
     -------
@@ -251,19 +251,9 @@ def plates_generator(
     autofluorescence_set_df : dataframe
         Duplicate of normalizer_set. 0 is assigned to the GFP-DNA column.
 
-    all_parameters: List
-        List of the name of all cfps parameters
+    parameters: List
+        List of the name of cfps parameters
     """
-
-    # all_concentrations_array = concatenate(
-    #     (variable_concentrations_array,
-    #         fixed_concentrations_array,),
-    #     axis=1)
-
-    # initial_set_array = concatenate(
-    #     (all_concentrations_array,
-    #         maximum_concentrations_sample),
-    #     axis=0)
 
     logger.debug(f'DOE_CONCENTRATIONS:\n{doe_concentrations}')
     logger.debug(f'CONST_CONCENTRATIONS: {const_concentrations}')
