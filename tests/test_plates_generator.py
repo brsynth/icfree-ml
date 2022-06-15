@@ -28,6 +28,7 @@ from json import (
 
 from icfree.plates_generator.plates_generator import (
     input_importer,
+    input_processor,
     doe_levels_generator
 )
 
@@ -53,7 +54,7 @@ class Test(TestCase):
         with open(
             os_path.join(
                     self.OUTPUT_FOLDER,
-                    'test_input.json'
+                    'test_input_importer.json'
             ), 'r'
         ) as fp:
             expected_df = DataFrame(
@@ -68,9 +69,30 @@ class Test(TestCase):
                 expected_df,
                 tested_df
             )
+            print(tested_df)
 
     def test_input_processor(self):
-        pass
+        with open(
+            os_path.join(
+                    self.OUTPUT_FOLDER,
+                    'test_input_processor.json'
+            ), 'r'
+        ) as fp:
+            expected_dictionary = (json_load(fp))
+
+        with open(
+            os_path.join(
+                    self.INPUT_FOLDER,
+                    'proCFPS_parameters.tsv'
+            ), 'r'
+        ) as fp2:
+            tested_df = input_importer(fp2)
+
+        tested_dictionary = input_processor(tested_df)
+        TestCase().assertDictEqual(
+                expected_dictionary,
+                tested_dictionary
+            )
 
     def test_doe_levels_generator(self):
         n_variable_parameters = 12
