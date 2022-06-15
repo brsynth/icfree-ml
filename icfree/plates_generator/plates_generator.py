@@ -254,12 +254,6 @@ def plates_generator(
     all_parameters: List
         List of the name of all cfps parameters
     """
-
-    # all_concentrations_array = concatenate(
-    #     (variable_concentrations_array,
-    #         fixed_concentrations_array,),
-    #     axis=1)
-
     # initial_set_array = concatenate(
     #     (all_concentrations_array,
     #         maximum_concentrations_sample),
