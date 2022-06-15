@@ -52,7 +52,7 @@ def main():
         logger.error('There is no \'doe\' status in the input file')
         exit(1)
 
-    # CONVERT INTO CONENTRATIONS
+    # CONVERT INTO CONCENTRATIONS
     # Read the maximum concentration for each variable parameter
     max_conc = [
         v['Maximum concentration']
@@ -66,14 +66,20 @@ def main():
     )
 
     # GENERATE PLATE
-    # Read the maximum concentration for each fixed parameter
+    # Read the maximum concentration for each dna parameter
     try:
-        bc_concentrations = [
-            v['Maximum concentration']
-            for v in parameters['full_bin_comb'].values()
+        dna_concentrations = [
+            dna_param[v]['Maximum concentration']
+            for status,dna_param in parameters.items()
+            for v in dna_param
+            if status.startswith('dna')
         ]
-    except KeyError:
-        bc_concentrations = []
+    except (KeyError, ValueError) as e:
+        logger.debug(e)
+        logger.warning('There is no status starting with \'dna\' in the input file')
+        logger.debug(f'{parameters.keys()}')
+        logger.warning('Using default values for DNA concentrations')
+        dna_concentrations = []
     try:
         const_concentrations = [
             v['Maximum concentration']
@@ -83,8 +89,8 @@ def main():
         const_concentrations = []
     plates = plates_generator(
         doe_concentrations=doe_concentrations,
-        bc_concentrations=bc_concentrations,
         const_concentrations=const_concentrations,
+        dna_concentrations=dna_concentrations,
         input_df=input_df,
         logger=logger
     )
