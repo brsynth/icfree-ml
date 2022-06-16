@@ -67,11 +67,13 @@
             "Stock concentration": 200.0
         }
     },
-    "bin_comb": {
+    "dna_fluo": {
         "GFP-DNA": {
             "Maximum concentration": 50.0,
             "Stock concentration": 300.0
-        },
+        }
+    },
+    "dna_goi": {
         "GOI-DNA": {
             "Maximum concentration": 50.0,
             "Stock concentration": 300.0
