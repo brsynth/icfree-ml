@@ -221,7 +221,7 @@ class Test(TestCase):
 
         input_df = input_importer(os_path.join(
                 self.INPUT_FOLDER,
-                'proCFPS_parameters-tmp.tsv'
+                'proCFPS_parameters.tsv'
                 ))
 
         parameters = input_processor(input_df)
@@ -272,7 +272,12 @@ class Test(TestCase):
         )
 
         initial_set_df = plates['initial']
-        tested_columns = initial_set_df.columns.tolist()
+        autofluorescence_set_df = plates['background']
+        normalizer_set_df = plates['normalizer']
+        tested_columns_initial_set = initial_set_df.columns.tolist()
+        tested_columns_normalizer_set = normalizer_set_df.columns.tolist()
+        tested_columns_autofluorescence_set = \
+            autofluorescence_set_df.columns.tolist()
         # tested_doe_columns =
         # tested_const_columns =
         # tested_dna_fluo_columns =
@@ -280,7 +285,19 @@ class Test(TestCase):
 
         self.assertListEqual(
             all_expected_columns,
-            tested_columns)
+            tested_columns_initial_set)
+
+        self.assertListEqual(
+            all_expected_columns,
+            tested_columns_normalizer_set)
+
+        self.assertListEqual(
+            all_expected_columns,
+            tested_columns_autofluorescence_set)
+
+        self.assertListEqual(
+            tested_columns_normalizer_set,
+            tested_columns_autofluorescence_set)
 
     def test_save_plates(self):
         pass
