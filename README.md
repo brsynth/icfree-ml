@@ -33,7 +33,8 @@ python -m icfree.echo_instructor
 <initial_training_set tsv file> \ 
 <normalizer_set tsv file> \ 
 <autofluorescence_set tsv file> \ 
-<sample_volume> 
+-v <sample_volume> \
+-of <output_folder>
 ~~~
 
 # Authors

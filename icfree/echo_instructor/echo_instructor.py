@@ -122,13 +122,13 @@ def volumes_array_generator(
         initial_concentrations_df,
         stock_concentrations_df) / 2.5, 0) * 2.5
 
-    normalizer_volumes_df = (multiply(
+    normalizer_volumes_df = round(multiply(
         normalizer_concentrations_df,
-        stock_concentrations_df)) * 2.5
+        stock_concentrations_df) / 2.5, 0) * 2.5
 
-    autofluorescence_volumes_df = (multiply(
+    autofluorescence_volumes_df = round(multiply(
         autofluorescence_concentrations_df,
-        stock_concentrations_df)) * 2.5
+        stock_concentrations_df) / 2.5, 0) * 2.5
 
     initial_volumes_df['Water'] = \
         sample_volume - initial_volumes_df.sum(axis=1)

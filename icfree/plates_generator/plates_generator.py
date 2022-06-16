@@ -254,6 +254,10 @@ def plates_generator(
     parameters: List
         List of the name of cfps parameters
     """
+    # initial_set_array = concatenate(
+    #     (all_concentrations_array,
+    #         maximum_concentrations_sample),
+    #     axis=0)
 
     logger.debug(f'DOE_CONCENTRATIONS:\n{doe_concentrations}')
     logger.debug(f'CONST_CONCENTRATIONS: {const_concentrations}')

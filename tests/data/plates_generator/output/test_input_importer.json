@@ -1,4 +1,4 @@
-{
+    {
     "Parameter": [
         "Mg-glutamate",
         "k-glutamate",
@@ -32,7 +32,7 @@
         "const",
         "doe",
         "const",
-        "bin_comb",
+        "dna_fluo",
         "const",
         "const",
         "const"

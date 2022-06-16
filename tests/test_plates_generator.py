@@ -11,6 +11,7 @@ from pickle import (
 )
 from numpy.testing import (
     assert_array_equal
+    # assert_almost_equal
 )
 from pandas.testing import (
     assert_frame_equal
@@ -20,7 +21,8 @@ from pandas import (
 )
 from numpy import (
     append as np_append,
-    arange as np_arange
+    arange as np_arange,
+    genfromtxt as np_genfromtxt
 )
 from json import (
     load as json_load
@@ -28,7 +30,11 @@ from json import (
 
 from icfree.plates_generator.plates_generator import (
     input_importer,
-    doe_levels_generator
+    input_processor,
+    doe_levels_generator,
+    levels_to_concentrations,
+    plates_generator,
+    save_plates
 )
 
 
@@ -53,7 +59,7 @@ class Test(TestCase):
         with open(
             os_path.join(
                     self.OUTPUT_FOLDER,
-                    'test_input.json'
+                    'test_input_importer.json'
             ), 'r'
         ) as fp:
             expected_df = DataFrame(
@@ -68,9 +74,30 @@ class Test(TestCase):
                 expected_df,
                 tested_df
             )
+            print(tested_df)
 
     def test_input_processor(self):
-        pass
+        with open(
+            os_path.join(
+                    self.OUTPUT_FOLDER,
+                    'test_input_processor.json'
+            ), 'r'
+        ) as fp:
+            expected_dictionary = (json_load(fp))
+
+        with open(
+            os_path.join(
+                    self.INPUT_FOLDER,
+                    'proCFPS_parameters.tsv'
+            ), 'r'
+        ) as fp2:
+            tested_df = input_importer(fp2)
+
+        tested_dictionary = input_processor(tested_df)
+        TestCase().assertDictEqual(
+                expected_dictionary,
+                tested_dictionary
+            )
 
     def test_doe_levels_generator(self):
         n_variable_parameters = 12
@@ -126,10 +153,331 @@ class Test(TestCase):
         )
 
     def test_levels_to_concentrations(self):
-        pass
+        input_df = input_importer(os_path.join(
+                self.INPUT_FOLDER,
+                'tested_concentrations.tsv'
+                ))
 
-    def test_plates_generator(self):
-        pass
+        parameters = input_processor(input_df)
+
+        n_variable_parameters = len(parameters['doe'])
+        doe_nb_concentrations = 5
+        doe_nb_samples = 10
+        seed = 123
+        tested_sampling_array = doe_levels_generator(
+            n_variable_parameters=n_variable_parameters,
+            doe_nb_concentrations=doe_nb_concentrations,
+            doe_nb_samples=doe_nb_samples,
+            seed=seed
+        )
+
+        max_conc = [
+            v['Maximum concentration']
+            for v in parameters['doe'].values()
+        ]
+
+        tested_concentrations_array = levels_to_concentrations(
+            tested_sampling_array,
+            max_conc,
+        )
+
+        # Refrence array generated from mutipltying
+        # sampling_array.pickle and ref_maximum_concentrations.json
+        with open(
+            os_path.join(
+                self.OUTPUT_FOLDER,
+                'ref_concentrations_array.csv'
+                ), 'r') as f1:
+            ref_concentrations_array = np_genfromtxt(f1, delimiter=',')
+
+        assert_array_equal(
+            tested_concentrations_array,
+            ref_concentrations_array
+        )
+
+    def test_plates_generator_all_columns(self):
+        with open(
+            os_path.join(
+                    self.OUTPUT_FOLDER,
+                    'all_expected_columns.json'
+            ), 'r'
+        ) as fp1:
+            all_expected_columns = json_load(fp1)
+
+        input_df = input_importer(os_path.join(
+                self.INPUT_FOLDER,
+                'proCFPS_parameters.tsv'
+                ))
+
+        parameters = input_processor(input_df)
+
+        n_variable_parameters = len(parameters['doe'])
+        doe_nb_concentrations = 5
+        doe_concentrations = np_append(
+            np_arange(0.0, 1.0, 1/(doe_nb_concentrations-1)),
+            1.0
+        )
+        doe_nb_samples = 10
+        seed = 123
+        doe_levels = doe_levels_generator(
+            n_variable_parameters=n_variable_parameters,
+            doe_nb_concentrations=doe_nb_concentrations,
+            doe_concentrations=doe_concentrations,
+            doe_nb_samples=doe_nb_samples,
+            seed=seed
+        )
+
+        max_conc = [
+            v['Maximum concentration']
+            for v in parameters['doe'].values()
+        ]
+        # Convert
+        doe_concentrations = levels_to_concentrations(
+            doe_levels,
+            max_conc,
+        )
+
+        dna_concentrations = {
+            v: dna_param[v]['Maximum concentration']
+            for status, dna_param in parameters.items()
+            for v in dna_param
+            if status.startswith('dna')
+        }
+
+        const_concentrations = {
+                k: v['Maximum concentration']
+                for k, v in parameters['const'].items()
+            }
+
+        plates = plates_generator(
+            doe_concentrations,
+            dna_concentrations,
+            const_concentrations,
+            parameters={k: list(v.keys()) for k, v in parameters.items()}
+        )
+
+        initial_set_df = plates['initial']
+        autofluorescence_set_df = plates['background']
+        normalizer_set_df = plates['normalizer']
+        tested_columns_initial_set = initial_set_df.columns.tolist()
+        tested_columns_normalizer_set = normalizer_set_df.columns.tolist()
+        tested_columns_autofluorescence_set = \
+            autofluorescence_set_df.columns.tolist()
+        # tested_doe_columns =
+        # tested_const_columns =
+        # tested_dna_fluo_columns =
+        # tested_dna_goi_columns =
+
+        self.assertListEqual(
+            all_expected_columns,
+            tested_columns_initial_set)
+
+        self.assertListEqual(
+            all_expected_columns,
+            tested_columns_normalizer_set)
+
+        self.assertListEqual(
+            all_expected_columns,
+            tested_columns_autofluorescence_set)
+
+        self.assertListEqual(
+            tested_columns_normalizer_set,
+            tested_columns_autofluorescence_set)
+
+    def test_plates_generator_woGOI(self):
+        with open(
+            os_path.join(
+                    self.OUTPUT_FOLDER,
+                    'expected_columns_woGOI.json'
+            ), 'r'
+        ) as fp2:
+            expected_columns_woGOI = json_load(fp2)
+
+        input_df = input_importer(os_path.join(
+                self.INPUT_FOLDER,
+                'proCFPS_parameters_woGOI.tsv'
+                ))
+
+        parameters = input_processor(input_df)
+
+        n_variable_parameters = len(parameters['doe'])
+        doe_nb_concentrations = 5
+        doe_concentrations = np_append(
+            np_arange(0.0, 1.0, 1/(doe_nb_concentrations-1)),
+            1.0
+        )
+        doe_nb_samples = 10
+        seed = 123
+        doe_levels = doe_levels_generator(
+            n_variable_parameters=n_variable_parameters,
+            doe_nb_concentrations=doe_nb_concentrations,
+            doe_concentrations=doe_concentrations,
+            doe_nb_samples=doe_nb_samples,
+            seed=seed
+        )
+
+        max_conc = [
+            v['Maximum concentration']
+            for v in parameters['doe'].values()
+        ]
+
+        doe_concentrations = levels_to_concentrations(
+            doe_levels,
+            max_conc,
+        )
+
+        dna_concentrations = {
+            v: dna_param[v]['Maximum concentration']
+            for status, dna_param in parameters.items()
+            for v in dna_param
+            if status.startswith('dna')
+        }
+
+        const_concentrations = {
+                k: v['Maximum concentration']
+                for k, v in parameters['const'].items()
+            }
+
+        plates = plates_generator(
+            doe_concentrations,
+            dna_concentrations,
+            const_concentrations,
+            parameters={k: list(v.keys()) for k, v in parameters.items()}
+        )
+
+        initial_set_df = plates['initial']
+        autofluorescence_set_df = plates['background']
+        normalizer_set_df = plates['normalizer']
+        tested_columns_initial_set = initial_set_df.columns.tolist()
+        tested_columns_normalizer_set = normalizer_set_df.columns.tolist()
+        tested_columns_autofluorescence_set = \
+            autofluorescence_set_df.columns.tolist()
+
+        self.assertListEqual(
+            expected_columns_woGOI,
+            tested_columns_initial_set)
+
+        self.assertListEqual(
+            expected_columns_woGOI,
+            tested_columns_normalizer_set)
+
+        self.assertListEqual(
+            expected_columns_woGOI,
+            tested_columns_autofluorescence_set)
+
+        self.assertListEqual(
+            tested_columns_normalizer_set,
+            tested_columns_autofluorescence_set)
 
     def test_save_plates(self):
-        pass
+        input_df = input_importer(os_path.join(
+                self.INPUT_FOLDER,
+                'proCFPS_parameters_woGOI.tsv'
+                ))
+
+        parameters = input_processor(input_df)
+
+        n_variable_parameters = len(parameters['doe'])
+        doe_nb_concentrations = 5
+        doe_concentrations = np_append(
+            np_arange(0.0, 1.0, 1/(doe_nb_concentrations-1)),
+            1.0
+        )
+        doe_nb_samples = 10
+        seed = 123
+        doe_levels = doe_levels_generator(
+            n_variable_parameters=n_variable_parameters,
+            doe_nb_concentrations=doe_nb_concentrations,
+            doe_concentrations=doe_concentrations,
+            doe_nb_samples=doe_nb_samples,
+            seed=seed
+        )
+
+        max_conc = [
+            v['Maximum concentration']
+            for v in parameters['doe'].values()
+        ]
+
+        doe_concentrations = levels_to_concentrations(
+            doe_levels,
+            max_conc,
+        )
+
+        dna_concentrations = {
+            v: dna_param[v]['Maximum concentration']
+            for status, dna_param in parameters.items()
+            for v in dna_param
+            if status.startswith('dna')
+        }
+
+        const_concentrations = {
+                k: v['Maximum concentration']
+                for k, v in parameters['const'].items()
+            }
+
+        plates = plates_generator(
+            doe_concentrations,
+            dna_concentrations,
+            const_concentrations,
+            parameters={k: list(v.keys()) for k, v in parameters.items()}
+        )
+
+        save_plates(
+            plates['initial'],
+            plates['normalizer'],
+            plates['background'],
+            plates['parameters'],
+            output_folder=self.OUTPUT_FOLDER
+        )
+
+        with open(
+            os_path.join(
+                    self.OUTPUT_FOLDER,
+                    'ref_initial_set.tsv'
+            )
+        ) as fp1:
+            ref_initial_set = fp1.read()
+
+        with open(
+            os_path.join(
+                    self.OUTPUT_FOLDER,
+                    'ref_autofluorescence_set.tsv'
+            )
+        ) as fp2:
+            ref_autofluorescence_set = fp2.read()
+
+        with open(
+            os_path.join(
+                    self.OUTPUT_FOLDER,
+                    'ref_normalizer_set.tsv'
+            )
+        ) as fp3:
+            ref_normalizer_set = fp3.read()
+
+        with open(
+            os_path.join(
+                    self.OUTPUT_FOLDER,
+                    'initial_set.tsv'
+            )
+        ) as fp4:
+            tested_initial_set = fp4.read()
+
+        with open(
+            os_path.join(
+                    self.OUTPUT_FOLDER,
+                    'autofluorescence_set.tsv'
+            )
+        ) as fp5:
+            tested_autofluorescence_set = fp5.read()
+
+        with open(
+            os_path.join(
+                    self.OUTPUT_FOLDER,
+                    'normalizer_set.tsv'
+            )
+        ) as fp6:
+            tested_normalizer_set = fp6.read()
+
+        assert ref_initial_set == tested_initial_set
+        assert ref_normalizer_set == tested_normalizer_set
+        assert ref_autofluorescence_set == tested_autofluorescence_set
