@@ -194,47 +194,14 @@ class Test(TestCase):
             ref_concentrations_array
         )
 
-    def test_plates_generator(self):
-        all_expected_columns = [
-            'Mg-glutamate',
-            'k-glutamate',
-            'CoA',
-            '3-PGA',
-            'NTP',
-            'NAD',
-            'Folinic acid',
-            'Spermidine',
-            'tRNA',
-            'Amino acids',
-            'CAMP',
-            'Extract',
-            'HEPES',
-            'PEG',
-            'Promoter',
-            'RBS',
-            'GFP-DNA',
-            'GOI-DNA'
-            ]
-
-        # expected_columns_woGOI = [
-        #     'Mg-glutamate',
-        #     'k-glutamate',
-        #     'CoA',
-        #     '3-PGA',
-        #     'NTP',
-        #     'NAD',
-        #     'Folinic acid',
-        #     'Spermidine',
-        #     'tRNA',
-        #     'Amino acids',
-        #     'CAMP',
-        #     'Extract',
-        #     'HEPES',
-        #     'PEG',
-        #     'Promoter',
-        #     'RBS',
-        #     'GFP-DNA'
-        #     ]
+    def test_plates_generator_all_columns(self):
+        with open(
+            os_path.join(
+                    self.OUTPUT_FOLDER,
+                    'all_expected_columns.json'
+            ), 'r'
+        ) as fp1:
+            all_expected_columns = json_load(fp1)
 
         # expected_doe_columns = [
         #     'Mg-glutamate',
@@ -334,6 +301,115 @@ class Test(TestCase):
 
         self.assertListEqual(
             all_expected_columns,
+            tested_columns_autofluorescence_set)
+
+        self.assertListEqual(
+            tested_columns_normalizer_set,
+            tested_columns_autofluorescence_set)
+
+    def test_plates_generator_woGOI(self):
+        with open(
+            os_path.join(
+                    self.OUTPUT_FOLDER,
+                    'expected_columns_woGOI.json'
+            ), 'r'
+        ) as fp2:
+            expected_columns_woGOI = json_load(fp2)
+
+        # expected_doe_columns = [
+        #     'Mg-glutamate',
+        #     'k-glutamate',
+        #     'CoA',
+        #     '3-PGA',
+        #     'NTP',
+        #     'NAD',
+        #     'Folinic acid',
+        #     'Spermidine',
+        #     'tRNA',
+        #     'Amino acids',
+        #     'CAMP'
+        #     ]
+
+        # expected_const_columns = [
+        #     'HEPES',
+        #     'PEG',
+        #     'Promoter',
+        #     'RBS'
+        #     ]
+
+        # expected_dna_fluo_columns = 'GFP-DNA'
+        # expected_dna_goi_columns = 'GOI-DNA'
+
+        input_df = input_importer(os_path.join(
+                self.INPUT_FOLDER,
+                'proCFPS_parameters_woGOI.tsv'
+                ))
+
+        parameters = input_processor(input_df)
+
+        n_variable_parameters = len(parameters['doe'])
+        doe_nb_concentrations = 5
+        doe_concentrations = np_append(
+            np_arange(0.0, 1.0, 1/(doe_nb_concentrations-1)),
+            1.0
+        )
+        doe_nb_samples = 10
+        seed = 123
+        doe_levels = doe_levels_generator(
+            n_variable_parameters=n_variable_parameters,
+            doe_nb_concentrations=doe_nb_concentrations,
+            doe_concentrations=doe_concentrations,
+            doe_nb_samples=doe_nb_samples,
+            seed=seed
+        )
+
+        max_conc = [
+            v['Maximum concentration']
+            for v in parameters['doe'].values()
+        ]
+        # Convert
+        doe_concentrations = levels_to_concentrations(
+            doe_levels,
+            max_conc,
+        )
+
+        dna_concentrations = {
+            v: dna_param[v]['Maximum concentration']
+            for status, dna_param in parameters.items()
+            for v in dna_param
+            if status.startswith('dna')
+        }
+
+        const_concentrations = {
+                k: v['Maximum concentration']
+                for k, v in parameters['const'].items()
+            }
+
+        plates = plates_generator(
+            doe_concentrations,
+            dna_concentrations,
+            const_concentrations,
+            parameters={k: list(v.keys()) for k, v in parameters.items()}
+        )
+
+        initial_set_df = plates['initial']
+        autofluorescence_set_df = plates['background']
+        normalizer_set_df = plates['normalizer']
+        tested_columns_initial_set = initial_set_df.columns.tolist()
+        tested_columns_normalizer_set = normalizer_set_df.columns.tolist()
+        tested_columns_autofluorescence_set = \
+            autofluorescence_set_df.columns.tolist()
+
+        self.assertListEqual(
+            expected_columns_woGOI,
+            tested_columns_initial_set)
+
+        self.assertListEqual(
+            expected_columns_woGOI,
+            tested_columns_normalizer_set)
+
+        self.assertListEqual(
+            expected_columns_woGOI,
             tested_columns_autofluorescence_set)
 
         self.assertListEqual(
