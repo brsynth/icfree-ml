@@ -154,7 +154,7 @@ class Test(TestCase):
     def test_levels_to_concentrations(self):
         input_df = input_importer(os_path.join(
                 self.INPUT_FOLDER,
-                'active-learning-beta.tsv'
+                'tested_concentrations.tsv'
                 ))
 
         parameters = input_processor(input_df)
