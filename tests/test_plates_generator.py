@@ -203,30 +203,6 @@ class Test(TestCase):
         ) as fp1:
             all_expected_columns = json_load(fp1)
 
-        # expected_doe_columns = [
-        #     'Mg-glutamate',
-        #     'k-glutamate',
-        #     'CoA',
-        #     '3-PGA',
-        #     'NTP',
-        #     'NAD',
-        #     'Folinic acid',
-        #     'Spermidine',
-        #     'tRNA',
-        #     'Amino acids',
-        #     'CAMP'
-        #     ]
-
-        # expected_const_columns = [
-        #     'HEPES',
-        #     'PEG',
-        #     'Promoter',
-        #     'RBS'
-        #     ]
-
-        # expected_dna_fluo_columns = 'GFP-DNA'
-        # expected_dna_goi_columns = 'GOI-DNA'
-
         input_df = input_importer(os_path.join(
                 self.INPUT_FOLDER,
                 'proCFPS_parameters.tsv'
@@ -316,30 +292,6 @@ class Test(TestCase):
         ) as fp2:
             expected_columns_woGOI = json_load(fp2)
 
-        # expected_doe_columns = [
-        #     'Mg-glutamate',
-        #     'k-glutamate',
-        #     'CoA',
-        #     '3-PGA',
-        #     'NTP',
-        #     'NAD',
-        #     'Folinic acid',
-        #     'Spermidine',
-        #     'tRNA',
-        #     'Amino acids',
-        #     'CAMP'
-        #     ]
-
-        # expected_const_columns = [
-        #     'HEPES',
-        #     'PEG',
-        #     'Promoter',
-        #     'RBS'
-        #     ]
-
-        # expected_dna_fluo_columns = 'GFP-DNA'
-        # expected_dna_goi_columns = 'GOI-DNA'
-
         input_df = input_importer(os_path.join(
                 self.INPUT_FOLDER,
                 'proCFPS_parameters_woGOI.tsv'
@@ -367,7 +319,7 @@ class Test(TestCase):
             v['Maximum concentration']
             for v in parameters['doe'].values()
         ]
-        # Convert
+
         doe_concentrations = levels_to_concentrations(
             doe_levels,
             max_conc,
