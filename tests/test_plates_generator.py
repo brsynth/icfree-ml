@@ -33,7 +33,8 @@ from icfree.plates_generator.plates_generator import (
     input_processor,
     doe_levels_generator,
     levels_to_concentrations,
-    plates_generator
+    plates_generator,
+    save_plates
 )
 
 
@@ -369,4 +370,114 @@ class Test(TestCase):
             tested_columns_autofluorescence_set)
 
     def test_save_plates(self):
-        pass
+        input_df = input_importer(os_path.join(
+                self.INPUT_FOLDER,
+                'proCFPS_parameters_woGOI.tsv'
+                ))
+
+        parameters = input_processor(input_df)
+
+        n_variable_parameters = len(parameters['doe'])
+        doe_nb_concentrations = 5
+        doe_concentrations = np_append(
+            np_arange(0.0, 1.0, 1/(doe_nb_concentrations-1)),
+            1.0
+        )
+        doe_nb_samples = 10
+        seed = 123
+        doe_levels = doe_levels_generator(
+            n_variable_parameters=n_variable_parameters,
+            doe_nb_concentrations=doe_nb_concentrations,
+            doe_concentrations=doe_concentrations,
+            doe_nb_samples=doe_nb_samples,
+            seed=seed
+        )
+
+        max_conc = [
+            v['Maximum concentration']
+            for v in parameters['doe'].values()
+        ]
+
+        doe_concentrations = levels_to_concentrations(
+            doe_levels,
+            max_conc,
+        )
+
+        dna_concentrations = {
+            v: dna_param[v]['Maximum concentration']
+            for status, dna_param in parameters.items()
+            for v in dna_param
+            if status.startswith('dna')
+        }
+
+        const_concentrations = {
+                k: v['Maximum concentration']
+                for k, v in parameters['const'].items()
+            }
+
+        plates = plates_generator(
+            doe_concentrations,
+            dna_concentrations,
+            const_concentrations,
+            parameters={k: list(v.keys()) for k, v in parameters.items()}
+        )
+
+        save_plates(
+            plates['initial'],
+            plates['normalizer'],
+            plates['background'],
+            plates['parameters'],
+            output_folder=self.OUTPUT_FOLDER
+        )
+
+        with open(
+            os_path.join(
+                    self.OUTPUT_FOLDER,
+                    'ref_initial_set.tsv'
+            )
+        ) as fp1:
+            ref_initial_set = fp1.read()
+
+        with open(
+            os_path.join(
+                    self.OUTPUT_FOLDER,
+                    'ref_autofluorescence_set.tsv'
+            )
+        ) as fp2:
+            ref_autofluorescence_set = fp2.read()
+
+        with open(
+            os_path.join(
+                    self.OUTPUT_FOLDER,
+                    'ref_normalizer_set.tsv'
+            )
+        ) as fp3:
+            ref_normalizer_set = fp3.read()
+
+        with open(
+            os_path.join(
+                    self.OUTPUT_FOLDER,
+                    'initial_set.tsv'
+            )
+        ) as fp4:
+            tested_initial_set = fp4.read()
+
+        with open(
+            os_path.join(
+                    self.OUTPUT_FOLDER,
+                    'autofluorescence_set.tsv'
+            )
+        ) as fp5:
+            tested_autofluorescence_set = fp5.read()
+
+        with open(
+            os_path.join(
+                    self.OUTPUT_FOLDER,
+                    'normalizer_set.tsv'
+            )
+        ) as fp6:
+            tested_normalizer_set = fp6.read()
+
+        assert ref_initial_set == tested_initial_set
+        assert ref_normalizer_set == tested_normalizer_set
+        assert ref_autofluorescence_set == tested_autofluorescence_set
