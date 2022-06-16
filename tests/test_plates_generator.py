@@ -21,7 +21,8 @@ from pandas import (
 )
 from numpy import (
     append as np_append,
-    arange as np_arange
+    arange as np_arange,
+    genfromtxt as np_genfromtxt
 )
 from json import (
     load as json_load
@@ -151,7 +152,47 @@ class Test(TestCase):
         )
 
     def test_levels_to_concentrations(self):
-        pass
+        input_df = input_importer(os_path.join(
+                self.INPUT_FOLDER,
+                'active-learning-beta.tsv'
+                ))
+
+        parameters = input_processor(input_df)
+
+        n_variable_parameters = len(parameters['doe'])
+        doe_nb_concentrations = 5
+        doe_nb_samples = 10
+        seed = 123
+        tested_sampling_array = doe_levels_generator(
+            n_variable_parameters=n_variable_parameters,
+            doe_nb_concentrations=doe_nb_concentrations,
+            doe_nb_samples=doe_nb_samples,
+            seed=seed
+        )
+
+        max_conc = [
+            v['Maximum concentration']
+            for v in parameters['doe'].values()
+        ]
+
+        tested_concentrations_array = levels_to_concentrations(
+            tested_sampling_array,
+            max_conc,
+        )
+
+        # Refrence array generated from mutipltying
+        # sampling_array.pickle and ref_maximum_concentrations.json
+        with open(
+            os_path.join(
+                self.OUTPUT_FOLDER,
+                'ref_concentrations_array.csv'
+                ), 'r') as f1:
+            ref_concentrations_array = np_genfromtxt(f1, delimiter=',')
+
+        assert_array_equal(
+            tested_concentrations_array,
+            ref_concentrations_array
+        )
 
     def test_plates_generator(self):
         all_expected_columns = [
@@ -175,25 +216,25 @@ class Test(TestCase):
             'GOI-DNA'
             ]
 
-        expected_columns_woGOI = [
-            'Mg-glutamate',
-            'k-glutamate',
-            'CoA',
-            '3-PGA',
-            'NTP',
-            'NAD',
-            'Folinic acid',
-            'Spermidine',
-            'tRNA',
-            'Amino acids',
-            'CAMP',
-            'Extract',
-            'HEPES',
-            'PEG',
-            'Promoter',
-            'RBS',
-            'GFP-DNA'
-            ]
+        # expected_columns_woGOI = [
+        #     'Mg-glutamate',
+        #     'k-glutamate',
+        #     'CoA',
+        #     '3-PGA',
+        #     'NTP',
+        #     'NAD',
+        #     'Folinic acid',
+        #     'Spermidine',
+        #     'tRNA',
+        #     'Amino acids',
+        #     'CAMP',
+        #     'Extract',
+        #     'HEPES',
+        #     'PEG',
+        #     'Promoter',
+        #     'RBS',
+        #     'GFP-DNA'
+        #     ]
 
         # expected_doe_columns = [
         #     'Mg-glutamate',
@@ -226,7 +267,7 @@ class Test(TestCase):
 
         parameters = input_processor(input_df)
 
-        n_variable_parameters = 11
+        n_variable_parameters = len(parameters['doe'])
         doe_nb_concentrations = 5
         doe_concentrations = np_append(
             np_arange(0.0, 1.0, 1/(doe_nb_concentrations-1)),
