@@ -12,7 +12,7 @@ Amino acids	doe	1.5	6
 Extract	const	30	30
 CAMP	doe	0.75	200
 HEPES	const	50	2100
-GFP-DNA	bin_comb	50	300
+GFP-DNA	dna_fluo	50	300
 PEG	const	2	200
 Promoter	const	10	300
 RBS	const	10	200
