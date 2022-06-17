@@ -27,6 +27,10 @@ from numpy import (
 from json import (
     load as json_load
 )
+from tempfile import (
+    TemporaryDirectory,
+    NamedTemporaryFile
+)
 
 from icfree.plates_generator.plates_generator import (
     input_importer,
@@ -50,7 +54,7 @@ class Test(TestCase):
         'input'
     )
 
-    OUTPUT_FOLDER = os_path.join(
+    REF_FOLDER = os_path.join(
         DATA_FOLDER,
         'output'
     )
@@ -58,7 +62,7 @@ class Test(TestCase):
     def test_input_importer(self):
         with open(
             os_path.join(
-                    self.OUTPUT_FOLDER,
+                    self.REF_FOLDER,
                     'test_input_importer.json'
             ), 'r'
         ) as fp:
@@ -79,7 +83,7 @@ class Test(TestCase):
     def test_input_processor(self):
         with open(
             os_path.join(
-                    self.OUTPUT_FOLDER,
+                    self.REF_FOLDER,
                     'test_input_processor.json'
             ), 'r'
         ) as fp:
@@ -113,7 +117,7 @@ class Test(TestCase):
 
         with open(
             os_path.join(
-                self.OUTPUT_FOLDER,
+                self.REF_FOLDER,
                 'sampling_array.pickle'
                 ), 'rb') as f:
             ref_sampling_array = pickle_load(f)
@@ -142,7 +146,7 @@ class Test(TestCase):
 
         with open(
             os_path.join(
-                self.OUTPUT_FOLDER,
+                self.REF_FOLDER,
                 'sampling_array.pickle'
                 ), 'rb') as f:
             ref_sampling_array = pickle_load(f)
@@ -185,7 +189,7 @@ class Test(TestCase):
         # sampling_array.pickle and ref_maximum_concentrations.json
         with open(
             os_path.join(
-                self.OUTPUT_FOLDER,
+                self.REF_FOLDER,
                 'ref_concentrations_array.csv'
                 ), 'r') as f1:
             ref_concentrations_array = np_genfromtxt(f1, delimiter=',')
@@ -198,7 +202,7 @@ class Test(TestCase):
     def test_plates_generator_all_columns(self):
         with open(
             os_path.join(
-                    self.OUTPUT_FOLDER,
+                    self.REF_FOLDER,
                     'all_expected_columns.json'
             ), 'r'
         ) as fp1:
@@ -287,7 +291,7 @@ class Test(TestCase):
     def test_plates_generator_woGOI(self):
         with open(
             os_path.join(
-                    self.OUTPUT_FOLDER,
+                    self.REF_FOLDER,
                     'expected_columns_woGOI.json'
             ), 'r'
         ) as fp2:
@@ -369,7 +373,14 @@ class Test(TestCase):
             tested_columns_normalizer_set,
             tested_columns_autofluorescence_set)
 
-    def test_save_plates(self):
+    def test_save_plates_wExistingOutFolder(self):
+        with TemporaryDirectory() as tmpFolder:
+            self._test_save_plates(output_folder=tmpFolder)
+
+    def test_save_plates_woExistingOutFolder(self):
+        self._test_save_plates(output_folder=NamedTemporaryFile().name)
+
+    def _test_save_plates(self, output_folder: str):
         input_df = input_importer(os_path.join(
                 self.INPUT_FOLDER,
                 'proCFPS_parameters_woGOI.tsv'
@@ -422,17 +433,10 @@ class Test(TestCase):
             parameters={k: list(v.keys()) for k, v in parameters.items()}
         )
 
-        save_plates(
-            plates['initial'],
-            plates['normalizer'],
-            plates['background'],
-            plates['parameters'],
-            output_folder=self.OUTPUT_FOLDER
-        )
-
+        # LOAD REF FILES
         with open(
             os_path.join(
-                    self.OUTPUT_FOLDER,
+                    self.REF_FOLDER,
                     'ref_initial_set.tsv'
             )
         ) as fp1:
@@ -440,7 +444,7 @@ class Test(TestCase):
 
         with open(
             os_path.join(
-                    self.OUTPUT_FOLDER,
+                    self.REF_FOLDER,
                     'ref_autofluorescence_set.tsv'
             )
         ) as fp2:
@@ -448,15 +452,24 @@ class Test(TestCase):
 
         with open(
             os_path.join(
-                    self.OUTPUT_FOLDER,
+                    self.REF_FOLDER,
                     'ref_normalizer_set.tsv'
             )
         ) as fp3:
             ref_normalizer_set = fp3.read()
 
+        # GENERATE PLATE FILES
+        save_plates(
+            plates['initial'],
+            plates['normalizer'],
+            plates['background'],
+            plates['parameters'],
+            output_folder=output_folder
+        )
+
         with open(
             os_path.join(
-                    self.OUTPUT_FOLDER,
+                    output_folder,
                     'initial_set.tsv'
             )
         ) as fp4:
@@ -464,7 +477,7 @@ class Test(TestCase):
 
         with open(
             os_path.join(
-                    self.OUTPUT_FOLDER,
+                    output_folder,
                     'autofluorescence_set.tsv'
             )
         ) as fp5:
@@ -472,12 +485,13 @@ class Test(TestCase):
 
         with open(
             os_path.join(
-                    self.OUTPUT_FOLDER,
+                    output_folder,
                     'normalizer_set.tsv'
             )
         ) as fp6:
             tested_normalizer_set = fp6.read()
 
+        # COMPARE FILES
         assert ref_initial_set == tested_initial_set
         assert ref_normalizer_set == tested_normalizer_set
         assert ref_autofluorescence_set == tested_autofluorescence_set
