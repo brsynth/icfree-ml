@@ -59,6 +59,15 @@ class Test(TestCase):
         'output'
     )
 
+    proCFPS_parameters = os_path.join(
+        INPUT_FOLDER,
+        'proCFPS_parameters.tsv'
+    )
+    proCFPS_parameters_woGOI = os_path.join(
+        INPUT_FOLDER,
+        'proCFPS_parameters_woGOI.tsv'
+    )
+
     def test_input_importer(self):
         with open(
             os_path.join(
@@ -375,16 +384,39 @@ class Test(TestCase):
 
     def test_save_plates_wExistingOutFolder(self):
         with TemporaryDirectory() as tmpFolder:
-            self._test_save_plates(output_folder=tmpFolder)
+            self._test_save_plates(
+                input_file=self.proCFPS_parameters,
+                output_folder=tmpFolder
+            )
 
     def test_save_plates_woExistingOutFolder(self):
-        self._test_save_plates(output_folder=NamedTemporaryFile().name)
+        self._test_save_plates(
+            input_file=self.proCFPS_parameters,
+            output_folder=NamedTemporaryFile().name
+        )
 
-    def _test_save_plates(self, output_folder: str):
-        input_df = input_importer(os_path.join(
-                self.INPUT_FOLDER,
-                'proCFPS_parameters_woGOI.tsv'
-                ))
+    def test_save_plates_wExistingOutFolder_woGOI(self):
+        with TemporaryDirectory() as tmpFolder:
+            self._test_save_plates(
+                input_file=self.proCFPS_parameters_woGOI,
+                output_folder=tmpFolder,
+                woGOI=True
+            )
+
+    def test_save_plates_woExistingOutFolder_woGOI(self):
+        self._test_save_plates(
+            input_file=self.proCFPS_parameters_woGOI,
+            output_folder=NamedTemporaryFile().name,
+            woGOI=True
+        )
+
+    def _test_save_plates(
+        self,
+        input_file: str,
+        output_folder: str,
+        woGOI: bool = False
+    ):
+        input_df = input_importer(input_file)
 
         parameters = input_processor(input_df)
 
@@ -434,26 +466,35 @@ class Test(TestCase):
         )
 
         # LOAD REF FILES
+        ref_filename = 'ref_initial'
+        if woGOI:
+            ref_filename += '_woGOI'
         with open(
             os_path.join(
                     self.REF_FOLDER,
-                    'ref_initial_set.tsv'
+                    f'{ref_filename}.tsv'
             )
         ) as fp1:
             ref_initial_set = fp1.read()
 
+        ref_filename = 'ref_autofluorescence'
+        if woGOI:
+            ref_filename += '_woGOI'
         with open(
             os_path.join(
                     self.REF_FOLDER,
-                    'ref_autofluorescence_set.tsv'
+                    f'{ref_filename}.tsv'
             )
         ) as fp2:
             ref_autofluorescence_set = fp2.read()
 
+        ref_filename = 'ref_normalizer'
+        if woGOI:
+            ref_filename += '_woGOI'
         with open(
             os_path.join(
                     self.REF_FOLDER,
-                    'ref_normalizer_set.tsv'
+                     f'{ref_filename}.tsv'
             )
         ) as fp3:
             ref_normalizer_set = fp3.read()
