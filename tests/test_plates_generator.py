@@ -11,7 +11,6 @@ from pickle import (
 )
 from numpy.testing import (
     assert_array_equal
-    # assert_almost_equal
 )
 from pandas.testing import (
     assert_frame_equal
@@ -276,10 +275,6 @@ class Test(TestCase):
         tested_columns_normalizer_set = normalizer_set_df.columns.tolist()
         tested_columns_autofluorescence_set = \
             autofluorescence_set_df.columns.tolist()
-        # tested_doe_columns =
-        # tested_const_columns =
-        # tested_dna_fluo_columns =
-        # tested_dna_goi_columns =
 
         self.assertListEqual(
             all_expected_columns,
