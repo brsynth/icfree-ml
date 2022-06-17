@@ -494,7 +494,7 @@ class Test(TestCase):
         with open(
             os_path.join(
                     self.REF_FOLDER,
-                     f'{ref_filename}.tsv'
+                    f'{ref_filename}.tsv'
             )
         ) as fp3:
             ref_normalizer_set = fp3.read()
