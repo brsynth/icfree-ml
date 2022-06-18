@@ -92,7 +92,7 @@ def volumes_array_generator(
     Parameters
     ----------
     cfps_parameters_df : DataFrame
-        Dataframe populated with cfps_parameters data.
+        Dataframe with cfps_parameters data.
     initial_volumes_df : DataFrame
         Dataframe with initial_concentrations data.
     normalizer_volumes_df : DataFrame
@@ -105,11 +105,11 @@ def volumes_array_generator(
     Returns
     -------
     initial_volumes_df : DataFrame
-        Initial set with volumes values.
+        DataFrame with converted volumes.
     normalizer_volumes_df : DataFrame
-        Normalizer set with volumes values.
+        DataFrame with converted volumes. 0 is assigned to the GOI-DNA column.
     autofluorescence_volumes_df : DataFrame
-        Autofluorescence set with volumes values.
+        DataFrame with converted volumes. 0 is assigned to the GFP-DNA column.
     """
     stock_concentrations_dict = dict(
         cfps_parameters_df[['Parameter', 'Stock concentration']].to_numpy())
