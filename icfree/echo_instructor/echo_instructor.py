@@ -147,7 +147,7 @@ def volumes_array_generator(
             autofluorescence_volumes_df)
 
 
-def save_volumes_array(
+def save_volumes(
         cfps_parameters_df,
         initial_volumes_df,
         normalizer_volumes_df,

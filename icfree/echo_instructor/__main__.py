@@ -3,7 +3,7 @@ import sys
 from .echo_instructor import (
     input_importer,
     volumes_array_generator,
-    save_volumes_array,
+    save_volumes,
     samples_merger,
     multiple_destination_plate_generator,
     multiple_echo_instructions_generator,
@@ -50,7 +50,7 @@ def main():
     normalizer_volumes_df = volumes_array_generator_variables[1]
     autofluorescence_volumes_df = volumes_array_generator_variables[2]
 
-    save_volumes_array(
+    save_volumes(
         cfps_parameters_df,
         initial_volumes_df,
         normalizer_volumes_df,
