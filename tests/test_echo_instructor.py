@@ -78,6 +78,7 @@ class Test(TestCase):
     )
 
     def test_input_importer(self):
+        # LOAD REFERENCE FILES
         with open(
             os_path.join(
                     self.REF_FOLDER,
@@ -125,6 +126,7 @@ class Test(TestCase):
             tested_normalizer_concentrations_df = input_importer_dfs[2]
             tested_autofluorescence_concentrations_df = input_importer_dfs[3]
 
+            # COMPARE DATAFRAMES
             assert_frame_equal(
                 expected_cfps_parameters_df,
                 tested_cfps_parameters_df,
@@ -172,6 +174,7 @@ class Test(TestCase):
         tested_normalizer_volumes_df = volumes_array_generator_dfs[1]
         tested_autofluorescence_volumes_df = volumes_array_generator_dfs[2]
 
+        # LOAD REFERENCE FILES
         with open(
             os_path.join(
                     self.REF_FOLDER,
@@ -199,6 +202,7 @@ class Test(TestCase):
             expected_autofluorescence_volumes_df = read_json(
                 fp3, orient='split')
 
+        # COMPARE DATAFRAMES
         assert_frame_equal(
             expected_initial_volumes_df,
             tested_initial_volumes_df,
@@ -217,6 +221,7 @@ class Test(TestCase):
             check_dtype=False
             )
 
+        # CHECK DATAFRAMES MODULO
         modulo_expected_initial_volumes_df = \
             expected_initial_volumes_df % 2.5
 
@@ -235,6 +240,7 @@ class Test(TestCase):
         modulo_tested_autofluorescence_volumes_df = \
             tested_autofluorescence_volumes_df % 2.5
 
+        # COMPARE DATAFRAMES
         assert_frame_equal(
             modulo_expected_initial_volumes_df,
             modulo_tested_initial_volumes_df
@@ -287,7 +293,7 @@ class Test(TestCase):
         tested_normalizer_volumes_df = volumes_array_generator_dfs[1]
         tested_autofluorescence_volumes_df = volumes_array_generator_dfs[2]
 
-        # LOAD REF FILES
+        # LOAD REFERENCE FILES
         ref_filename = 'expected_initial_volumes'
         with open(
             os_path.join(
@@ -319,6 +325,7 @@ class Test(TestCase):
         ) as fp3:
             expected_normalizer_volumes = fp3.read()
 
+        # GENERATE VOLUME FILES
         save_volumes(
             cfps_parameters_df=tested_cfps_parameters_df,
             initial_volumes_df=tested_initial_volumes_df,
@@ -350,6 +357,7 @@ class Test(TestCase):
         ) as fp6:
             tested_autofluorescence_volumes = fp6.read()
 
+        # COMPARE FILES
         assert expected_initial_volumes == tested_initial_volumes
         assert expected_normalizer_volumes == tested_normalizer_volumes
         assert expected_autofluorescence_volumes == \
