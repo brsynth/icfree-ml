@@ -206,12 +206,12 @@ def samples_merger(
 
     Parameters
     ----------
-    initial_set_volumes_df : DataFrame
-        Initial set with volumes values.
-    normalizer_set_volumes_df : DataFrame
-        Normalizer set with volumes values.
-    autofluorescence_set_volumes_df : DataFrame
-        Autofluorescence set with volumes values.
+    initial_volumes_df : DataFrame
+        DataFrame with converted volumes.
+    normalizer_volumes_df : DataFrame
+        DataFrame with converted volumes. 0 is assigned to the GOI-DNA column.
+    autofluorescence_volumes_df : DataFrame
+        DataFrame with converted volumes. 0 is assigned to the GFP-DNA column.
 
     Returns
     -------
@@ -295,12 +295,12 @@ def multiple_destination_plate_generator(
 
     Parameters
     ----------
-    initial_volumes_df: DataFrame
-        _description_
-    normalizer_volumes_df: DataFrame
-        _description_
-    autofluorescence_volumes_df: DataFrame
-        _description_
+    initial_volumes_df : DataFrame
+        DataFrame with converted volumes.
+    normalizer_volumes_df : DataFrame
+        DataFrame with converted volumes. 0 is assigned to the GOI-DNA column.
+    autofluorescence_volumes_df : DataFrame
+        DataFrame with converted volumes. 0 is assigned to the GFP-DNA column.
     starting_well : str
         Name of the starter well to begin filling the 384 well-plate.
     vertical: bool
