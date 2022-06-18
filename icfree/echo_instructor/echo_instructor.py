@@ -81,10 +81,10 @@ def input_importer(
 
 
 def volumes_array_generator(
-        cfps_parameters_df,
-        initial_concentrations_df,
-        normalizer_concentrations_df,
-        autofluorescence_concentrations_df,
+        cfps_parameters_df: DataFrame,
+        initial_concentrations_df: DataFrame,
+        normalizer_concentrations_df: DataFrame,
+        autofluorescence_concentrations_df: DataFrame,
         sample_volume: int = DEFAULT_SAMPLE_VOLUME):
     """
     Convert concentrations dataframes into volumes dataframes
@@ -148,10 +148,10 @@ def volumes_array_generator(
 
 
 def save_volumes(
-        cfps_parameters_df,
-        initial_volumes_df,
-        normalizer_volumes_df,
-        autofluorescence_volumes_df,
+        cfps_parameters_df: DataFrame,
+        initial_volumes_df: DataFrame,
+        normalizer_volumes_df: DataFrame,
+        autofluorescence_volumes_df: DataFrame,
         output_folder: str = DEFAULT_OUTPUT_FOLDER):
     """
     Save volumes dataframes in tsv files
@@ -198,9 +198,9 @@ def save_volumes(
 
 
 def samples_merger(
-        initial_volumes_df,
-        normalizer_volumes_df,
-        autofluorescence_volumes_df):
+        initial_volumes_df: DataFrame,
+        normalizer_volumes_df: DataFrame,
+        autofluorescence_volumes_df: DataFrame):
     """
     Merge and triplicate samples into a single dataframe
 
@@ -285,9 +285,9 @@ def samples_merger(
 
 
 def multiple_destination_plate_generator(
-        initial_volumes_df,
-        normalizer_volumes_df,
-        autofluorescence_volumes_df,
+        initial_volumes_df: DataFrame,
+        normalizer_volumes_df: DataFrame,
+        autofluorescence_volumes_df: DataFrame,
         starting_well='A1',
         vertical=True):
     """
