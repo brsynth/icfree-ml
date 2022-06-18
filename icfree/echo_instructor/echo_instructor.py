@@ -657,15 +657,6 @@ def save_echo_instructions(
     if not os_path.exists(output_subfolder_sin):
         os_mkdir(output_subfolder_sin)
 
-    # keys = list(echo_instructions_dict.keys())
-
-    # for key in keys:
-    #     for echo_instructions in echo_instructions_dict.values():
-    #         echo_instructions.to_csv(
-    #             'data/echo_instructions/' + key + '.tsv',
-    #             sep='\t',
-    #             index=False)
-
     for key, value in multiple_echo_instructions_dict.items():
         key_index = list(multiple_echo_instructions_dict.keys()).index(key)
         value.to_csv(
