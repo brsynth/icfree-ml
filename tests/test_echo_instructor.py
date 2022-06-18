@@ -126,30 +126,30 @@ class Test(TestCase):
             tested_normalizer_concentrations_df = input_importer_dfs[2]
             tested_autofluorescence_concentrations_df = input_importer_dfs[3]
 
-            # COMPARE DATAFRAMES
-            assert_frame_equal(
-                expected_cfps_parameters_df,
-                tested_cfps_parameters_df,
-                check_dtype=False
-            )
+        # COMPARE DATAFRAMES
+        assert_frame_equal(
+            expected_cfps_parameters_df,
+            tested_cfps_parameters_df,
+            check_dtype=False
+        )
 
-            assert_frame_equal(
-                expected_initial_concentrations_df,
-                tested_initial_concentrations_df,
-                check_dtype=False
-            )
+        assert_frame_equal(
+            expected_initial_concentrations_df,
+            tested_initial_concentrations_df,
+            check_dtype=False
+        )
 
-            assert_frame_equal(
-                expected_normalizer_concentrations_df,
-                tested_normalizer_concentrations_df,
-                check_dtype=False
-            )
+        assert_frame_equal(
+            expected_normalizer_concentrations_df,
+            tested_normalizer_concentrations_df,
+            check_dtype=False
+        )
 
-            assert_frame_equal(
-                expected_autofluorescence_concentrations_df,
-                tested_autofluorescence_concentrations_df,
-                check_dtype=False
-            )
+        assert_frame_equal(
+            expected_autofluorescence_concentrations_df,
+            tested_autofluorescence_concentrations_df,
+            check_dtype=False
+        )
 
     def test_volumes_array_generator(self):
         input_importer_dfs = input_importer(
