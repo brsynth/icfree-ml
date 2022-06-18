@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# coding: utf-8
+
 from os import (
     path as os_path,
     mkdir as os_mkdir
