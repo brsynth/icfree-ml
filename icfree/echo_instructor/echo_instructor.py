@@ -39,18 +39,18 @@ def input_importer(
     Parameters
     ----------
     cfps_parameters : tsv file
-        tsv with list of cfps parameters and relative features.
+        Tsv with list of cfps parameters and relative features.
     initial_concentrations : tsv file
-        Initial training set with concentrations values.
+        Dataset with concentrations values.
     normalizer_concentrations : tsv file
-        Normalizer set with concentrations values.
+        Copy of initial_concentrations. 0 is assigned to the GOI-DNA column.
     autofluorescence_concentrations : tsv file
-        Autofluorescence set with concentrations values.
+        Copy of normalizer_concentrations. 0 is assigned to the GFP-DNA column.
 
     Returns
     -------
     cfps_parameters_df : DataFrame
-        Dataframe populated with cfps_parameters data.
+        Dataframe with cfps_parameters data.
     initial_volumes_df : DataFrame
         Dataframe with initial_set_concentrations data.
     normalizer_volumes_df : DataFrame
