@@ -10,7 +10,7 @@ Spermidine	doe	1	420
 tRNA	doe	0.2	84
 Amino acids	doe	1.5	6
 CAMP	doe	0.75	200
-Extract	const	30	30
+Extract	const	30	300
 HEPES	const	50	2100
 PEG	const	2	200
 Promoter	const	10	300
