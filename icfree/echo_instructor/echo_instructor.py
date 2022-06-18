@@ -154,29 +154,20 @@ def save_volumes_array(
         autofluorescence_volumes_df,
         output_folder: str = DEFAULT_OUTPUT_FOLDER):
     """
-    Save dataframes in tsv files
+    Save volumes dataframes in tsv files
 
     Parameters
     ----------
     cfps_parameters_df : DataFrame
-        Pandas dataframe populated with cfps_parameters data.
+        Dataframe with cfps_parameters data.
     initial_volumes_df : DataFrame
-        Initial set with volumes values.
+        DataFrame with converted volumes.
     normalizer_volumes_df : DataFrame
-        Normalizer set with volumes values.
+        Copy of initial_volumes_df. 0 is assigned to the GOI-DNA column.
     autofluorescence_volumes_df : DataFrame
-        Autofluorescence set with volumes values.
+        Copy of normalizer_volumes_df. 0 is assigned to the GFP-DNA column.
     output_folder: str
-        Path where store output files
-
-    Returns
-    -------
-    initial_volumes : tsv file
-        Initial set with volumes values.
-    normalizer_volumes : tsv file
-        Normalizer set with volumes values.
-    autofluorescence_volumes : tsv file
-        Autofluorescence set with volumes values.
+        Path to storage folder for output files
     """
     if not os_path.exists(output_folder):
         os_mkdir(output_folder)
@@ -187,27 +178,23 @@ def save_volumes_array(
     all_parameters = cfps_parameters_df['Parameter'].tolist()
     all_parameters.append('Water')
 
-    initial_volumes = initial_volumes_df.to_csv(
+    initial_volumes_df.to_csv(
         os_path.join(output_subfolder, 'initial_volumes.tsv'),
         sep='\t',
         header=all_parameters,
         index=False)
 
-    normalizer_volumes = normalizer_volumes_df.to_csv(
+    normalizer_volumes_df.to_csv(
         os_path.join(output_subfolder, 'normalizer_volumes.tsv'),
         sep='\t',
         header=all_parameters,
         index=False)
 
-    autofluorescence_volumes = autofluorescence_volumes_df.to_csv(
+    autofluorescence_volumes_df.to_csv(
         os_path.join(output_subfolder, 'autofluorescence_volumes.tsv'),
         sep='\t',
         header=all_parameters,
         index=False)
-
-    return (initial_volumes,
-            normalizer_volumes,
-            autofluorescence_volumes)
 
 
 def samples_merger(
