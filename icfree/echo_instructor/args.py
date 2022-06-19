@@ -31,7 +31,7 @@ def add_arguments(parser):
     )
 
     parser.add_argument(
-        'init_tset',
+        'init_set',
         type=str,
         help='Path to a .tsv file containing initial training set',
     )

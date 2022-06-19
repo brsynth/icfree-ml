@@ -22,7 +22,7 @@ def main():
 
     args = parser.parse_args()
     cfps_parameters = args.cfps
-    initial_concentrations = args.init_tset
+    initial_concentrations = args.init_set
     normalizer_concentrations = args.norm_set
     autofluorescence_concentrations = args.autofluo_set
     starting_well = args.starting_well
