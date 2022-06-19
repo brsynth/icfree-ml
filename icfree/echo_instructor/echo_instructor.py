@@ -526,6 +526,7 @@ def multiple_echo_instructions_generator(
         for parameter_name in destination_plate.drop(columns=['well_name']):
             worklist = {
                 'Source Plate Name': [],
+                'Source Plate Type': [],
                 'Source Well': [],
                 'Destination Plate Name': [],
                 'Destination Well': [],
@@ -534,6 +535,7 @@ def multiple_echo_instructions_generator(
 
             for index in range(len(destination_plate)):
                 worklist['Source Plate Name'].append('Source[1]')
+                worklist['Source Plate Type'].append('384PP_AQ_GP3')
                 worklist['Source Well'].append(parameter_name)
                 worklist['Destination Plate Name'].append('Destination[1]')
                 worklist['Destination Well'].append(
@@ -594,6 +596,7 @@ def single_echo_instructions_generator(
         for parameter_name in destination_plate.drop(columns=['well_name']):
             worklist = {
                 'Source Plate Name': [],
+                'Source Plate Type': [],
                 'Source Well': [],
                 'Destination Plate Name': [],
                 'Destination Well': [],
@@ -602,6 +605,7 @@ def single_echo_instructions_generator(
 
             for index in range(len(destination_plate)):
                 worklist['Source Plate Name'].append('Source[1]')
+                worklist['Source Plate Type'].append('384PP_AQ_GP3')
                 worklist['Source Well'].append(parameter_name)
                 worklist['Destination Plate Name'].append('Destination[1]')
                 worklist['Destination Well'].append(
