@@ -71,7 +71,7 @@ def main():
         initial_volumes_df,
         normalizer_volumes_df,
         autofluorescence_volumes_df,
-        starting_well='A1',
+        starting_well,
         vertical=True)
 
     multiple_echo_instructions_dict = \

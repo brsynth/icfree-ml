@@ -101,7 +101,7 @@ def volumes_array_generator(
     autofluorescence_volumes_df : DataFrame
         Dataframe with autofluorescence_concentrations data.
     sample_volume: int
-        Final sample volume in each well.
+        Final sample volume in each well. Defaults to 10000 nL.
 
     Returns
     -------
@@ -168,7 +168,7 @@ def save_volumes(
     autofluorescence_volumes_df : DataFrame
         Copy of normalizer_volumes_df. 0 is assigned to the GFP-DNA column.
     output_folder: str
-        Path to storage folder for output files
+        Path to storage folder for output files. Defaults to working directory.
     """
     if not os_path.exists(output_folder):
         os_mkdir(output_folder)
@@ -307,7 +307,7 @@ def multiple_destination_plate_generator(
     autofluorescence_volumes_df : DataFrame
         DataFrame with converted volumes. 0 is assigned to the GFP-DNA column.
     starting_well : str
-        Starter well to begin filling the 384 well-plate.
+        Starter well to begin filling the 384 well-plate. Defaults to 'A1'.
     vertical: bool
         -True: plate is filled column by column from top to bottom.
         -False: plate is filled row by row from left to right.
@@ -395,7 +395,7 @@ def single_destination_plate_generator(
         master_plate_1_final,
         master_plate_2_final,
         master_plate_3_final,
-        starting_well='A1',
+        starting_well: str = DEFAULT_STARTING_WELL,
         vertical=True):
     """
     Generate a single destination plates dataframe
@@ -409,7 +409,7 @@ def single_destination_plate_generator(
     master_plate_3_final: DataFrame
         Third DataFrame with merged samples.
     starting_well : str
-        Starter well to begin filling the 384 well-plate.
+        Starter well to begin filling the 384 well-plate. Defaults to 'A1'.
     vertical: bool
         -True: plate is filled column by column from top to bottom.
         -False: plate is filled row by row from left to right.
