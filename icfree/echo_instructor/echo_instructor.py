@@ -493,9 +493,7 @@ def single_destination_plate_generator(
 
 
 def multiple_echo_instructions_generator(
-        multiple_destination_plates_dict,
-        desired_order=None,
-        reset_index=True):
+        multiple_destination_plates_dict):
     """
     Generate and dispatch Echo® instructions on multiple plates
 
@@ -553,19 +551,11 @@ def multiple_echo_instructions_generator(
             zip(multiple_echo_instructions_dict_keys,
                 multiple_echo_instructions_list))
 
-    if desired_order:
-        echo_instructions = concat([all_sources[i] for i in desired_order])
-
-    if reset_index:
-        echo_instructions = echo_instructions.reset_index(drop=True)
-
     return multiple_echo_instructions_dict
 
 
 def single_echo_instructions_generator(
-        single_destination_plates_dict,
-        desired_order=None,
-        reset_index=True):
+        single_destination_plates_dict):
     """
     Generate and merge Echo® instructions a single triplicated plate
 
@@ -622,12 +612,6 @@ def single_echo_instructions_generator(
         single_echo_instructions_dict = dict(
             zip(single_echo_instructions_dict_keys,
                 single_echo_instructions_list))
-
-    if desired_order:
-        echo_instructions = concat([all_sources[i] for i in desired_order])
-
-    if reset_index:
-        echo_instructions = echo_instructions.reset_index(drop=True)
 
     return single_echo_instructions_dict
 
