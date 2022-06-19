@@ -116,6 +116,7 @@ def volumes_array_generator(
     autofluorescence_volumes_df : DataFrame
         DataFrame with converted volumes. 0 is assigned to the GFP-DNA column.
     """
+    # Exract stock conecentrations from cfps_parameters_df
     stock_concentrations_dict = dict(
         cfps_parameters_df[['Parameter', 'Stock concentration']].to_numpy())
 
@@ -126,6 +127,7 @@ def volumes_array_generator(
     stock_concentrations_df = \
         sample_volume / stock_concentrations_df
 
+    # Convert concentrations to volumes
     initial_volumes_df = round(multiply(
         initial_concentrations_df,
         stock_concentrations_df) / 2.5, 0) * 2.5
@@ -138,6 +140,7 @@ def volumes_array_generator(
         autofluorescence_concentrations_df,
         stock_concentrations_df) / 2.5, 0) * 2.5
 
+    # Add Water column
     initial_volumes_df['Water'] = \
         sample_volume - initial_volumes_df.sum(axis=1)
 
@@ -174,8 +177,11 @@ def save_volumes(
     output_folder: str
         Path to storage folder for output files. Defaults to working directory.
     """
+    # Create output folder if it doesn't exist
     if not os_path.exists(output_folder):
         os_mkdir(output_folder)
+
+    # Store files in user-provided output folder
     output_subfolder = os_path.join(output_folder, 'volumes_output')
     if not os_path.exists(output_subfolder):
         os_mkdir(output_subfolder)
@@ -227,7 +233,7 @@ def samples_merger(
     master_plate_3_final: DataFrame
         Third DataFrame with merged samples.
     """
-    # SPLIT VOLUMES DATAFRAMES INTO THREE SUBSETS
+    # Split volumes dataframes into three subsets
     initial_volumes_df_list = vsplit(
         initial_volumes_df,
         3)
@@ -240,13 +246,14 @@ def samples_merger(
         autofluorescence_volumes_df,
         3)
 
-    # MERGE FIRST SUBSETS FROM EACH LIST
+    # Merge first subsets from each list
     master_plate_1 = concat((
         initial_volumes_df_list[0],
         normalizer_volumes_df_list[0],
         autofluorescence_volumes_df_list[0]),
         axis=0)
 
+    # Triplicate merged subsets
     master_plate_1_duplicate = master_plate_1.copy()
     master_plate_1_triplicate = master_plate_1.copy()
     master_plate_1_final = concat((
@@ -256,13 +263,14 @@ def samples_merger(
         axis=0,
         ignore_index=True)
 
-    # MERGE SECOND SUBSETS FROM EACH LIST
+    # Merge second subsets from each list
     master_plate_2 = concat((
         initial_volumes_df_list[1],
         normalizer_volumes_df_list[1],
         autofluorescence_volumes_df_list[1]),
         axis=0)
 
+    # Triplicate merged subsets
     master_plate_2_duplicate = master_plate_2.copy()
     master_plate_2_triplicate = master_plate_2.copy()
     master_plate_2_final = concat((
@@ -272,13 +280,14 @@ def samples_merger(
         axis=0,
         ignore_index=True)
 
-    # MERGE THIRD SUBSETS FROM EACH LIST
+    # Merge third subsets from each list
     master_plate_3 = concat((
         initial_volumes_df_list[2],
         normalizer_volumes_df_list[2],
         autofluorescence_volumes_df_list[2]),
         axis=0)
 
+    # Triplicate merged subsets
     master_plate_3_duplicate = master_plate_3.copy()
     master_plate_3_triplicate = master_plate_3.copy()
     master_plate_3_final = concat((
@@ -338,7 +347,7 @@ def multiple_destination_plate_generator(
     all_dataframe = {}
 
     for volumes_df in volumes_df_dict.values():
-        # FILL DESTINATION PLATES COLUMN BY COLUMN
+        # Fill destination plates column by column
         if vertical:
             from_well = plate_rows.index(starting_well[0]) + \
                 (int(starting_well[1:]) - 1) * 16
@@ -364,7 +373,7 @@ def multiple_destination_plate_generator(
             volumes_wells['well_name'] = names
             volumes_wells_list.append(volumes_wells)
 
-        # FILL DESTINATION PLATES ROW BY ROW
+        # Fill destination plates row by row
         if not vertical:
             from_well = plate_rows.index(starting_well[0]) * 24 + \
                 int(starting_well[1:]) - 1
@@ -440,7 +449,7 @@ def single_destination_plate_generator(
     all_dataframe = {}
 
     for volumes_df in volumes_df_dict.values():
-        # FILL DESTINATION PLATES COLUMN BY COLUMN
+        # Fill destination plates column by column
         if vertical:
             from_well = plate_rows.index(starting_well[0]) + \
                 (int(starting_well[1:]) - 1) * 16
@@ -466,7 +475,7 @@ def single_destination_plate_generator(
             volumes_wells['well_name'] = names
             volumes_wells_list.append(volumes_wells)
 
-        # FILL DESTINATION PLATES ROW BY ROW
+        # Fill destination plates row by row
         if not vertical:
             from_well = plate_rows.index(starting_well[0]) * 24 + \
                 int(starting_well[1:]) - 1
