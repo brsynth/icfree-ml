@@ -34,7 +34,7 @@ def input_importer(
         normalizer_concentrations,
         autofluorescence_concentrations):
     """
-    Create dataframes from tsv files
+    Create concentrations dataframes from tsv files
 
     Parameters
     ----------
@@ -216,12 +216,13 @@ def samples_merger(
     Returns
     -------
     master_plate_1_final: DataFrame
-        _description_
+        First DataFrame with merged samples.
     master_plate_2_final: DataFrame
-        _description_
+        Second DataFrame with merged samples.
     master_plate_3_final: DataFrame
-        _description_
+        Third DataFrame with merged samples.
     """
+    # SPLIT VOLUMES DATAFRAMES INTO THREE SUBSETS
     initial_volumes_df_list = vsplit(
         initial_volumes_df,
         3)
@@ -234,6 +235,7 @@ def samples_merger(
         autofluorescence_volumes_df,
         3)
 
+    # MERGE FIRST SUBSETS FROM EACH LIST
     master_plate_1 = concat((
         initial_volumes_df_list[0],
         normalizer_volumes_df_list[0],
@@ -249,6 +251,7 @@ def samples_merger(
         axis=0,
         ignore_index=True)
 
+    # MERGE SECOND SUBSETS FROM EACH LIST
     master_plate_2 = concat((
         initial_volumes_df_list[1],
         normalizer_volumes_df_list[1],
@@ -264,6 +267,7 @@ def samples_merger(
         axis=0,
         ignore_index=True)
 
+    # MERGE THIRD SUBSETS FROM EACH LIST
     master_plate_3 = concat((
         initial_volumes_df_list[2],
         normalizer_volumes_df_list[2],
@@ -302,15 +306,15 @@ def multiple_destination_plate_generator(
     autofluorescence_volumes_df : DataFrame
         DataFrame with converted volumes. 0 is assigned to the GFP-DNA column.
     starting_well : str
-        Name of the starter well to begin filling the 384 well-plate.
+        Starter well to begin filling the 384 well-plate.
     vertical: bool
         -True: plate is filled column by column from top to bottom.
         -False: plate is filled row by row from left to right.
 
     Returns
     -------
-    destination_plates_dict: Dict
-        _description_
+    multiple_destination_plates_dict: Dict
+        Dict with destination plates dataframes.
     """
     volumes_df_dict = {
         'initial_volumes_df': initial_volumes_df,
@@ -329,6 +333,7 @@ def multiple_destination_plate_generator(
     all_dataframe = {}
 
     for volumes_df in volumes_df_dict.values():
+        # FILL DESTINATION PLATES COLUMN BY COLUMN
         if vertical:
             from_well = plate_rows.index(starting_well[0]) + \
                 (int(starting_well[1:]) - 1) * 16
@@ -354,6 +359,7 @@ def multiple_destination_plate_generator(
             volumes_wells['well_name'] = names
             volumes_wells_list.append(volumes_wells)
 
+        # FILL DESTINATION PLATES ROW BY ROW
         if not vertical:
             from_well = plate_rows.index(starting_well[0]) * 24 + \
                 int(starting_well[1:]) - 1
@@ -391,18 +397,18 @@ def single_destination_plate_generator(
         starting_well='A1',
         vertical=True):
     """
-    Generate a single destination plates datframe
+    Generate a single destination plates dataframe
 
     Parameters
     ----------
     master_plate_1_final: DataFrame
-        _description_
+        First DataFrame with merged samples.
     master_plate_2_final: DataFrame
-        _description_
+        Second DataFrame with merged samples.
     master_plate_3_final: DataFrame
-        _description_
+        Third DataFrame with merged samples.
     starting_well : str
-        Name of the starter well to begin filling the 384 well-plate.
+        Starter well to begin filling the 384 well-plate.
     vertical: bool
         -True: plate is filled column by column from top to bottom.
         -False: plate is filled row by row from left to right.
@@ -410,7 +416,7 @@ def single_destination_plate_generator(
     Returns
     -------
     single_destination_plates_dict: Dict
-        _description_
+        Dict with destination plates dataframes.
     """
     volumes_df_dict = {
         'master_plate_1_final': master_plate_1_final,
@@ -429,6 +435,7 @@ def single_destination_plate_generator(
     all_dataframe = {}
 
     for volumes_df in volumes_df_dict.values():
+        # FILL DESTINATION PLATES COLUMN BY COLUMN
         if vertical:
             from_well = plate_rows.index(starting_well[0]) + \
                 (int(starting_well[1:]) - 1) * 16
@@ -454,6 +461,7 @@ def single_destination_plate_generator(
             volumes_wells['well_name'] = names
             volumes_wells_list.append(volumes_wells)
 
+        # FILL DESTINATION PLATES ROW BY ROW
         if not vertical:
             from_well = plate_rows.index(starting_well[0]) * 24 + \
                 int(starting_well[1:]) - 1
@@ -494,7 +502,7 @@ def multiple_echo_instructions_generator(
     Parameters
     ----------
         multiple_destination_plates_dict: Dict
-            _description_
+            Dict with destination plates dataframes.
         desired_order: _type_
             _description_
         reset_index: _type_
@@ -503,7 +511,7 @@ def multiple_echo_instructions_generator(
     Returns
     -------
         multiple_echo_instructions_dict: Dict
-            _description_
+            Dict with echo instructions dataframes.
     """
     all_sources = {}
     multiple_echo_instructions_dict = {}
@@ -562,7 +570,7 @@ def single_echo_instructions_generator(
     Parameters
     ----------
         single_destination_plates_dict: Dict
-            _description_
+            Dict with destination plates dataframes.
         desired_order: _type_
             _description_
         reset_index: _type_
@@ -570,8 +578,8 @@ def single_echo_instructions_generator(
 
     Returns
     -------
-        multiple_echo_instructions_dict: Dict
-            _description_
+        single_echo_instructions_dict: Dict
+            Dict with echo instructions dataframes.
     """
     all_sources = {}
     single_echo_instructions_dict = {}
@@ -625,15 +633,15 @@ def save_echo_instructions(
         single_echo_instructions_dict,
         output_folder: str = DEFAULT_OUTPUT_FOLDER):
     """
-    Save instructions in tsv files
+    Save Echo instructions in tsv files
 
     Parameters
     ----------
         single_echo_instructions_dict: Dict
-            _description_
+            Dict with echo instructions dataframes.
 
         multiple_echo_instructions_dict: Dict
-            _description_
+            Dict with echo instructions dataframes.
 
         output_folder: str
             Path to output storage folder
