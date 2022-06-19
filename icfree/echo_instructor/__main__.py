@@ -25,6 +25,7 @@ def main():
     initial_concentrations = args.init_tset
     normalizer_concentrations = args.norm_set
     autofluorescence_concentrations = args.autofluo_set
+    starting_well = args.starting_well
     sample_volume = args.sample_volume
     output_folder = args.output_folder
 
@@ -80,7 +81,7 @@ def main():
         master_plate_1_final,
         master_plate_2_final,
         master_plate_3_final,
-        starting_well='A1',
+        starting_well,
         vertical=True)
 
     single_echo_instructions_dict = \

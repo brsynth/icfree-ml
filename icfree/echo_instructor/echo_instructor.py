@@ -24,7 +24,8 @@ from string import (
 
 from .args import (
     DEFAULT_OUTPUT_FOLDER,
-    DEFAULT_SAMPLE_VOLUME
+    DEFAULT_SAMPLE_VOLUME,
+    DEFAULT_STARTING_WELL
 )
 
 
@@ -292,7 +293,7 @@ def multiple_destination_plate_generator(
         initial_volumes_df: DataFrame,
         normalizer_volumes_df: DataFrame,
         autofluorescence_volumes_df: DataFrame,
-        starting_well='A1',
+        starting_well: str = DEFAULT_STARTING_WELL,
         vertical=True):
     """
     Generate an ensemble of destination plates dataframes

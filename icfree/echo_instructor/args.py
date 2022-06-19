@@ -5,6 +5,7 @@ from os import getcwd as os_getcwd
 
 DEFAULT_OUTPUT_FOLDER = os_getcwd()
 DEFAULT_SAMPLE_VOLUME = 10000
+DEFAULT_STARTING_WELL = 'A1'
 
 
 def build_args_parser(
@@ -53,6 +54,14 @@ def add_arguments(parser):
         default=DEFAULT_SAMPLE_VOLUME,
         help=('Final sample volume in each well in nL'
               f' (default: {DEFAULT_SAMPLE_VOLUME})')
+    )
+
+    parser.add_argument(
+        '-sw', '--starting_well',
+        type=str,
+        default=DEFAULT_STARTING_WELL,
+        help=('Starter well to begin filling the 384 well-plate.'
+              f' (default: {DEFAULT_STARTING_WELL})')
     )
 
     parser.add_argument(
