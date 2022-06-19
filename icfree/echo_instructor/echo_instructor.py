@@ -621,7 +621,7 @@ def save_echo_instructions(
         single_echo_instructions_dict,
         output_folder: str = DEFAULT_OUTPUT_FOLDER):
     """
-    Save Echo instructions in tsv files
+    Save Echo instructions in csv files
 
     Parameters
     ----------
@@ -654,22 +654,20 @@ def save_echo_instructions(
         os_mkdir(output_subfolder_sin)
 
     for key, value in multiple_echo_instructions_dict.items():
-        key_index = list(multiple_echo_instructions_dict.keys()).index(key)
         value.to_csv(
             os_path.join(
                 output_subfolder_mul,
-                f'{str(key_index)}.csv'
+                f'{str(key)}.csv'
             ),
             sep=',',
             index=False,
             encoding='utf-8')
 
     for key, value in single_echo_instructions_dict.items():
-        key_index = list(single_echo_instructions_dict.keys()).index(key)
         value.to_csv(
             os_path.join(
                 output_subfolder_sin,
-                f'{str(key_index)}.csv'
+                f'{str(key)}_instructions.csv'
             ),
             sep=',',
             index=False,
