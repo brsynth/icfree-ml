@@ -658,17 +658,19 @@ def save_echo_instructions(
         value.to_csv(
             os_path.join(
                 output_subfolder_mul,
-                f'{str(key_index)}.tsv'
+                f'{str(key_index)}.csv'
             ),
-            sep='\t',
-            index=False)
+            sep=',',
+            index=False,
+            encoding='utf-8')
 
     for key, value in single_echo_instructions_dict.items():
         key_index = list(single_echo_instructions_dict.keys()).index(key)
         value.to_csv(
             os_path.join(
                 output_subfolder_sin,
-                f'{str(key_index)}.tsv'
+                f'{str(key_index)}.csv'
             ),
-            sep='\t',
-            index=False)
+            sep=',',
+            index=False,
+            encoding='utf-8')
