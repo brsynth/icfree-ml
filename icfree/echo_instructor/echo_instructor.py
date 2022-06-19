@@ -22,6 +22,10 @@ from string import (
     ascii_uppercase
 )
 
+from typing import (
+    Dict
+)
+
 from .args import (
     DEFAULT_OUTPUT_FOLDER,
     DEFAULT_SAMPLE_VOLUME,
@@ -392,9 +396,9 @@ def multiple_destination_plate_generator(
 
 
 def single_destination_plate_generator(
-        master_plate_1_final,
-        master_plate_2_final,
-        master_plate_3_final,
+        master_plate_1_final: DataFrame,
+        master_plate_2_final: DataFrame,
+        master_plate_3_final: DataFrame,
         starting_well: str = DEFAULT_STARTING_WELL,
         vertical=True):
     """
@@ -494,7 +498,7 @@ def single_destination_plate_generator(
 
 
 def multiple_echo_instructions_generator(
-        multiple_destination_plates_dict):
+        multiple_destination_plates_dict: Dict):
     """
     Generate and dispatch Echo® instructions on multiple plates
 
@@ -556,7 +560,7 @@ def multiple_echo_instructions_generator(
 
 
 def single_echo_instructions_generator(
-        single_destination_plates_dict):
+        single_destination_plates_dict: Dict):
     """
     Generate and merge Echo® instructions a single triplicated plate
 
@@ -618,8 +622,8 @@ def single_echo_instructions_generator(
 
 
 def save_echo_instructions(
-        multiple_echo_instructions_dict,
-        single_echo_instructions_dict,
+        multiple_echo_instructions_dict: Dict,
+        single_echo_instructions_dict: Dict,
         output_folder: str = DEFAULT_OUTPUT_FOLDER):
     """
     Save Echo instructions in csv files
