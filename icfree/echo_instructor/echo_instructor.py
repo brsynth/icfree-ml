@@ -642,29 +642,30 @@ def save_echo_instructions(
         output_folder: str
             Path to output storage folder
     """
-    # Create output subfolders if they don't exist
+    # Create output folder if it doesn't exist
     if not os_path.exists(output_folder):
         os_mkdir(output_folder)
-    output_subfolder = os_path.join(output_folder, 'echo_instructions')
 
+    # Create output subfolders if they don't exist
+    output_subfolder = os_path.join(output_folder, 'echo_instructions')
     if not os_path.exists(output_subfolder):
         os_mkdir(output_subfolder)
-    output_subfolder_mul = os_path.join(
+
+    output_subfolder_distributed = os_path.join(
         output_folder, 'echo_instructions', 'distributed')
+    if not os_path.exists(output_subfolder_distributed):
+        os_mkdir(output_subfolder_distributed)
 
-    if not os_path.exists(output_subfolder_mul):
-        os_mkdir(output_subfolder_mul)
-    output_subfolder_sin = os_path.join(
+    output_subfolder_merged = os_path.join(
         output_folder, 'echo_instructions', 'merged')
-
-    if not os_path.exists(output_subfolder_sin):
-        os_mkdir(output_subfolder_sin)
+    if not os_path.exists(output_subfolder_merged):
+        os_mkdir(output_subfolder_merged)
 
     # Save distributed Echo instructions in csv files
     for key, value in distribute_echo_instructions_dict.items():
         value.to_csv(
             os_path.join(
-                output_subfolder_mul,
+                output_subfolder_distributed,
                 f'{str(key)}.csv'
             ),
             sep=',',
@@ -675,7 +676,7 @@ def save_echo_instructions(
     for key, value in merge_echo_instructions_dict.items():
         value.to_csv(
             os_path.join(
-                output_subfolder_sin,
+                output_subfolder_merged,
                 f'{str(key)}_instructions.csv'
             ),
             sep=',',
