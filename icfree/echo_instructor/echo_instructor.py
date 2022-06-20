@@ -432,7 +432,7 @@ def merge_destination_plate_generator(
     Returns
     -------
     merge_destination_plates_dict: Dict
-        Dict with destination plates dataframes.
+        Dict with merged destination plates dataframes.
     """
     volumes_df_dict = {
         'merged_plate_1_final': merged_plate_1_final,
@@ -642,6 +642,7 @@ def save_echo_instructions(
         output_folder: str
             Path to output storage folder
     """
+    # Create output subfolders if they don't exist
     if not os_path.exists(output_folder):
         os_mkdir(output_folder)
     output_subfolder = os_path.join(output_folder, 'echo_instructions')
@@ -649,18 +650,17 @@ def save_echo_instructions(
     if not os_path.exists(output_subfolder):
         os_mkdir(output_subfolder)
     output_subfolder_mul = os_path.join(
-        output_folder, 'echo_instructions', 'distributed'
-    )
+        output_folder, 'echo_instructions', 'distributed')
 
     if not os_path.exists(output_subfolder_mul):
         os_mkdir(output_subfolder_mul)
     output_subfolder_sin = os_path.join(
-        output_folder, 'echo_instructions', 'merged'
-    )
+        output_folder, 'echo_instructions', 'merged')
 
     if not os_path.exists(output_subfolder_sin):
         os_mkdir(output_subfolder_sin)
 
+    # Save distributed Echo instructions in csv files
     for key, value in distribute_echo_instructions_dict.items():
         value.to_csv(
             os_path.join(
@@ -671,6 +671,7 @@ def save_echo_instructions(
             index=False,
             encoding='utf-8')
 
+    # Save merged Echo instructions in csv files
     for key, value in merge_echo_instructions_dict.items():
         value.to_csv(
             os_path.join(
