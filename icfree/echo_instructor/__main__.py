@@ -47,14 +47,17 @@ def main():
     normalizer_concentrations_df = input_importer_variables[2]
     autofluorescence_concentrations_df = input_importer_variables[3]
 
-    volumes_array_generator_variables = volumes_array_generator(
-        cfps_parameters_df,
-        initial_concentrations_df,
-        normalizer_concentrations_df,
-        autofluorescence_concentrations_df,
-        sample_volume,
-        logger=logger
-    )
+    try:
+        volumes_array_generator_variables = volumes_array_generator(
+            cfps_parameters_df,
+            initial_concentrations_df,
+            normalizer_concentrations_df,
+            autofluorescence_concentrations_df,
+            sample_volume,
+            logger=logger
+        )
+    except ValueError as e:
+        exit(1)
 
     initial_volumes_df = volumes_array_generator_variables[0]
     normalizer_volumes_df = volumes_array_generator_variables[1]

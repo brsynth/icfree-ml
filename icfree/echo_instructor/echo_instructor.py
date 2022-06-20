@@ -166,7 +166,7 @@ def volumes_array_generator(
             'It seems that the number of parameters is different '
             'than the number of stock concentrations. Exiting...'
         )
-        exit()
+        raise(e)
 
     # WARNING: < 10 nL (echo specs) --> have to dilute stock
     for volumes in [
@@ -175,8 +175,10 @@ def volumes_array_generator(
         autofluorescence_volumes_df
     ]:
         for factor in volumes.columns:
-            min = volumes[factor].min()
-            if 0 < min < 10:
+            for value in volumes[factor].sort_values():
+                if value != 0:
+                    break
+            if 0 < value < 10:
                 logger.warning(
                     f'There are {factor} volume(s) < 10 nL. '
                     'Stock have to be more diluted.'
