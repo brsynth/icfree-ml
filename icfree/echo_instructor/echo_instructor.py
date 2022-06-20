@@ -186,9 +186,11 @@ def save_volumes(
     if not os_path.exists(output_subfolder):
         os_mkdir(output_subfolder)
 
+    # Get list of cfps parameters and add water
     all_parameters = cfps_parameters_df['Parameter'].tolist()
     all_parameters.append('Water')
 
+    # Save volumes dataframes in tsv files
     initial_volumes_df.to_csv(
         os_path.join(output_subfolder, 'initial_volumes.tsv'),
         sep='\t',
@@ -515,10 +517,6 @@ def multiple_echo_instructions_generator(
     ----------
         multiple_destination_plates_dict: Dict
             Dict with destination plates dataframes.
-        desired_order: _type_
-            _description_
-        reset_index: _type_
-            _description_
 
     Returns
     -------
@@ -577,10 +575,6 @@ def single_echo_instructions_generator(
     ----------
         single_destination_plates_dict: Dict
             Dict with destination plates dataframes.
-        desired_order: _type_
-            _description_
-        reset_index: _type_
-            _description_
 
     Returns
     -------
