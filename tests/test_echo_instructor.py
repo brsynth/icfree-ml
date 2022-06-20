@@ -510,12 +510,13 @@ class Test(TestCase):
             for key in expected_merge_destination_plates_dict
         }
 
+        # Compare dict keys
         assert tested_merge_destination_plates_dict.keys() ==  \
             expected_merge_destination_plates_dict.keys()
 
+        # Compare dict types
         expected_type_class = \
             type(expected_merge_destination_plates_dict.values())
-
         isinstance(tested_merge_destination_plates_dict, expected_type_class)
 
         for keys, values in tested_merge_destination_plates_dict.items():
