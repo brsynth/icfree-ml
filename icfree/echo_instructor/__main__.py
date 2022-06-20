@@ -1,5 +1,9 @@
 import sys
 
+from brs_utils import (
+    create_logger
+)
+
 from .echo_instructor import (
     input_importer,
     volumes_array_generator,
@@ -11,7 +15,6 @@ from .echo_instructor import (
     single_echo_instructions_generator,
     save_echo_instructions
 )
-
 from .args import build_args_parser
 
 
@@ -21,6 +24,10 @@ def main():
         description='Generates instructions for the Echo robot')
 
     args = parser.parse_args()
+
+    # CREATE LOGGER
+    logger = create_logger(parser.prog, args.log)
+
     cfps_parameters = args.cfps
     initial_concentrations = args.init_set
     normalizer_concentrations = args.norm_set
@@ -45,7 +52,9 @@ def main():
         initial_concentrations_df,
         normalizer_concentrations_df,
         autofluorescence_concentrations_df,
-        sample_volume)
+        sample_volume,
+        logger=logger
+    )
 
     initial_volumes_df = volumes_array_generator_variables[0]
     normalizer_volumes_df = volumes_array_generator_variables[1]
