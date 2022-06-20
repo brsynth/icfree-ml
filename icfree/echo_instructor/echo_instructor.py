@@ -126,10 +126,22 @@ def volumes_array_generator(
 
     # Print out parameters
     logger.info('Converting concentrations to volumes...')
-    logger.debug('cfps parameters:\n%s', cfps_parameters_df)
-    logger.debug('initial concentrations:\n%s', initial_concentrations_df)
-    logger.debug('normalizer concentrations:\n%s', normalizer_concentrations_df)
-    logger.debug('autofluorescence concentrations:\n%s', autofluorescence_concentrations_df)
+    logger.debug(
+        'cfps parameters:\n%s',
+        cfps_parameters_df
+    )
+    logger.debug(
+        'initial concentrations:\n%s',
+        initial_concentrations_df
+    )
+    logger.debug(
+        'normalizer concentrations:\n%s',
+        normalizer_concentrations_df
+    )
+    logger.debug(
+        'autofluorescence concentrations:\n%s',
+        autofluorescence_concentrations_df
+    )
     logger.debug('Sample volume:\n%s', sample_volume)
 
     # Exract stock conecentrations from cfps_parameters_df
@@ -149,17 +161,26 @@ def volumes_array_generator(
         initial_volumes_df = round(multiply(
             initial_concentrations_df,
             coeff) / 2.5, 0) * 2.5
-        logger.debug('initial volumes:\n%s', initial_volumes_df)
+        logger.debug(
+            'initial volumes:\n%s',
+            initial_volumes_df
+        )
 
         normalizer_volumes_df = round(multiply(
             normalizer_concentrations_df,
             coeff) / 2.5, 0) * 2.5
-        logger.debug('normalizer volumes:\n%s', normalizer_volumes_df)
+        logger.debug(
+            'normalizer volumes:\n%s',
+            normalizer_volumes_df
+        )
 
         autofluorescence_volumes_df = round(multiply(
             autofluorescence_concentrations_df,
             coeff) / 2.5, 0) * 2.5
-        logger.debug('autofluorescence volumes:\n%s', autofluorescence_volumes_df)
+        logger.debug(
+            'autofluorescence volumes:\n%s',
+            autofluorescence_volumes_df
+        )
     except ValueError as e:
         logger.error(f'*** {e}')
         logger.error(
@@ -207,7 +228,10 @@ def volumes_array_generator(
     ]:
         if water_volumes.min() < 0:
             logger.warning('*** Volume of added water < 0')
-            logger.warning('It seems that at least a factor stock is not concentrated enough.')
+            logger.warning(
+                'It seems that at least a factor stock '
+                'is not concentrated enough.'
+            )
 
     return (initial_volumes_df,
             normalizer_volumes_df,

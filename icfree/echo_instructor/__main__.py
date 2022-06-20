@@ -56,7 +56,7 @@ def main():
             sample_volume,
             logger=logger
         )
-    except ValueError as e:
+    except ValueError:
         exit(1)
 
     initial_volumes_df = volumes_array_generator_variables[0]
