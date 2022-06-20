@@ -10,7 +10,11 @@ from pandas.testing import (
     assert_frame_equal
 )
 from pandas import (
-    read_json
+    read_json,
+    DataFrame
+)
+from json import (
+    load as json_load
 )
 from tempfile import (
     TemporaryDirectory,
@@ -21,10 +25,10 @@ from icfree.echo_instructor.echo_instructor import (
     input_importer,
     concentrations_to_volumes,
     save_volumes,
-    samples_merger
+    samples_merger,
     # distribute_destination_plate_generator,
     # distribute_echo_instructions_generator,
-    # merge_destination_plate_generator,
+    merge_destination_plate_generator
     # merge_echo_instructions_generator,
     # save_echo_instructions
 )
@@ -452,7 +456,74 @@ class Test(TestCase):
         pass
 
     def test_merge_destination_plate_generator(self):
-        pass
+        input_importer_dfs = input_importer(
+            self.tested_cfps_parameters,
+            self.tested_initial_concentrations,
+            self.tested_normalizer_concentrations,
+            self.tested_autofluorescence_concentrations)
+
+        tested_cfps_parameters_df = input_importer_dfs[0]
+        tested_initial_concentrations_df = input_importer_dfs[1]
+        tested_normalizer_concentrations_df = input_importer_dfs[2]
+        tested_autofluorescence_concentrations_df = input_importer_dfs[3]
+
+        volumes_array_generator_dfs = concentrations_to_volumes(
+            tested_cfps_parameters_df,
+            tested_initial_concentrations_df,
+            tested_normalizer_concentrations_df,
+            tested_autofluorescence_concentrations_df,
+            sample_volume=10000)
+
+        tested_initial_volumes_df = volumes_array_generator_dfs[0]
+        tested_normalizer_volumes_df = volumes_array_generator_dfs[1]
+        tested_autofluorescence_volumes_df = volumes_array_generator_dfs[2]
+
+        samples_merger_dfs = samples_merger(
+            tested_initial_volumes_df,
+            tested_normalizer_volumes_df,
+            tested_autofluorescence_volumes_df)
+
+        tested_merged_plate_1_final = samples_merger_dfs[0]
+        tested_merged_plate_2_final = samples_merger_dfs[1]
+        tested_merged_plate_3_final = samples_merger_dfs[2]
+
+        tested_merge_destination_plates_dict =  \
+            merge_destination_plate_generator(
+                tested_merged_plate_1_final,
+                tested_merged_plate_2_final,
+                tested_merged_plate_3_final,
+                starting_well='A1',
+                vertical=True)
+
+        # Load reference dictionary
+        with open(
+            os_path.join(
+                    self.REF_FOLDER,
+                    'expected_merge_destination_plates_dict.json'
+            ), 'r'
+        ) as fp1:
+            expected_merge_destination_plates_dict = (json_load(fp1))
+
+        # Convert dictionaries into dataframes
+        expected_merge_destination_plates_dict = {
+            key: DataFrame(expected_merge_destination_plates_dict[key])
+            for key in expected_merge_destination_plates_dict
+        }
+
+        assert tested_merge_destination_plates_dict.keys() ==  \
+            expected_merge_destination_plates_dict.keys()
+
+        expected_type_class = \
+            type(expected_merge_destination_plates_dict.values())
+
+        isinstance(tested_merge_destination_plates_dict, expected_type_class)
+
+        for keys, values in tested_merge_destination_plates_dict.items():
+            assert_frame_equal(
+                values,
+                expected_merge_destination_plates_dict[keys],
+                check_dtype=False
+                )
 
     def test_merge_echo_instructions_generator(self):
         pass
