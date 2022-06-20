@@ -445,16 +445,16 @@ class Test(TestCase):
             check_dtype=False
             )
 
-    def test_multiple_destination_plate_generator(self):
+    def test_distribute_destination_plate_generator(self):
         pass
 
-    def test_multiple_echo_instructions_generator(self):
+    def test_distribute_echo_instructions_generator(self):
         pass
 
-    def test_single_destination_plate_generator(self):
+    def test_merge_destination_plate_generator(self):
         pass
 
-    def test_single_echo_instructions_generator(self):
+    def test_merge_echo_instructions_generator(self):
         pass
 
     def test_save_echo_instructions(self):
