@@ -19,13 +19,13 @@ from tempfile import (
 
 from icfree.echo_instructor.echo_instructor import (
     input_importer,
-    volumes_array_generator,
+    concentrations_to_volumes,
     save_volumes,
     samples_merger
-    # multiple_destination_plate_generator,
-    # multiple_echo_instructions_generator,
-    # single_destination_plate_generator,
-    # single_echo_instructions_generator,
+    # distribute_destination_plate_generator,
+    # distribute_echo_instructions_generator,
+    # merge_destination_plate_generator,
+    # merge_echo_instructions_generator,
     # save_echo_instructions
 )
 
@@ -163,7 +163,7 @@ class Test(TestCase):
         tested_normalizer_concentrations_df = input_importer_dfs[2]
         tested_autofluorescence_concentrations_df = input_importer_dfs[3]
 
-        volumes_array_generator_dfs = volumes_array_generator(
+        volumes_array_generator_dfs = concentrations_to_volumes(
             tested_cfps_parameters_df,
             tested_initial_concentrations_df,
             tested_normalizer_concentrations_df,
@@ -282,7 +282,7 @@ class Test(TestCase):
         tested_normalizer_concentrations_df = input_importer_dfs[2]
         tested_autofluorescence_concentrations_df = input_importer_dfs[3]
 
-        volumes_array_generator_dfs = volumes_array_generator(
+        volumes_array_generator_dfs = concentrations_to_volumes(
             tested_cfps_parameters_df,
             tested_initial_concentrations_df,
             tested_normalizer_concentrations_df,
@@ -375,7 +375,7 @@ class Test(TestCase):
         tested_normalizer_concentrations_df = input_importer_dfs[2]
         tested_autofluorescence_concentrations_df = input_importer_dfs[3]
 
-        volumes_array_generator_dfs = volumes_array_generator(
+        volumes_array_generator_dfs = concentrations_to_volumes(
             tested_cfps_parameters_df,
             tested_initial_concentrations_df,
             tested_normalizer_concentrations_df,
@@ -391,57 +391,57 @@ class Test(TestCase):
             tested_normalizer_volumes_df,
             tested_autofluorescence_volumes_df)
 
-        tested_master_plate_1_final = samples_merger_dfs[0]
-        tested_master_plate_2_final = samples_merger_dfs[1]
-        tested_master_plate_3_final = samples_merger_dfs[2]
+        tested_merged_plate_1_final = samples_merger_dfs[0]
+        tested_merged_plate_2_final = samples_merger_dfs[1]
+        tested_merged_plate_3_final = samples_merger_dfs[2]
 
         # Load reference files
         with open(
             os_path.join(
                     self.REF_FOLDER,
-                    'expected_master_plate_1_final.json'
+                    'expected_merged_plate_1_final.json'
             ), 'r'
         ) as fp1:
-            expected_master_plate_1_final = read_json(
+            expected_merged_plate_1_final = read_json(
                 fp1,
                 orient='split')
 
         with open(
             os_path.join(
                     self.REF_FOLDER,
-                    'expected_master_plate_2_final.json'
+                    'expected_merged_plate_2_final.json'
             ), 'r'
         ) as fp2:
-            expected_master_plate_2_final = read_json(
+            expected_merged_plate_2_final = read_json(
                 fp2,
                 orient='split')
 
         with open(
             os_path.join(
                     self.REF_FOLDER,
-                    'expected_master_plate_3_final.json'
+                    'expected_merged_plate_3_final.json'
             ), 'r'
         ) as fp3:
-            expected_master_plate_3_final = read_json(
+            expected_merged_plate_3_final = read_json(
                 fp3,
                 orient='split')
 
         # Compare dataframes
         assert_frame_equal(
-            tested_master_plate_1_final,
-            expected_master_plate_1_final,
+            tested_merged_plate_1_final,
+            expected_merged_plate_1_final,
             check_dtype=False
             )
 
         assert_frame_equal(
-            tested_master_plate_2_final,
-            expected_master_plate_2_final,
+            tested_merged_plate_2_final,
+            expected_merged_plate_2_final,
             check_dtype=False
             )
 
         assert_frame_equal(
-            tested_master_plate_3_final,
-            expected_master_plate_3_final,
+            tested_merged_plate_3_final,
+            expected_merged_plate_3_final,
             check_dtype=False
             )
 
