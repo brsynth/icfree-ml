@@ -124,21 +124,21 @@ def concentrations_to_volumes(
         stock_concentrations_dict.values(),
         dtype=float)
 
-    stock_concentrations_df = \
+    sample_volume_stock_ratio_df = \
         sample_volume / stock_concentrations_df
 
     # Convert concentrations to volumes
     initial_volumes_df = round(multiply(
         initial_concentrations_df,
-        stock_concentrations_df) / 2.5, 0) * 2.5
+        sample_volume_stock_ratio_df) / 2.5, 0) * 2.5
 
     normalizer_volumes_df = round(multiply(
         normalizer_concentrations_df,
-        stock_concentrations_df) / 2.5, 0) * 2.5
+        sample_volume_stock_ratio_df) / 2.5, 0) * 2.5
 
     autofluorescence_volumes_df = round(multiply(
         autofluorescence_concentrations_df,
-        stock_concentrations_df) / 2.5, 0) * 2.5
+        sample_volume_stock_ratio_df) / 2.5, 0) * 2.5
 
     # Add Water column
     initial_volumes_df['Water'] = \
