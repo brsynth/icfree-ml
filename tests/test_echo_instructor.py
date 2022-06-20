@@ -27,7 +27,7 @@ from icfree.echo_instructor.echo_instructor import (
     save_volumes,
     samples_merger,
     distribute_destination_plate_generator,
-    # distribute_echo_instructions_generator,
+    distribute_echo_instructions_generator,
     merge_destination_plate_generator,
     merge_echo_instructions_generator
     # save_echo_instructions
@@ -515,7 +515,73 @@ class Test(TestCase):
                 )
 
     def test_distribute_echo_instructions_generator(self):
-        pass
+        input_importer_dfs = input_importer(
+            self.tested_cfps_parameters,
+            self.tested_initial_concentrations,
+            self.tested_normalizer_concentrations,
+            self.tested_autofluorescence_concentrations)
+
+        tested_cfps_parameters_df = input_importer_dfs[0]
+        tested_initial_concentrations_df = input_importer_dfs[1]
+        tested_normalizer_concentrations_df = input_importer_dfs[2]
+        tested_autofluorescence_concentrations_df = input_importer_dfs[3]
+
+        volumes_array_generator_dfs = concentrations_to_volumes(
+            tested_cfps_parameters_df,
+            tested_initial_concentrations_df,
+            tested_normalizer_concentrations_df,
+            tested_autofluorescence_concentrations_df,
+            sample_volume=10000)
+
+        tested_initial_volumes_df = volumes_array_generator_dfs[0]
+        tested_normalizer_volumes_df = volumes_array_generator_dfs[1]
+        tested_autofluorescence_volumes_df = volumes_array_generator_dfs[2]
+
+        tested_distribute_destination_plates_dict = \
+            distribute_destination_plate_generator(
+                tested_initial_volumes_df,
+                tested_normalizer_volumes_df,
+                tested_autofluorescence_volumes_df,
+                starting_well='A1',
+                vertical=True)
+
+        tested_distribute_echo_instructions_dict = \
+            distribute_echo_instructions_generator(
+                tested_distribute_destination_plates_dict)
+
+        # Load reference dictionary
+        with open(
+            os_path.join(
+                    self.REF_FOLDER,
+                    'expected_distribute_echo_instructions_dict.json'
+            ), 'r'
+        ) as fp1:
+            expected_distribute_echo_instructions_dict = (json_load(fp1))
+
+        # Convert dictionaries into dataframes
+        expected_distribute_echo_instructions_dict = {
+            key: DataFrame(expected_distribute_echo_instructions_dict[key])
+            for key in expected_distribute_echo_instructions_dict
+        }
+
+        # Compare dict keys
+        assert tested_distribute_echo_instructions_dict.keys() ==  \
+            expected_distribute_echo_instructions_dict.keys()
+
+        # Compare dict values types
+        expected_type_class = \
+            type(expected_distribute_echo_instructions_dict.values())
+        isinstance(
+            tested_distribute_echo_instructions_dict,
+            expected_type_class)
+
+        # Compare dict values
+        for keys, values in tested_distribute_echo_instructions_dict.items():
+            assert_frame_equal(
+                values,
+                expected_distribute_echo_instructions_dict[keys],
+                check_dtype=False
+                )
 
     def test_merge_destination_plate_generator(self):
         input_importer_dfs = input_importer(
