@@ -87,7 +87,8 @@ def main():
         vertical=True)
 
     merge_echo_instructions_dict = \
-        merge_echo_instructions_generator(merge_destination_plates_dict)
+        merge_echo_instructions_generator(
+            merge_destination_plates_dict)
 
     save_echo_instructions(
         distribute_echo_instructions_dict,
