@@ -140,6 +140,9 @@ def volumes_array_generator(
         autofluorescence_concentrations_df,
         stock_concentrations_df) / 2.5, 0) * 2.5
 
+    # WARNING: < 10 uL (echo specs) --> have to dilute stock
+    # WARNING: Vwater < 0 --> have to increase stock conentration
+
     # Add Water column
     initial_volumes_df['Water'] = \
         sample_volume - initial_volumes_df.sum(axis=1)
