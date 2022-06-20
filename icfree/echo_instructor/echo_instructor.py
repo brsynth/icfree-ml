@@ -556,7 +556,8 @@ def distribute_echo_instructions_generator(
 
             worklist = DataFrame(worklist)
             all_sources[parameter_name] = worklist
-            echo_instructions = concat(all_sources.values())
+            echo_instructions = concat(
+                all_sources.values()).reset_index(drop=True)
 
         distribute_echo_instructions_list.append(echo_instructions)
         distribute_echo_instructions_dict = dict(
