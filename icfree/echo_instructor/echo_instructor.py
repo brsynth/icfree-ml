@@ -98,11 +98,11 @@ def concentrations_to_volumes(
     ----------
     cfps_parameters_df : DataFrame
         Dataframe with cfps_parameters data.
-    initial_volumes_df : DataFrame
+    initial_concentrations_df : DataFrame
         Dataframe with initial_concentrations data.
-    normalizer_volumes_df : DataFrame
+    normalizer_concentrations_df : DataFrame
         Dataframe with normalizer_concentrations data.
-    autofluorescence_volumes_df : DataFrame
+    autofluorescence_concentrations_df : DataFrame
         Dataframe with autofluorescence_concentrations data.
     sample_volume: int
         Final sample volume in each well. Defaults to 10000 nL.
