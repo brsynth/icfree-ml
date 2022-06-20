@@ -168,13 +168,17 @@ def volumes_array_generator(
         )
         exit()
 
-    # WARNING: < 10 uL (echo specs) --> have to dilute stock
-    for volumes in [initial_volumes_df, normalizer_volumes_df, autofluorescence_volumes_df]:
+    # WARNING: < 10 nL (echo specs) --> have to dilute stock
+    for volumes in [
+        initial_volumes_df,
+        normalizer_volumes_df,
+        autofluorescence_volumes_df
+    ]:
         for factor in volumes.columns:
             min = volumes[factor].min()
             if 0 < min < 10:
                 logger.warning(
-                    f'There are {factor} volume(s) < 10 uL. '
+                    f'There are {factor} volume(s) < 10 nL. '
                     'Stock have to be more diluted.'
                 )
 
@@ -194,7 +198,11 @@ def volumes_array_generator(
     # WARNING: Vwater < 0 --> have to increase stock conentration
     # Check if a factor stock is not concentrated enough,
     # i.e. Vwater < 0
-    for water_volumes in [initial_volumes_df['Water'], normalizer_volumes_df['Water'], autofluorescence_volumes_df['Water']]:
+    for water_volumes in [
+        initial_volumes_df['Water'],
+        normalizer_volumes_df['Water'],
+        autofluorescence_volumes_df['Water']
+    ]:
         if water_volumes.min() < 0:
             logger.warning('*** Volume of added water < 0')
             logger.warning('It seems that at least a factor stock is not concentrated enough.')
