@@ -26,6 +26,11 @@ from typing import (
     Dict
 )
 
+from logging import (
+    Logger,
+    getLogger
+)
+
 from .args import (
     DEFAULT_OUTPUT_FOLDER,
     DEFAULT_SAMPLE_VOLUME,
@@ -90,7 +95,8 @@ def concentrations_to_volumes(
         initial_concentrations_df: DataFrame,
         normalizer_concentrations_df: DataFrame,
         autofluorescence_concentrations_df: DataFrame,
-        sample_volume: int = DEFAULT_SAMPLE_VOLUME):
+        sample_volume: int = DEFAULT_SAMPLE_VOLUME,
+        logger: Logger = getLogger(__name__)):
     """
     Convert concentrations dataframes into volumes dataframes
 
@@ -116,6 +122,26 @@ def concentrations_to_volumes(
     autofluorescence_volumes_df : DataFrame
         DataFrame with converted volumes. 0 is assigned to the GFP-DNA column.
     """
+    # Print out parameters
+    logger.info('Converting concentrations to volumes...')
+    logger.debug(
+        'cfps parameters:\n%s',
+        cfps_parameters_df
+    )
+    logger.debug(
+        'initial concentrations:\n%s',
+        initial_concentrations_df
+    )
+    logger.debug(
+        'normalizer concentrations:\n%s',
+        normalizer_concentrations_df
+    )
+    logger.debug(
+        'autofluorescence concentrations:\n%s',
+        autofluorescence_concentrations_df
+    )
+    logger.debug('Sample volume:\n%s', sample_volume)
+
     # Exract stock conecentrations from cfps_parameters_df
     stock_concentrations_dict = dict(
         cfps_parameters_df[['Parameter', 'Stock concentration']].to_numpy())
@@ -124,31 +150,88 @@ def concentrations_to_volumes(
         stock_concentrations_dict.values(),
         dtype=float)
 
-    sample_volume_stock_ratio_df = \
+    logger.debug('Stock concentrations:\n%s', stock_concentrations_df)
+
+    # Calculate sample volume and stock concentrations ratio for each well
+    sample_volume_stock_ratio = \
         sample_volume / stock_concentrations_df
 
     # Convert concentrations to volumes
-    initial_volumes_df = round(multiply(
-        initial_concentrations_df,
-        sample_volume_stock_ratio_df) / 2.5, 0) * 2.5
+    try:
+        initial_volumes_df = round(multiply(
+            initial_concentrations_df,
+            sample_volume_stock_ratio) / 2.5, 0) * 2.5
+        logger.debug(
+            'initial volumes:\n%s',
+            initial_volumes_df
+        )
 
-    normalizer_volumes_df = round(multiply(
-        normalizer_concentrations_df,
-        sample_volume_stock_ratio_df) / 2.5, 0) * 2.5
+        normalizer_volumes_df = round(multiply(
+            normalizer_concentrations_df,
+            sample_volume_stock_ratio) / 2.5, 0) * 2.5
+        logger.debug(
+            'normalizer volumes:\n%s',
+            normalizer_volumes_df
+        )
 
-    autofluorescence_volumes_df = round(multiply(
-        autofluorescence_concentrations_df,
-        sample_volume_stock_ratio_df) / 2.5, 0) * 2.5
+        autofluorescence_volumes_df = round(multiply(
+            autofluorescence_concentrations_df,
+            sample_volume_stock_ratio) / 2.5, 0) * 2.5
+        logger.debug(
+            'autofluorescence volumes:\n%s',
+            autofluorescence_volumes_df
+        )
+    except ValueError as e:
+        logger.error(f'*** {e}')
+        logger.error(
+            'It seems that the number of parameters is different '
+            'than the number of stock concentrations. Exiting...'
+        )
+        raise(e)
+
+    # WARNING: < 10 nL (Echo limit) --> dilute stock
+    for volumes in [
+        initial_volumes_df,
+        normalizer_volumes_df,
+        autofluorescence_volumes_df
+    ]:
+        for factor in volumes.columns:
+            for value in volumes[factor].sort_values():
+                if value != 0:
+                    break
+            if 0 < value < 10:
+                logger.warning(
+                    f'There are {factor} volume(s) < 10 nL. '
+                    'Stock have to be more diluted.'
+                )
 
     # Add Water column
     initial_volumes_df['Water'] = \
         sample_volume - initial_volumes_df.sum(axis=1)
+    logger.debug('initial volumes:\n%s', initial_volumes_df)
 
     normalizer_volumes_df['Water'] = \
         sample_volume - normalizer_volumes_df.sum(axis=1)
+    logger.debug('normalizer volumes:\n%s', normalizer_volumes_df)
 
     autofluorescence_volumes_df['Water'] = \
         sample_volume - autofluorescence_volumes_df.sum(axis=1)
+    logger.debug('autofluorescence volumes:\n%s', autofluorescence_volumes_df)
+
+    # WARNING: Vwater < 0 --> increase stock concentration
+    # Check if a factor stock is not concentrated enough,
+    # i.e. Vwater < 0
+    for water_volumes in [
+        initial_volumes_df['Water'],
+        normalizer_volumes_df['Water'],
+        autofluorescence_volumes_df['Water']
+    ]:
+        if water_volumes.min() < 0:
+            logger.warning('*** Volume of added water < 0')
+            logger.warning(
+                'It seems that at least a factor stock '
+                'is not concentrated enough.'
+            )
 
     return (initial_volumes_df,
             normalizer_volumes_df,
