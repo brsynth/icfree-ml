@@ -156,7 +156,7 @@ def concentrations_to_volumes(
     sample_volume_stock_ratio = \
         sample_volume / stock_concentrations_df
 
-    # Convert concentrations to volumes
+    # Convert concentrations into volumes
     try:
         initial_volumes_df = round(multiply(
             initial_concentrations_df,
@@ -185,11 +185,11 @@ def concentrations_to_volumes(
         logger.error(f'*** {e}')
         logger.error(
             'It seems that the number of parameters is different '
-            'than the number of stock concentrations. Exiting...'
+            'from the number of stock concentrations. Exiting...'
         )
         raise(e)
 
-    # WARNING: < 10 nL (Echo limit) --> dilute stock
+    # WARNING: < 10 nL (Echo min volume transfer limit) --> dilute stock
     for volumes in [
         initial_volumes_df,
         normalizer_volumes_df,
@@ -264,7 +264,7 @@ def save_volumes(
     if not os_path.exists(output_folder):
         os_mkdir(output_folder)
 
-    # Store files in user-provided output folder
+    # Create subfolder for volumes
     output_subfolder = os_path.join(output_folder, 'volumes_output')
     if not os_path.exists(output_subfolder):
         os_mkdir(output_subfolder)
