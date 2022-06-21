@@ -1,5 +1,9 @@
 import sys
 
+from brs_utils import (
+    create_logger
+)
+
 from .echo_instructor import (
     input_importer,
     concentrations_to_volumes,
@@ -21,6 +25,11 @@ def main():
         description='Generates instructions for the Echo robot')
 
     args = parser.parse_args()
+
+    # CREATE LOGGER
+    logger = create_logger(parser.prog, args.log)
+
+    args = parser.parse_args()
     cfps_parameters = args.cfps
     initial_concentrations = args.init_set
     normalizer_concentrations = args.norm_set
@@ -40,12 +49,16 @@ def main():
     normalizer_concentrations_df = input_importer_variables[2]
     autofluorescence_concentrations_df = input_importer_variables[3]
 
-    concentrations_to_volumes_dfs = concentrations_to_volumes(
-        cfps_parameters_df,
-        initial_concentrations_df,
-        normalizer_concentrations_df,
-        autofluorescence_concentrations_df,
-        sample_volume)
+    try:
+        concentrations_to_volumes_dfs = concentrations_to_volumes(
+            cfps_parameters_df,
+            initial_concentrations_df,
+            normalizer_concentrations_df,
+            autofluorescence_concentrations_df,
+            sample_volume,
+            logger=logger)
+    except ValueError:
+        exit(1)
 
     initial_volumes_df = concentrations_to_volumes_dfs[0]
     normalizer_volumes_df = concentrations_to_volumes_dfs[1]
