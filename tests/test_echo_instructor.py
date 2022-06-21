@@ -339,24 +339,24 @@ class Test(TestCase):
 
         with open(
             os_path.join(
-                    self.REF_FOLDER,
-                    'tested_initial_volumes.tsv'
+                    output_folder,
+                    'initial_volumes.tsv'
             )
         ) as fp4:
             tested_initial_volumes = fp4.read()
 
         with open(
             os_path.join(
-                    self.REF_FOLDER,
-                    'tested_normalizer_volumes.tsv'
+                    output_folder,
+                    'normalizer_volumes.tsv'
             )
         ) as fp5:
             tested_normalizer_volumes = fp5.read()
 
         with open(
             os_path.join(
-                    self.REF_FOLDER,
-                    'tested_autofluorescence_volumes.tsv'
+                    output_folder,
+                    'autofluorescence_volumes.tsv'
             )
         ) as fp6:
             tested_autofluorescence_volumes = fp6.read()
