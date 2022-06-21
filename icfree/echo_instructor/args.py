@@ -3,6 +3,9 @@ from argparse import (
     )
 from os import getcwd as os_getcwd
 
+from brs_utils import add_logger_args
+from icfree._version import __version__
+
 DEFAULT_OUTPUT_FOLDER = os_getcwd()
 DEFAULT_SAMPLE_VOLUME = 10000
 DEFAULT_STARTING_WELL = 'A1'
@@ -70,6 +73,16 @@ def add_arguments(parser):
         default=DEFAULT_OUTPUT_FOLDER,
         help=('Output folder to write output files'
               f' (default: {DEFAULT_OUTPUT_FOLDER})')
+    )
+
+    # Add logger arguments
+    parser = add_logger_args(parser)
+
+    parser.add_argument(
+        '--version',
+        action='version',
+        version='%(prog)s {}'.format(__version__),
+        help='show the version number and exit'
     )
 
     return parser
