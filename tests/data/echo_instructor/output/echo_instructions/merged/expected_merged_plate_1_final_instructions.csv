@@ -1,0 +1,514 @@
+Source Plate Name,Source Plate Type,Source Well,Destination Plate Name,Destination Well,Transfer Volume,Sample ID
+Source[1],384PP_AQ_GP3,Mg-glutamate,Destination[1],A1,60.0,Mg-glutamate
+Source[1],384PP_AQ_GP3,Mg-glutamate,Destination[1],B1,120.0,Mg-glutamate
+Source[1],384PP_AQ_GP3,Mg-glutamate,Destination[1],C1,120.0,Mg-glutamate
+Source[1],384PP_AQ_GP3,Mg-glutamate,Destination[1],D1,60.0,Mg-glutamate
+Source[1],384PP_AQ_GP3,Mg-glutamate,Destination[1],E1,120.0,Mg-glutamate
+Source[1],384PP_AQ_GP3,Mg-glutamate,Destination[1],F1,120.0,Mg-glutamate
+Source[1],384PP_AQ_GP3,Mg-glutamate,Destination[1],G1,60.0,Mg-glutamate
+Source[1],384PP_AQ_GP3,Mg-glutamate,Destination[1],H1,120.0,Mg-glutamate
+Source[1],384PP_AQ_GP3,Mg-glutamate,Destination[1],I1,120.0,Mg-glutamate
+Source[1],384PP_AQ_GP3,Mg-glutamate,Destination[1],J1,60.0,Mg-glutamate
+Source[1],384PP_AQ_GP3,Mg-glutamate,Destination[1],K1,120.0,Mg-glutamate
+Source[1],384PP_AQ_GP3,Mg-glutamate,Destination[1],L1,120.0,Mg-glutamate
+Source[1],384PP_AQ_GP3,Mg-glutamate,Destination[1],M1,60.0,Mg-glutamate
+Source[1],384PP_AQ_GP3,Mg-glutamate,Destination[1],N1,120.0,Mg-glutamate
+Source[1],384PP_AQ_GP3,Mg-glutamate,Destination[1],O1,120.0,Mg-glutamate
+Source[1],384PP_AQ_GP3,Mg-glutamate,Destination[1],P1,60.0,Mg-glutamate
+Source[1],384PP_AQ_GP3,Mg-glutamate,Destination[1],A2,120.0,Mg-glutamate
+Source[1],384PP_AQ_GP3,Mg-glutamate,Destination[1],B2,120.0,Mg-glutamate
+Source[1],384PP_AQ_GP3,Mg-glutamate,Destination[1],C2,60.0,Mg-glutamate
+Source[1],384PP_AQ_GP3,Mg-glutamate,Destination[1],D2,120.0,Mg-glutamate
+Source[1],384PP_AQ_GP3,Mg-glutamate,Destination[1],E2,120.0,Mg-glutamate
+Source[1],384PP_AQ_GP3,Mg-glutamate,Destination[1],F2,60.0,Mg-glutamate
+Source[1],384PP_AQ_GP3,Mg-glutamate,Destination[1],G2,120.0,Mg-glutamate
+Source[1],384PP_AQ_GP3,Mg-glutamate,Destination[1],H2,120.0,Mg-glutamate
+Source[1],384PP_AQ_GP3,Mg-glutamate,Destination[1],I2,60.0,Mg-glutamate
+Source[1],384PP_AQ_GP3,Mg-glutamate,Destination[1],J2,120.0,Mg-glutamate
+Source[1],384PP_AQ_GP3,Mg-glutamate,Destination[1],K2,120.0,Mg-glutamate
+Source[1],384PP_AQ_GP3,k-glutamate,Destination[1],A1,0.0,k-glutamate
+Source[1],384PP_AQ_GP3,k-glutamate,Destination[1],B1,237.5,k-glutamate
+Source[1],384PP_AQ_GP3,k-glutamate,Destination[1],C1,60.0,k-glutamate
+Source[1],384PP_AQ_GP3,k-glutamate,Destination[1],D1,0.0,k-glutamate
+Source[1],384PP_AQ_GP3,k-glutamate,Destination[1],E1,237.5,k-glutamate
+Source[1],384PP_AQ_GP3,k-glutamate,Destination[1],F1,60.0,k-glutamate
+Source[1],384PP_AQ_GP3,k-glutamate,Destination[1],G1,0.0,k-glutamate
+Source[1],384PP_AQ_GP3,k-glutamate,Destination[1],H1,237.5,k-glutamate
+Source[1],384PP_AQ_GP3,k-glutamate,Destination[1],I1,60.0,k-glutamate
+Source[1],384PP_AQ_GP3,k-glutamate,Destination[1],J1,0.0,k-glutamate
+Source[1],384PP_AQ_GP3,k-glutamate,Destination[1],K1,237.5,k-glutamate
+Source[1],384PP_AQ_GP3,k-glutamate,Destination[1],L1,60.0,k-glutamate
+Source[1],384PP_AQ_GP3,k-glutamate,Destination[1],M1,0.0,k-glutamate
+Source[1],384PP_AQ_GP3,k-glutamate,Destination[1],N1,237.5,k-glutamate
+Source[1],384PP_AQ_GP3,k-glutamate,Destination[1],O1,60.0,k-glutamate
+Source[1],384PP_AQ_GP3,k-glutamate,Destination[1],P1,0.0,k-glutamate
+Source[1],384PP_AQ_GP3,k-glutamate,Destination[1],A2,237.5,k-glutamate
+Source[1],384PP_AQ_GP3,k-glutamate,Destination[1],B2,60.0,k-glutamate
+Source[1],384PP_AQ_GP3,k-glutamate,Destination[1],C2,0.0,k-glutamate
+Source[1],384PP_AQ_GP3,k-glutamate,Destination[1],D2,237.5,k-glutamate
+Source[1],384PP_AQ_GP3,k-glutamate,Destination[1],E2,60.0,k-glutamate
+Source[1],384PP_AQ_GP3,k-glutamate,Destination[1],F2,0.0,k-glutamate
+Source[1],384PP_AQ_GP3,k-glutamate,Destination[1],G2,237.5,k-glutamate
+Source[1],384PP_AQ_GP3,k-glutamate,Destination[1],H2,60.0,k-glutamate
+Source[1],384PP_AQ_GP3,k-glutamate,Destination[1],I2,0.0,k-glutamate
+Source[1],384PP_AQ_GP3,k-glutamate,Destination[1],J2,237.5,k-glutamate
+Source[1],384PP_AQ_GP3,k-glutamate,Destination[1],K2,60.0,k-glutamate
+Source[1],384PP_AQ_GP3,CoA,Destination[1],A1,5.0,CoA
+Source[1],384PP_AQ_GP3,CoA,Destination[1],B1,0.0,CoA
+Source[1],384PP_AQ_GP3,CoA,Destination[1],C1,10.0,CoA
+Source[1],384PP_AQ_GP3,CoA,Destination[1],D1,5.0,CoA
+Source[1],384PP_AQ_GP3,CoA,Destination[1],E1,0.0,CoA
+Source[1],384PP_AQ_GP3,CoA,Destination[1],F1,10.0,CoA
+Source[1],384PP_AQ_GP3,CoA,Destination[1],G1,5.0,CoA
+Source[1],384PP_AQ_GP3,CoA,Destination[1],H1,0.0,CoA
+Source[1],384PP_AQ_GP3,CoA,Destination[1],I1,10.0,CoA
+Source[1],384PP_AQ_GP3,CoA,Destination[1],J1,5.0,CoA
+Source[1],384PP_AQ_GP3,CoA,Destination[1],K1,0.0,CoA
+Source[1],384PP_AQ_GP3,CoA,Destination[1],L1,10.0,CoA
+Source[1],384PP_AQ_GP3,CoA,Destination[1],M1,5.0,CoA
+Source[1],384PP_AQ_GP3,CoA,Destination[1],N1,0.0,CoA
+Source[1],384PP_AQ_GP3,CoA,Destination[1],O1,10.0,CoA
+Source[1],384PP_AQ_GP3,CoA,Destination[1],P1,5.0,CoA
+Source[1],384PP_AQ_GP3,CoA,Destination[1],A2,0.0,CoA
+Source[1],384PP_AQ_GP3,CoA,Destination[1],B2,10.0,CoA
+Source[1],384PP_AQ_GP3,CoA,Destination[1],C2,5.0,CoA
+Source[1],384PP_AQ_GP3,CoA,Destination[1],D2,0.0,CoA
+Source[1],384PP_AQ_GP3,CoA,Destination[1],E2,10.0,CoA
+Source[1],384PP_AQ_GP3,CoA,Destination[1],F2,5.0,CoA
+Source[1],384PP_AQ_GP3,CoA,Destination[1],G2,0.0,CoA
+Source[1],384PP_AQ_GP3,CoA,Destination[1],H2,10.0,CoA
+Source[1],384PP_AQ_GP3,CoA,Destination[1],I2,5.0,CoA
+Source[1],384PP_AQ_GP3,CoA,Destination[1],J2,0.0,CoA
+Source[1],384PP_AQ_GP3,CoA,Destination[1],K2,10.0,CoA
+Source[1],384PP_AQ_GP3,3-PGA,Destination[1],A1,0.0,3-PGA
+Source[1],384PP_AQ_GP3,3-PGA,Destination[1],B1,160.0,3-PGA
+Source[1],384PP_AQ_GP3,3-PGA,Destination[1],C1,52.5,3-PGA
+Source[1],384PP_AQ_GP3,3-PGA,Destination[1],D1,0.0,3-PGA
+Source[1],384PP_AQ_GP3,3-PGA,Destination[1],E1,160.0,3-PGA
+Source[1],384PP_AQ_GP3,3-PGA,Destination[1],F1,52.5,3-PGA
+Source[1],384PP_AQ_GP3,3-PGA,Destination[1],G1,0.0,3-PGA
+Source[1],384PP_AQ_GP3,3-PGA,Destination[1],H1,160.0,3-PGA
+Source[1],384PP_AQ_GP3,3-PGA,Destination[1],I1,52.5,3-PGA
+Source[1],384PP_AQ_GP3,3-PGA,Destination[1],J1,0.0,3-PGA
+Source[1],384PP_AQ_GP3,3-PGA,Destination[1],K1,160.0,3-PGA
+Source[1],384PP_AQ_GP3,3-PGA,Destination[1],L1,52.5,3-PGA
+Source[1],384PP_AQ_GP3,3-PGA,Destination[1],M1,0.0,3-PGA
+Source[1],384PP_AQ_GP3,3-PGA,Destination[1],N1,160.0,3-PGA
+Source[1],384PP_AQ_GP3,3-PGA,Destination[1],O1,52.5,3-PGA
+Source[1],384PP_AQ_GP3,3-PGA,Destination[1],P1,0.0,3-PGA
+Source[1],384PP_AQ_GP3,3-PGA,Destination[1],A2,160.0,3-PGA
+Source[1],384PP_AQ_GP3,3-PGA,Destination[1],B2,52.5,3-PGA
+Source[1],384PP_AQ_GP3,3-PGA,Destination[1],C2,0.0,3-PGA
+Source[1],384PP_AQ_GP3,3-PGA,Destination[1],D2,160.0,3-PGA
+Source[1],384PP_AQ_GP3,3-PGA,Destination[1],E2,52.5,3-PGA
+Source[1],384PP_AQ_GP3,3-PGA,Destination[1],F2,0.0,3-PGA
+Source[1],384PP_AQ_GP3,3-PGA,Destination[1],G2,160.0,3-PGA
+Source[1],384PP_AQ_GP3,3-PGA,Destination[1],H2,52.5,3-PGA
+Source[1],384PP_AQ_GP3,3-PGA,Destination[1],I2,0.0,3-PGA
+Source[1],384PP_AQ_GP3,3-PGA,Destination[1],J2,160.0,3-PGA
+Source[1],384PP_AQ_GP3,3-PGA,Destination[1],K2,52.5,3-PGA
+Source[1],384PP_AQ_GP3,NTP,Destination[1],A1,5.0,NTP
+Source[1],384PP_AQ_GP3,NTP,Destination[1],B1,12.5,NTP
+Source[1],384PP_AQ_GP3,NTP,Destination[1],C1,0.0,NTP
+Source[1],384PP_AQ_GP3,NTP,Destination[1],D1,5.0,NTP
+Source[1],384PP_AQ_GP3,NTP,Destination[1],E1,12.5,NTP
+Source[1],384PP_AQ_GP3,NTP,Destination[1],F1,0.0,NTP
+Source[1],384PP_AQ_GP3,NTP,Destination[1],G1,5.0,NTP
+Source[1],384PP_AQ_GP3,NTP,Destination[1],H1,12.5,NTP
+Source[1],384PP_AQ_GP3,NTP,Destination[1],I1,0.0,NTP
+Source[1],384PP_AQ_GP3,NTP,Destination[1],J1,5.0,NTP
+Source[1],384PP_AQ_GP3,NTP,Destination[1],K1,12.5,NTP
+Source[1],384PP_AQ_GP3,NTP,Destination[1],L1,0.0,NTP
+Source[1],384PP_AQ_GP3,NTP,Destination[1],M1,5.0,NTP
+Source[1],384PP_AQ_GP3,NTP,Destination[1],N1,12.5,NTP
+Source[1],384PP_AQ_GP3,NTP,Destination[1],O1,0.0,NTP
+Source[1],384PP_AQ_GP3,NTP,Destination[1],P1,5.0,NTP
+Source[1],384PP_AQ_GP3,NTP,Destination[1],A2,12.5,NTP
+Source[1],384PP_AQ_GP3,NTP,Destination[1],B2,0.0,NTP
+Source[1],384PP_AQ_GP3,NTP,Destination[1],C2,5.0,NTP
+Source[1],384PP_AQ_GP3,NTP,Destination[1],D2,12.5,NTP
+Source[1],384PP_AQ_GP3,NTP,Destination[1],E2,0.0,NTP
+Source[1],384PP_AQ_GP3,NTP,Destination[1],F2,5.0,NTP
+Source[1],384PP_AQ_GP3,NTP,Destination[1],G2,12.5,NTP
+Source[1],384PP_AQ_GP3,NTP,Destination[1],H2,0.0,NTP
+Source[1],384PP_AQ_GP3,NTP,Destination[1],I2,5.0,NTP
+Source[1],384PP_AQ_GP3,NTP,Destination[1],J2,12.5,NTP
+Source[1],384PP_AQ_GP3,NTP,Destination[1],K2,0.0,NTP
+Source[1],384PP_AQ_GP3,NAD,Destination[1],A1,5.0,NAD
+Source[1],384PP_AQ_GP3,NAD,Destination[1],B1,5.0,NAD
+Source[1],384PP_AQ_GP3,NAD,Destination[1],C1,5.0,NAD
+Source[1],384PP_AQ_GP3,NAD,Destination[1],D1,5.0,NAD
+Source[1],384PP_AQ_GP3,NAD,Destination[1],E1,5.0,NAD
+Source[1],384PP_AQ_GP3,NAD,Destination[1],F1,5.0,NAD
+Source[1],384PP_AQ_GP3,NAD,Destination[1],G1,5.0,NAD
+Source[1],384PP_AQ_GP3,NAD,Destination[1],H1,5.0,NAD
+Source[1],384PP_AQ_GP3,NAD,Destination[1],I1,5.0,NAD
+Source[1],384PP_AQ_GP3,NAD,Destination[1],J1,5.0,NAD
+Source[1],384PP_AQ_GP3,NAD,Destination[1],K1,5.0,NAD
+Source[1],384PP_AQ_GP3,NAD,Destination[1],L1,5.0,NAD
+Source[1],384PP_AQ_GP3,NAD,Destination[1],M1,5.0,NAD
+Source[1],384PP_AQ_GP3,NAD,Destination[1],N1,5.0,NAD
+Source[1],384PP_AQ_GP3,NAD,Destination[1],O1,5.0,NAD
+Source[1],384PP_AQ_GP3,NAD,Destination[1],P1,5.0,NAD
+Source[1],384PP_AQ_GP3,NAD,Destination[1],A2,5.0,NAD
+Source[1],384PP_AQ_GP3,NAD,Destination[1],B2,5.0,NAD
+Source[1],384PP_AQ_GP3,NAD,Destination[1],C2,5.0,NAD
+Source[1],384PP_AQ_GP3,NAD,Destination[1],D2,5.0,NAD
+Source[1],384PP_AQ_GP3,NAD,Destination[1],E2,5.0,NAD
+Source[1],384PP_AQ_GP3,NAD,Destination[1],F2,5.0,NAD
+Source[1],384PP_AQ_GP3,NAD,Destination[1],G2,5.0,NAD
+Source[1],384PP_AQ_GP3,NAD,Destination[1],H2,5.0,NAD
+Source[1],384PP_AQ_GP3,NAD,Destination[1],I2,5.0,NAD
+Source[1],384PP_AQ_GP3,NAD,Destination[1],J2,5.0,NAD
+Source[1],384PP_AQ_GP3,NAD,Destination[1],K2,5.0,NAD
+Source[1],384PP_AQ_GP3,Folinic acid,Destination[1],A1,17.5,Folinic acid
+Source[1],384PP_AQ_GP3,Folinic acid,Destination[1],B1,25.0,Folinic acid
+Source[1],384PP_AQ_GP3,Folinic acid,Destination[1],C1,0.0,Folinic acid
+Source[1],384PP_AQ_GP3,Folinic acid,Destination[1],D1,17.5,Folinic acid
+Source[1],384PP_AQ_GP3,Folinic acid,Destination[1],E1,25.0,Folinic acid
+Source[1],384PP_AQ_GP3,Folinic acid,Destination[1],F1,0.0,Folinic acid
+Source[1],384PP_AQ_GP3,Folinic acid,Destination[1],G1,17.5,Folinic acid
+Source[1],384PP_AQ_GP3,Folinic acid,Destination[1],H1,25.0,Folinic acid
+Source[1],384PP_AQ_GP3,Folinic acid,Destination[1],I1,0.0,Folinic acid
+Source[1],384PP_AQ_GP3,Folinic acid,Destination[1],J1,17.5,Folinic acid
+Source[1],384PP_AQ_GP3,Folinic acid,Destination[1],K1,25.0,Folinic acid
+Source[1],384PP_AQ_GP3,Folinic acid,Destination[1],L1,0.0,Folinic acid
+Source[1],384PP_AQ_GP3,Folinic acid,Destination[1],M1,17.5,Folinic acid
+Source[1],384PP_AQ_GP3,Folinic acid,Destination[1],N1,25.0,Folinic acid
+Source[1],384PP_AQ_GP3,Folinic acid,Destination[1],O1,0.0,Folinic acid
+Source[1],384PP_AQ_GP3,Folinic acid,Destination[1],P1,17.5,Folinic acid
+Source[1],384PP_AQ_GP3,Folinic acid,Destination[1],A2,25.0,Folinic acid
+Source[1],384PP_AQ_GP3,Folinic acid,Destination[1],B2,0.0,Folinic acid
+Source[1],384PP_AQ_GP3,Folinic acid,Destination[1],C2,17.5,Folinic acid
+Source[1],384PP_AQ_GP3,Folinic acid,Destination[1],D2,25.0,Folinic acid
+Source[1],384PP_AQ_GP3,Folinic acid,Destination[1],E2,0.0,Folinic acid
+Source[1],384PP_AQ_GP3,Folinic acid,Destination[1],F2,17.5,Folinic acid
+Source[1],384PP_AQ_GP3,Folinic acid,Destination[1],G2,25.0,Folinic acid
+Source[1],384PP_AQ_GP3,Folinic acid,Destination[1],H2,0.0,Folinic acid
+Source[1],384PP_AQ_GP3,Folinic acid,Destination[1],I2,17.5,Folinic acid
+Source[1],384PP_AQ_GP3,Folinic acid,Destination[1],J2,25.0,Folinic acid
+Source[1],384PP_AQ_GP3,Folinic acid,Destination[1],K2,0.0,Folinic acid
+Source[1],384PP_AQ_GP3,Spermidine,Destination[1],A1,17.5,Spermidine
+Source[1],384PP_AQ_GP3,Spermidine,Destination[1],B1,25.0,Spermidine
+Source[1],384PP_AQ_GP3,Spermidine,Destination[1],C1,12.5,Spermidine
+Source[1],384PP_AQ_GP3,Spermidine,Destination[1],D1,17.5,Spermidine
+Source[1],384PP_AQ_GP3,Spermidine,Destination[1],E1,25.0,Spermidine
+Source[1],384PP_AQ_GP3,Spermidine,Destination[1],F1,12.5,Spermidine
+Source[1],384PP_AQ_GP3,Spermidine,Destination[1],G1,17.5,Spermidine
+Source[1],384PP_AQ_GP3,Spermidine,Destination[1],H1,25.0,Spermidine
+Source[1],384PP_AQ_GP3,Spermidine,Destination[1],I1,12.5,Spermidine
+Source[1],384PP_AQ_GP3,Spermidine,Destination[1],J1,17.5,Spermidine
+Source[1],384PP_AQ_GP3,Spermidine,Destination[1],K1,25.0,Spermidine
+Source[1],384PP_AQ_GP3,Spermidine,Destination[1],L1,12.5,Spermidine
+Source[1],384PP_AQ_GP3,Spermidine,Destination[1],M1,17.5,Spermidine
+Source[1],384PP_AQ_GP3,Spermidine,Destination[1],N1,25.0,Spermidine
+Source[1],384PP_AQ_GP3,Spermidine,Destination[1],O1,12.5,Spermidine
+Source[1],384PP_AQ_GP3,Spermidine,Destination[1],P1,17.5,Spermidine
+Source[1],384PP_AQ_GP3,Spermidine,Destination[1],A2,25.0,Spermidine
+Source[1],384PP_AQ_GP3,Spermidine,Destination[1],B2,12.5,Spermidine
+Source[1],384PP_AQ_GP3,Spermidine,Destination[1],C2,17.5,Spermidine
+Source[1],384PP_AQ_GP3,Spermidine,Destination[1],D2,25.0,Spermidine
+Source[1],384PP_AQ_GP3,Spermidine,Destination[1],E2,12.5,Spermidine
+Source[1],384PP_AQ_GP3,Spermidine,Destination[1],F2,17.5,Spermidine
+Source[1],384PP_AQ_GP3,Spermidine,Destination[1],G2,25.0,Spermidine
+Source[1],384PP_AQ_GP3,Spermidine,Destination[1],H2,12.5,Spermidine
+Source[1],384PP_AQ_GP3,Spermidine,Destination[1],I2,17.5,Spermidine
+Source[1],384PP_AQ_GP3,Spermidine,Destination[1],J2,25.0,Spermidine
+Source[1],384PP_AQ_GP3,Spermidine,Destination[1],K2,12.5,Spermidine
+Source[1],384PP_AQ_GP3,tRNA,Destination[1],A1,12.5,tRNA
+Source[1],384PP_AQ_GP3,tRNA,Destination[1],B1,5.0,tRNA
+Source[1],384PP_AQ_GP3,tRNA,Destination[1],C1,17.5,tRNA
+Source[1],384PP_AQ_GP3,tRNA,Destination[1],D1,12.5,tRNA
+Source[1],384PP_AQ_GP3,tRNA,Destination[1],E1,5.0,tRNA
+Source[1],384PP_AQ_GP3,tRNA,Destination[1],F1,17.5,tRNA
+Source[1],384PP_AQ_GP3,tRNA,Destination[1],G1,12.5,tRNA
+Source[1],384PP_AQ_GP3,tRNA,Destination[1],H1,5.0,tRNA
+Source[1],384PP_AQ_GP3,tRNA,Destination[1],I1,17.5,tRNA
+Source[1],384PP_AQ_GP3,tRNA,Destination[1],J1,12.5,tRNA
+Source[1],384PP_AQ_GP3,tRNA,Destination[1],K1,5.0,tRNA
+Source[1],384PP_AQ_GP3,tRNA,Destination[1],L1,17.5,tRNA
+Source[1],384PP_AQ_GP3,tRNA,Destination[1],M1,12.5,tRNA
+Source[1],384PP_AQ_GP3,tRNA,Destination[1],N1,5.0,tRNA
+Source[1],384PP_AQ_GP3,tRNA,Destination[1],O1,17.5,tRNA
+Source[1],384PP_AQ_GP3,tRNA,Destination[1],P1,12.5,tRNA
+Source[1],384PP_AQ_GP3,tRNA,Destination[1],A2,5.0,tRNA
+Source[1],384PP_AQ_GP3,tRNA,Destination[1],B2,17.5,tRNA
+Source[1],384PP_AQ_GP3,tRNA,Destination[1],C2,12.5,tRNA
+Source[1],384PP_AQ_GP3,tRNA,Destination[1],D2,5.0,tRNA
+Source[1],384PP_AQ_GP3,tRNA,Destination[1],E2,17.5,tRNA
+Source[1],384PP_AQ_GP3,tRNA,Destination[1],F2,12.5,tRNA
+Source[1],384PP_AQ_GP3,tRNA,Destination[1],G2,5.0,tRNA
+Source[1],384PP_AQ_GP3,tRNA,Destination[1],H2,17.5,tRNA
+Source[1],384PP_AQ_GP3,tRNA,Destination[1],I2,12.5,tRNA
+Source[1],384PP_AQ_GP3,tRNA,Destination[1],J2,5.0,tRNA
+Source[1],384PP_AQ_GP3,tRNA,Destination[1],K2,17.5,tRNA
+Source[1],384PP_AQ_GP3,Amino acids,Destination[1],A1,1250.0,Amino acids
+Source[1],384PP_AQ_GP3,Amino acids,Destination[1],B1,0.0,Amino acids
+Source[1],384PP_AQ_GP3,Amino acids,Destination[1],C1,625.0,Amino acids
+Source[1],384PP_AQ_GP3,Amino acids,Destination[1],D1,1250.0,Amino acids
+Source[1],384PP_AQ_GP3,Amino acids,Destination[1],E1,0.0,Amino acids
+Source[1],384PP_AQ_GP3,Amino acids,Destination[1],F1,625.0,Amino acids
+Source[1],384PP_AQ_GP3,Amino acids,Destination[1],G1,1250.0,Amino acids
+Source[1],384PP_AQ_GP3,Amino acids,Destination[1],H1,0.0,Amino acids
+Source[1],384PP_AQ_GP3,Amino acids,Destination[1],I1,625.0,Amino acids
+Source[1],384PP_AQ_GP3,Amino acids,Destination[1],J1,1250.0,Amino acids
+Source[1],384PP_AQ_GP3,Amino acids,Destination[1],K1,0.0,Amino acids
+Source[1],384PP_AQ_GP3,Amino acids,Destination[1],L1,625.0,Amino acids
+Source[1],384PP_AQ_GP3,Amino acids,Destination[1],M1,1250.0,Amino acids
+Source[1],384PP_AQ_GP3,Amino acids,Destination[1],N1,0.0,Amino acids
+Source[1],384PP_AQ_GP3,Amino acids,Destination[1],O1,625.0,Amino acids
+Source[1],384PP_AQ_GP3,Amino acids,Destination[1],P1,1250.0,Amino acids
+Source[1],384PP_AQ_GP3,Amino acids,Destination[1],A2,0.0,Amino acids
+Source[1],384PP_AQ_GP3,Amino acids,Destination[1],B2,625.0,Amino acids
+Source[1],384PP_AQ_GP3,Amino acids,Destination[1],C2,1250.0,Amino acids
+Source[1],384PP_AQ_GP3,Amino acids,Destination[1],D2,0.0,Amino acids
+Source[1],384PP_AQ_GP3,Amino acids,Destination[1],E2,625.0,Amino acids
+Source[1],384PP_AQ_GP3,Amino acids,Destination[1],F2,1250.0,Amino acids
+Source[1],384PP_AQ_GP3,Amino acids,Destination[1],G2,0.0,Amino acids
+Source[1],384PP_AQ_GP3,Amino acids,Destination[1],H2,625.0,Amino acids
+Source[1],384PP_AQ_GP3,Amino acids,Destination[1],I2,1250.0,Amino acids
+Source[1],384PP_AQ_GP3,Amino acids,Destination[1],J2,0.0,Amino acids
+Source[1],384PP_AQ_GP3,Amino acids,Destination[1],K2,625.0,Amino acids
+Source[1],384PP_AQ_GP3,CAMP,Destination[1],A1,10.0,CAMP
+Source[1],384PP_AQ_GP3,CAMP,Destination[1],B1,27.5,CAMP
+Source[1],384PP_AQ_GP3,CAMP,Destination[1],C1,37.5,CAMP
+Source[1],384PP_AQ_GP3,CAMP,Destination[1],D1,10.0,CAMP
+Source[1],384PP_AQ_GP3,CAMP,Destination[1],E1,27.5,CAMP
+Source[1],384PP_AQ_GP3,CAMP,Destination[1],F1,37.5,CAMP
+Source[1],384PP_AQ_GP3,CAMP,Destination[1],G1,10.0,CAMP
+Source[1],384PP_AQ_GP3,CAMP,Destination[1],H1,27.5,CAMP
+Source[1],384PP_AQ_GP3,CAMP,Destination[1],I1,37.5,CAMP
+Source[1],384PP_AQ_GP3,CAMP,Destination[1],J1,10.0,CAMP
+Source[1],384PP_AQ_GP3,CAMP,Destination[1],K1,27.5,CAMP
+Source[1],384PP_AQ_GP3,CAMP,Destination[1],L1,37.5,CAMP
+Source[1],384PP_AQ_GP3,CAMP,Destination[1],M1,10.0,CAMP
+Source[1],384PP_AQ_GP3,CAMP,Destination[1],N1,27.5,CAMP
+Source[1],384PP_AQ_GP3,CAMP,Destination[1],O1,37.5,CAMP
+Source[1],384PP_AQ_GP3,CAMP,Destination[1],P1,10.0,CAMP
+Source[1],384PP_AQ_GP3,CAMP,Destination[1],A2,27.5,CAMP
+Source[1],384PP_AQ_GP3,CAMP,Destination[1],B2,37.5,CAMP
+Source[1],384PP_AQ_GP3,CAMP,Destination[1],C2,10.0,CAMP
+Source[1],384PP_AQ_GP3,CAMP,Destination[1],D2,27.5,CAMP
+Source[1],384PP_AQ_GP3,CAMP,Destination[1],E2,37.5,CAMP
+Source[1],384PP_AQ_GP3,CAMP,Destination[1],F2,10.0,CAMP
+Source[1],384PP_AQ_GP3,CAMP,Destination[1],G2,27.5,CAMP
+Source[1],384PP_AQ_GP3,CAMP,Destination[1],H2,37.5,CAMP
+Source[1],384PP_AQ_GP3,CAMP,Destination[1],I2,10.0,CAMP
+Source[1],384PP_AQ_GP3,CAMP,Destination[1],J2,27.5,CAMP
+Source[1],384PP_AQ_GP3,CAMP,Destination[1],K2,37.5,CAMP
+Source[1],384PP_AQ_GP3,Extract,Destination[1],A1,1000.0,Extract
+Source[1],384PP_AQ_GP3,Extract,Destination[1],B1,1000.0,Extract
+Source[1],384PP_AQ_GP3,Extract,Destination[1],C1,1000.0,Extract
+Source[1],384PP_AQ_GP3,Extract,Destination[1],D1,1000.0,Extract
+Source[1],384PP_AQ_GP3,Extract,Destination[1],E1,1000.0,Extract
+Source[1],384PP_AQ_GP3,Extract,Destination[1],F1,1000.0,Extract
+Source[1],384PP_AQ_GP3,Extract,Destination[1],G1,1000.0,Extract
+Source[1],384PP_AQ_GP3,Extract,Destination[1],H1,1000.0,Extract
+Source[1],384PP_AQ_GP3,Extract,Destination[1],I1,1000.0,Extract
+Source[1],384PP_AQ_GP3,Extract,Destination[1],J1,1000.0,Extract
+Source[1],384PP_AQ_GP3,Extract,Destination[1],K1,1000.0,Extract
+Source[1],384PP_AQ_GP3,Extract,Destination[1],L1,1000.0,Extract
+Source[1],384PP_AQ_GP3,Extract,Destination[1],M1,1000.0,Extract
+Source[1],384PP_AQ_GP3,Extract,Destination[1],N1,1000.0,Extract
+Source[1],384PP_AQ_GP3,Extract,Destination[1],O1,1000.0,Extract
+Source[1],384PP_AQ_GP3,Extract,Destination[1],P1,1000.0,Extract
+Source[1],384PP_AQ_GP3,Extract,Destination[1],A2,1000.0,Extract
+Source[1],384PP_AQ_GP3,Extract,Destination[1],B2,1000.0,Extract
+Source[1],384PP_AQ_GP3,Extract,Destination[1],C2,1000.0,Extract
+Source[1],384PP_AQ_GP3,Extract,Destination[1],D2,1000.0,Extract
+Source[1],384PP_AQ_GP3,Extract,Destination[1],E2,1000.0,Extract
+Source[1],384PP_AQ_GP3,Extract,Destination[1],F2,1000.0,Extract
+Source[1],384PP_AQ_GP3,Extract,Destination[1],G2,1000.0,Extract
+Source[1],384PP_AQ_GP3,Extract,Destination[1],H2,1000.0,Extract
+Source[1],384PP_AQ_GP3,Extract,Destination[1],I2,1000.0,Extract
+Source[1],384PP_AQ_GP3,Extract,Destination[1],J2,1000.0,Extract
+Source[1],384PP_AQ_GP3,Extract,Destination[1],K2,1000.0,Extract
+Source[1],384PP_AQ_GP3,HEPES,Destination[1],A1,237.5,HEPES
+Source[1],384PP_AQ_GP3,HEPES,Destination[1],B1,237.5,HEPES
+Source[1],384PP_AQ_GP3,HEPES,Destination[1],C1,237.5,HEPES
+Source[1],384PP_AQ_GP3,HEPES,Destination[1],D1,237.5,HEPES
+Source[1],384PP_AQ_GP3,HEPES,Destination[1],E1,237.5,HEPES
+Source[1],384PP_AQ_GP3,HEPES,Destination[1],F1,237.5,HEPES
+Source[1],384PP_AQ_GP3,HEPES,Destination[1],G1,237.5,HEPES
+Source[1],384PP_AQ_GP3,HEPES,Destination[1],H1,237.5,HEPES
+Source[1],384PP_AQ_GP3,HEPES,Destination[1],I1,237.5,HEPES
+Source[1],384PP_AQ_GP3,HEPES,Destination[1],J1,237.5,HEPES
+Source[1],384PP_AQ_GP3,HEPES,Destination[1],K1,237.5,HEPES
+Source[1],384PP_AQ_GP3,HEPES,Destination[1],L1,237.5,HEPES
+Source[1],384PP_AQ_GP3,HEPES,Destination[1],M1,237.5,HEPES
+Source[1],384PP_AQ_GP3,HEPES,Destination[1],N1,237.5,HEPES
+Source[1],384PP_AQ_GP3,HEPES,Destination[1],O1,237.5,HEPES
+Source[1],384PP_AQ_GP3,HEPES,Destination[1],P1,237.5,HEPES
+Source[1],384PP_AQ_GP3,HEPES,Destination[1],A2,237.5,HEPES
+Source[1],384PP_AQ_GP3,HEPES,Destination[1],B2,237.5,HEPES
+Source[1],384PP_AQ_GP3,HEPES,Destination[1],C2,237.5,HEPES
+Source[1],384PP_AQ_GP3,HEPES,Destination[1],D2,237.5,HEPES
+Source[1],384PP_AQ_GP3,HEPES,Destination[1],E2,237.5,HEPES
+Source[1],384PP_AQ_GP3,HEPES,Destination[1],F2,237.5,HEPES
+Source[1],384PP_AQ_GP3,HEPES,Destination[1],G2,237.5,HEPES
+Source[1],384PP_AQ_GP3,HEPES,Destination[1],H2,237.5,HEPES
+Source[1],384PP_AQ_GP3,HEPES,Destination[1],I2,237.5,HEPES
+Source[1],384PP_AQ_GP3,HEPES,Destination[1],J2,237.5,HEPES
+Source[1],384PP_AQ_GP3,HEPES,Destination[1],K2,237.5,HEPES
+Source[1],384PP_AQ_GP3,PEG,Destination[1],A1,100.0,PEG
+Source[1],384PP_AQ_GP3,PEG,Destination[1],B1,100.0,PEG
+Source[1],384PP_AQ_GP3,PEG,Destination[1],C1,100.0,PEG
+Source[1],384PP_AQ_GP3,PEG,Destination[1],D1,100.0,PEG
+Source[1],384PP_AQ_GP3,PEG,Destination[1],E1,100.0,PEG
+Source[1],384PP_AQ_GP3,PEG,Destination[1],F1,100.0,PEG
+Source[1],384PP_AQ_GP3,PEG,Destination[1],G1,100.0,PEG
+Source[1],384PP_AQ_GP3,PEG,Destination[1],H1,100.0,PEG
+Source[1],384PP_AQ_GP3,PEG,Destination[1],I1,100.0,PEG
+Source[1],384PP_AQ_GP3,PEG,Destination[1],J1,100.0,PEG
+Source[1],384PP_AQ_GP3,PEG,Destination[1],K1,100.0,PEG
+Source[1],384PP_AQ_GP3,PEG,Destination[1],L1,100.0,PEG
+Source[1],384PP_AQ_GP3,PEG,Destination[1],M1,100.0,PEG
+Source[1],384PP_AQ_GP3,PEG,Destination[1],N1,100.0,PEG
+Source[1],384PP_AQ_GP3,PEG,Destination[1],O1,100.0,PEG
+Source[1],384PP_AQ_GP3,PEG,Destination[1],P1,100.0,PEG
+Source[1],384PP_AQ_GP3,PEG,Destination[1],A2,100.0,PEG
+Source[1],384PP_AQ_GP3,PEG,Destination[1],B2,100.0,PEG
+Source[1],384PP_AQ_GP3,PEG,Destination[1],C2,100.0,PEG
+Source[1],384PP_AQ_GP3,PEG,Destination[1],D2,100.0,PEG
+Source[1],384PP_AQ_GP3,PEG,Destination[1],E2,100.0,PEG
+Source[1],384PP_AQ_GP3,PEG,Destination[1],F2,100.0,PEG
+Source[1],384PP_AQ_GP3,PEG,Destination[1],G2,100.0,PEG
+Source[1],384PP_AQ_GP3,PEG,Destination[1],H2,100.0,PEG
+Source[1],384PP_AQ_GP3,PEG,Destination[1],I2,100.0,PEG
+Source[1],384PP_AQ_GP3,PEG,Destination[1],J2,100.0,PEG
+Source[1],384PP_AQ_GP3,PEG,Destination[1],K2,100.0,PEG
+Source[1],384PP_AQ_GP3,Promoter,Destination[1],A1,332.5,Promoter
+Source[1],384PP_AQ_GP3,Promoter,Destination[1],B1,332.5,Promoter
+Source[1],384PP_AQ_GP3,Promoter,Destination[1],C1,332.5,Promoter
+Source[1],384PP_AQ_GP3,Promoter,Destination[1],D1,332.5,Promoter
+Source[1],384PP_AQ_GP3,Promoter,Destination[1],E1,332.5,Promoter
+Source[1],384PP_AQ_GP3,Promoter,Destination[1],F1,332.5,Promoter
+Source[1],384PP_AQ_GP3,Promoter,Destination[1],G1,332.5,Promoter
+Source[1],384PP_AQ_GP3,Promoter,Destination[1],H1,332.5,Promoter
+Source[1],384PP_AQ_GP3,Promoter,Destination[1],I1,332.5,Promoter
+Source[1],384PP_AQ_GP3,Promoter,Destination[1],J1,332.5,Promoter
+Source[1],384PP_AQ_GP3,Promoter,Destination[1],K1,332.5,Promoter
+Source[1],384PP_AQ_GP3,Promoter,Destination[1],L1,332.5,Promoter
+Source[1],384PP_AQ_GP3,Promoter,Destination[1],M1,332.5,Promoter
+Source[1],384PP_AQ_GP3,Promoter,Destination[1],N1,332.5,Promoter
+Source[1],384PP_AQ_GP3,Promoter,Destination[1],O1,332.5,Promoter
+Source[1],384PP_AQ_GP3,Promoter,Destination[1],P1,332.5,Promoter
+Source[1],384PP_AQ_GP3,Promoter,Destination[1],A2,332.5,Promoter
+Source[1],384PP_AQ_GP3,Promoter,Destination[1],B2,332.5,Promoter
+Source[1],384PP_AQ_GP3,Promoter,Destination[1],C2,332.5,Promoter
+Source[1],384PP_AQ_GP3,Promoter,Destination[1],D2,332.5,Promoter
+Source[1],384PP_AQ_GP3,Promoter,Destination[1],E2,332.5,Promoter
+Source[1],384PP_AQ_GP3,Promoter,Destination[1],F2,332.5,Promoter
+Source[1],384PP_AQ_GP3,Promoter,Destination[1],G2,332.5,Promoter
+Source[1],384PP_AQ_GP3,Promoter,Destination[1],H2,332.5,Promoter
+Source[1],384PP_AQ_GP3,Promoter,Destination[1],I2,332.5,Promoter
+Source[1],384PP_AQ_GP3,Promoter,Destination[1],J2,332.5,Promoter
+Source[1],384PP_AQ_GP3,Promoter,Destination[1],K2,332.5,Promoter
+Source[1],384PP_AQ_GP3,RBS,Destination[1],A1,500.0,RBS
+Source[1],384PP_AQ_GP3,RBS,Destination[1],B1,500.0,RBS
+Source[1],384PP_AQ_GP3,RBS,Destination[1],C1,500.0,RBS
+Source[1],384PP_AQ_GP3,RBS,Destination[1],D1,500.0,RBS
+Source[1],384PP_AQ_GP3,RBS,Destination[1],E1,500.0,RBS
+Source[1],384PP_AQ_GP3,RBS,Destination[1],F1,500.0,RBS
+Source[1],384PP_AQ_GP3,RBS,Destination[1],G1,500.0,RBS
+Source[1],384PP_AQ_GP3,RBS,Destination[1],H1,500.0,RBS
+Source[1],384PP_AQ_GP3,RBS,Destination[1],I1,500.0,RBS
+Source[1],384PP_AQ_GP3,RBS,Destination[1],J1,500.0,RBS
+Source[1],384PP_AQ_GP3,RBS,Destination[1],K1,500.0,RBS
+Source[1],384PP_AQ_GP3,RBS,Destination[1],L1,500.0,RBS
+Source[1],384PP_AQ_GP3,RBS,Destination[1],M1,500.0,RBS
+Source[1],384PP_AQ_GP3,RBS,Destination[1],N1,500.0,RBS
+Source[1],384PP_AQ_GP3,RBS,Destination[1],O1,500.0,RBS
+Source[1],384PP_AQ_GP3,RBS,Destination[1],P1,500.0,RBS
+Source[1],384PP_AQ_GP3,RBS,Destination[1],A2,500.0,RBS
+Source[1],384PP_AQ_GP3,RBS,Destination[1],B2,500.0,RBS
+Source[1],384PP_AQ_GP3,RBS,Destination[1],C2,500.0,RBS
+Source[1],384PP_AQ_GP3,RBS,Destination[1],D2,500.0,RBS
+Source[1],384PP_AQ_GP3,RBS,Destination[1],E2,500.0,RBS
+Source[1],384PP_AQ_GP3,RBS,Destination[1],F2,500.0,RBS
+Source[1],384PP_AQ_GP3,RBS,Destination[1],G2,500.0,RBS
+Source[1],384PP_AQ_GP3,RBS,Destination[1],H2,500.0,RBS
+Source[1],384PP_AQ_GP3,RBS,Destination[1],I2,500.0,RBS
+Source[1],384PP_AQ_GP3,RBS,Destination[1],J2,500.0,RBS
+Source[1],384PP_AQ_GP3,RBS,Destination[1],K2,500.0,RBS
+Source[1],384PP_AQ_GP3,GFP-DNA,Destination[1],A1,1667.5,GFP-DNA
+Source[1],384PP_AQ_GP3,GFP-DNA,Destination[1],B1,1667.5,GFP-DNA
+Source[1],384PP_AQ_GP3,GFP-DNA,Destination[1],C1,1667.5,GFP-DNA
+Source[1],384PP_AQ_GP3,GFP-DNA,Destination[1],D1,0.0,GFP-DNA
+Source[1],384PP_AQ_GP3,GFP-DNA,Destination[1],E1,0.0,GFP-DNA
+Source[1],384PP_AQ_GP3,GFP-DNA,Destination[1],F1,0.0,GFP-DNA
+Source[1],384PP_AQ_GP3,GFP-DNA,Destination[1],G1,0.0,GFP-DNA
+Source[1],384PP_AQ_GP3,GFP-DNA,Destination[1],H1,0.0,GFP-DNA
+Source[1],384PP_AQ_GP3,GFP-DNA,Destination[1],I1,0.0,GFP-DNA
+Source[1],384PP_AQ_GP3,GFP-DNA,Destination[1],J1,1667.5,GFP-DNA
+Source[1],384PP_AQ_GP3,GFP-DNA,Destination[1],K1,1667.5,GFP-DNA
+Source[1],384PP_AQ_GP3,GFP-DNA,Destination[1],L1,1667.5,GFP-DNA
+Source[1],384PP_AQ_GP3,GFP-DNA,Destination[1],M1,0.0,GFP-DNA
+Source[1],384PP_AQ_GP3,GFP-DNA,Destination[1],N1,0.0,GFP-DNA
+Source[1],384PP_AQ_GP3,GFP-DNA,Destination[1],O1,0.0,GFP-DNA
+Source[1],384PP_AQ_GP3,GFP-DNA,Destination[1],P1,0.0,GFP-DNA
+Source[1],384PP_AQ_GP3,GFP-DNA,Destination[1],A2,0.0,GFP-DNA
+Source[1],384PP_AQ_GP3,GFP-DNA,Destination[1],B2,0.0,GFP-DNA
+Source[1],384PP_AQ_GP3,GFP-DNA,Destination[1],C2,1667.5,GFP-DNA
+Source[1],384PP_AQ_GP3,GFP-DNA,Destination[1],D2,1667.5,GFP-DNA
+Source[1],384PP_AQ_GP3,GFP-DNA,Destination[1],E2,1667.5,GFP-DNA
+Source[1],384PP_AQ_GP3,GFP-DNA,Destination[1],F2,0.0,GFP-DNA
+Source[1],384PP_AQ_GP3,GFP-DNA,Destination[1],G2,0.0,GFP-DNA
+Source[1],384PP_AQ_GP3,GFP-DNA,Destination[1],H2,0.0,GFP-DNA
+Source[1],384PP_AQ_GP3,GFP-DNA,Destination[1],I2,0.0,GFP-DNA
+Source[1],384PP_AQ_GP3,GFP-DNA,Destination[1],J2,0.0,GFP-DNA
+Source[1],384PP_AQ_GP3,GFP-DNA,Destination[1],K2,0.0,GFP-DNA
+Source[1],384PP_AQ_GP3,GOI-DNA,Destination[1],A1,1667.5,GOI-DNA
+Source[1],384PP_AQ_GP3,GOI-DNA,Destination[1],B1,1667.5,GOI-DNA
+Source[1],384PP_AQ_GP3,GOI-DNA,Destination[1],C1,1667.5,GOI-DNA
+Source[1],384PP_AQ_GP3,GOI-DNA,Destination[1],D1,1667.5,GOI-DNA
+Source[1],384PP_AQ_GP3,GOI-DNA,Destination[1],E1,1667.5,GOI-DNA
+Source[1],384PP_AQ_GP3,GOI-DNA,Destination[1],F1,1667.5,GOI-DNA
+Source[1],384PP_AQ_GP3,GOI-DNA,Destination[1],G1,0.0,GOI-DNA
+Source[1],384PP_AQ_GP3,GOI-DNA,Destination[1],H1,0.0,GOI-DNA
+Source[1],384PP_AQ_GP3,GOI-DNA,Destination[1],I1,0.0,GOI-DNA
+Source[1],384PP_AQ_GP3,GOI-DNA,Destination[1],J1,1667.5,GOI-DNA
+Source[1],384PP_AQ_GP3,GOI-DNA,Destination[1],K1,1667.5,GOI-DNA
+Source[1],384PP_AQ_GP3,GOI-DNA,Destination[1],L1,1667.5,GOI-DNA
+Source[1],384PP_AQ_GP3,GOI-DNA,Destination[1],M1,1667.5,GOI-DNA
+Source[1],384PP_AQ_GP3,GOI-DNA,Destination[1],N1,1667.5,GOI-DNA
+Source[1],384PP_AQ_GP3,GOI-DNA,Destination[1],O1,1667.5,GOI-DNA
+Source[1],384PP_AQ_GP3,GOI-DNA,Destination[1],P1,0.0,GOI-DNA
+Source[1],384PP_AQ_GP3,GOI-DNA,Destination[1],A2,0.0,GOI-DNA
+Source[1],384PP_AQ_GP3,GOI-DNA,Destination[1],B2,0.0,GOI-DNA
+Source[1],384PP_AQ_GP3,GOI-DNA,Destination[1],C2,1667.5,GOI-DNA
+Source[1],384PP_AQ_GP3,GOI-DNA,Destination[1],D2,1667.5,GOI-DNA
+Source[1],384PP_AQ_GP3,GOI-DNA,Destination[1],E2,1667.5,GOI-DNA
+Source[1],384PP_AQ_GP3,GOI-DNA,Destination[1],F2,1667.5,GOI-DNA
+Source[1],384PP_AQ_GP3,GOI-DNA,Destination[1],G2,1667.5,GOI-DNA
+Source[1],384PP_AQ_GP3,GOI-DNA,Destination[1],H2,1667.5,GOI-DNA
+Source[1],384PP_AQ_GP3,GOI-DNA,Destination[1],I2,0.0,GOI-DNA
+Source[1],384PP_AQ_GP3,GOI-DNA,Destination[1],J2,0.0,GOI-DNA
+Source[1],384PP_AQ_GP3,GOI-DNA,Destination[1],K2,0.0,GOI-DNA
+Source[1],384PP_AQ_GP3,Water,Destination[1],A1,3112.5,Water
+Source[1],384PP_AQ_GP3,Water,Destination[1],B1,3877.5,Water
+Source[1],384PP_AQ_GP3,Water,Destination[1],C1,3555.0,Water
+Source[1],384PP_AQ_GP3,Water,Destination[1],D1,4780.0,Water
+Source[1],384PP_AQ_GP3,Water,Destination[1],E1,5545.0,Water
+Source[1],384PP_AQ_GP3,Water,Destination[1],F1,5222.5,Water
+Source[1],384PP_AQ_GP3,Water,Destination[1],G1,6447.5,Water
+Source[1],384PP_AQ_GP3,Water,Destination[1],H1,7212.5,Water
+Source[1],384PP_AQ_GP3,Water,Destination[1],I1,6890.0,Water
+Source[1],384PP_AQ_GP3,Water,Destination[1],J1,3112.5,Water
+Source[1],384PP_AQ_GP3,Water,Destination[1],K1,3877.5,Water
+Source[1],384PP_AQ_GP3,Water,Destination[1],L1,3555.0,Water
+Source[1],384PP_AQ_GP3,Water,Destination[1],M1,4780.0,Water
+Source[1],384PP_AQ_GP3,Water,Destination[1],N1,5545.0,Water
+Source[1],384PP_AQ_GP3,Water,Destination[1],O1,5222.5,Water
+Source[1],384PP_AQ_GP3,Water,Destination[1],P1,6447.5,Water
+Source[1],384PP_AQ_GP3,Water,Destination[1],A2,7212.5,Water
+Source[1],384PP_AQ_GP3,Water,Destination[1],B2,6890.0,Water
+Source[1],384PP_AQ_GP3,Water,Destination[1],C2,3112.5,Water
+Source[1],384PP_AQ_GP3,Water,Destination[1],D2,3877.5,Water
+Source[1],384PP_AQ_GP3,Water,Destination[1],E2,3555.0,Water
+Source[1],384PP_AQ_GP3,Water,Destination[1],F2,4780.0,Water
+Source[1],384PP_AQ_GP3,Water,Destination[1],G2,5545.0,Water
+Source[1],384PP_AQ_GP3,Water,Destination[1],H2,5222.5,Water
+Source[1],384PP_AQ_GP3,Water,Destination[1],I2,6447.5,Water
+Source[1],384PP_AQ_GP3,Water,Destination[1],J2,7212.5,Water
+Source[1],384PP_AQ_GP3,Water,Destination[1],K2,6890.0,Water
