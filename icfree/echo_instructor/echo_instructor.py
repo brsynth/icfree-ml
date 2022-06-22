@@ -28,7 +28,8 @@ from typing import (
 
 from logging import (
     Logger,
-    getLogger
+    getLogger,
+    basicConfig
 )
 
 from .args import (
@@ -200,6 +201,9 @@ def concentrations_to_volumes(
                 if value != 0:
                     break
             if 0 < value < 10:
+                basicConfig(
+                    filename='volumes.log',
+                    encoding='utf-8')
                 logger.warning(
                     f'There are {factor} volume(s) < 10 nL. '
                     'Stock have to be more diluted.'
