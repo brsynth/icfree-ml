@@ -144,11 +144,18 @@ def concentrations_to_volumes(
 
     # Exract stock conecentrations from cfps_parameters_df
     stock_concentrations_dict = dict(
-        cfps_parameters_df[['Parameter', 'Stock concentration']].to_numpy())
+        cfps_parameters_df[
+            [
+                'Parameter',
+                'Stock concentration'
+            ]
+        ].to_numpy()
+    )
 
     stock_concentrations_df = fromiter(
         stock_concentrations_dict.values(),
-        dtype=float)
+        dtype=float
+    )
 
     logger.debug('Stock concentrations:\n%s', stock_concentrations_df)
 
@@ -157,10 +164,15 @@ def concentrations_to_volumes(
         sample_volume / stock_concentrations_df
 
     # Convert concentrations into volumes
+    # and make it a multiple of 2.5 (ECHO specs)
     try:
-        initial_volumes_df = round(multiply(
-            initial_concentrations_df,
-            sample_volume_stock_ratio) / 2.5, 0) * 2.5
+        initial_volumes_df = round(
+            multiply(
+                initial_concentrations_df,
+                sample_volume_stock_ratio
+            ) / 2.5,
+            0
+        ) * 2.5
         logger.debug(
             'initial volumes:\n%s',
             initial_volumes_df
@@ -189,7 +201,7 @@ def concentrations_to_volumes(
         )
         raise(e)
 
-    # WARNING: < 10 nL (Echo min volume transfer limit) --> dilute stock
+    # WARNING: < 10 nL (ECHO min volume transfer limit) --> dilute stock
     for volumes in [
         initial_volumes_df,
         normalizer_volumes_df,
@@ -204,9 +216,6 @@ def concentrations_to_volumes(
                     f'There are {factor} volume(s) < 10 nL. '
                     'Stock have to be more diluted.'
                 )
-
-    # WARNING: < 10 uL (echo specs) --> have to dilute stock
-    # WARNING: Vwater < 0 --> have to increase stock conentration
 
     # Add Water column
     initial_volumes_df['Water'] = \
