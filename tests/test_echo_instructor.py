@@ -10,7 +10,11 @@ from pandas.testing import (
     assert_frame_equal
 )
 from pandas import (
-    read_json
+    read_json,
+    DataFrame
+)
+from json import (
+    load as json_load
 )
 from tempfile import (
     TemporaryDirectory,
@@ -19,13 +23,13 @@ from tempfile import (
 
 from icfree.echo_instructor.echo_instructor import (
     input_importer,
-    volumes_array_generator,
+    concentrations_to_volumes,
     save_volumes,
-    samples_merger
-    # multiple_destination_plate_generator,
-    # multiple_echo_instructions_generator,
-    # single_destination_plate_generator,
-    # single_echo_instructions_generator,
+    samples_merger,
+    distribute_destination_plate_generator,
+    distribute_echo_instructions_generator,
+    merge_destination_plate_generator,
+    merge_echo_instructions_generator
     # save_echo_instructions
 )
 
@@ -163,7 +167,7 @@ class Test(TestCase):
         tested_normalizer_concentrations_df = input_importer_dfs[2]
         tested_autofluorescence_concentrations_df = input_importer_dfs[3]
 
-        volumes_array_generator_dfs = volumes_array_generator(
+        volumes_array_generator_dfs = concentrations_to_volumes(
             tested_cfps_parameters_df,
             tested_initial_concentrations_df,
             tested_normalizer_concentrations_df,
@@ -282,7 +286,7 @@ class Test(TestCase):
         tested_normalizer_concentrations_df = input_importer_dfs[2]
         tested_autofluorescence_concentrations_df = input_importer_dfs[3]
 
-        volumes_array_generator_dfs = volumes_array_generator(
+        volumes_array_generator_dfs = concentrations_to_volumes(
             tested_cfps_parameters_df,
             tested_initial_concentrations_df,
             tested_normalizer_concentrations_df,
@@ -335,24 +339,24 @@ class Test(TestCase):
 
         with open(
             os_path.join(
-                    self.REF_FOLDER,
-                    'tested_initial_volumes.tsv'
+                    output_folder,
+                    'initial_volumes.tsv'
             )
         ) as fp4:
             tested_initial_volumes = fp4.read()
 
         with open(
             os_path.join(
-                    self.REF_FOLDER,
-                    'tested_normalizer_volumes.tsv'
+                    output_folder,
+                    'normalizer_volumes.tsv'
             )
         ) as fp5:
             tested_normalizer_volumes = fp5.read()
 
         with open(
             os_path.join(
-                    self.REF_FOLDER,
-                    'tested_autofluorescence_volumes.tsv'
+                    output_folder,
+                    'autofluorescence_volumes.tsv'
             )
         ) as fp6:
             tested_autofluorescence_volumes = fp6.read()
@@ -375,7 +379,7 @@ class Test(TestCase):
         tested_normalizer_concentrations_df = input_importer_dfs[2]
         tested_autofluorescence_concentrations_df = input_importer_dfs[3]
 
-        volumes_array_generator_dfs = volumes_array_generator(
+        volumes_array_generator_dfs = concentrations_to_volumes(
             tested_cfps_parameters_df,
             tested_initial_concentrations_df,
             tested_normalizer_concentrations_df,
@@ -391,71 +395,341 @@ class Test(TestCase):
             tested_normalizer_volumes_df,
             tested_autofluorescence_volumes_df)
 
-        tested_master_plate_1_final = samples_merger_dfs[0]
-        tested_master_plate_2_final = samples_merger_dfs[1]
-        tested_master_plate_3_final = samples_merger_dfs[2]
+        tested_merged_plate_1_final = samples_merger_dfs[0]
+        tested_merged_plate_2_final = samples_merger_dfs[1]
+        tested_merged_plate_3_final = samples_merger_dfs[2]
 
         # Load reference files
         with open(
             os_path.join(
                     self.REF_FOLDER,
-                    'expected_master_plate_1_final.json'
+                    'expected_merged_plate_1_final.json'
             ), 'r'
         ) as fp1:
-            expected_master_plate_1_final = read_json(
+            expected_merged_plate_1_final = read_json(
                 fp1,
                 orient='split')
 
         with open(
             os_path.join(
                     self.REF_FOLDER,
-                    'expected_master_plate_2_final.json'
+                    'expected_merged_plate_2_final.json'
             ), 'r'
         ) as fp2:
-            expected_master_plate_2_final = read_json(
+            expected_merged_plate_2_final = read_json(
                 fp2,
                 orient='split')
 
         with open(
             os_path.join(
                     self.REF_FOLDER,
-                    'expected_master_plate_3_final.json'
+                    'expected_merged_plate_3_final.json'
             ), 'r'
         ) as fp3:
-            expected_master_plate_3_final = read_json(
+            expected_merged_plate_3_final = read_json(
                 fp3,
                 orient='split')
 
         # Compare dataframes
         assert_frame_equal(
-            tested_master_plate_1_final,
-            expected_master_plate_1_final,
+            tested_merged_plate_1_final,
+            expected_merged_plate_1_final,
             check_dtype=False
             )
 
         assert_frame_equal(
-            tested_master_plate_2_final,
-            expected_master_plate_2_final,
+            tested_merged_plate_2_final,
+            expected_merged_plate_2_final,
             check_dtype=False
             )
 
         assert_frame_equal(
-            tested_master_plate_3_final,
-            expected_master_plate_3_final,
+            tested_merged_plate_3_final,
+            expected_merged_plate_3_final,
             check_dtype=False
             )
 
-    def test_multiple_destination_plate_generator(self):
-        pass
+    def test_distribute_destination_plate_generator(self):
+        input_importer_dfs = input_importer(
+            self.tested_cfps_parameters,
+            self.tested_initial_concentrations,
+            self.tested_normalizer_concentrations,
+            self.tested_autofluorescence_concentrations)
 
-    def test_multiple_echo_instructions_generator(self):
-        pass
+        tested_cfps_parameters_df = input_importer_dfs[0]
+        tested_initial_concentrations_df = input_importer_dfs[1]
+        tested_normalizer_concentrations_df = input_importer_dfs[2]
+        tested_autofluorescence_concentrations_df = input_importer_dfs[3]
 
-    def test_single_destination_plate_generator(self):
-        pass
+        volumes_array_generator_dfs = concentrations_to_volumes(
+            tested_cfps_parameters_df,
+            tested_initial_concentrations_df,
+            tested_normalizer_concentrations_df,
+            tested_autofluorescence_concentrations_df,
+            sample_volume=10000)
 
-    def test_single_echo_instructions_generator(self):
-        pass
+        tested_initial_volumes_df = volumes_array_generator_dfs[0]
+        tested_normalizer_volumes_df = volumes_array_generator_dfs[1]
+        tested_autofluorescence_volumes_df = volumes_array_generator_dfs[2]
+
+        tested_distribute_destination_plates_dict = \
+            distribute_destination_plate_generator(
+                tested_initial_volumes_df,
+                tested_normalizer_volumes_df,
+                tested_autofluorescence_volumes_df,
+                starting_well='A1',
+                vertical=True)
+
+        # Load reference dictionary
+        with open(
+            os_path.join(
+                    self.REF_FOLDER,
+                    'expected_distribute_destination_plates_dict.json'
+            ), 'r'
+        ) as fp1:
+            expected_distribute_destination_plates_dict = (json_load(fp1))
+
+        # Convert dictionaries into dataframes
+        expected_distribute_destination_plates_dict = {
+            key: DataFrame(expected_distribute_destination_plates_dict[key])
+            for key in expected_distribute_destination_plates_dict
+        }
+
+        # Compare dict keys
+        assert tested_distribute_destination_plates_dict.keys() ==  \
+            expected_distribute_destination_plates_dict.keys()
+
+        # Compare dict values types
+        expected_type_class = \
+            type(expected_distribute_destination_plates_dict.values())
+        isinstance(
+            tested_distribute_destination_plates_dict,
+            expected_type_class)
+
+        # Compare dict values
+        for keys, values in tested_distribute_destination_plates_dict.items():
+            assert_frame_equal(
+                values,
+                expected_distribute_destination_plates_dict[keys],
+                check_dtype=False
+                )
+
+    def test_distribute_echo_instructions_generator(self):
+        input_importer_dfs = input_importer(
+            self.tested_cfps_parameters,
+            self.tested_initial_concentrations,
+            self.tested_normalizer_concentrations,
+            self.tested_autofluorescence_concentrations)
+
+        tested_cfps_parameters_df = input_importer_dfs[0]
+        tested_initial_concentrations_df = input_importer_dfs[1]
+        tested_normalizer_concentrations_df = input_importer_dfs[2]
+        tested_autofluorescence_concentrations_df = input_importer_dfs[3]
+
+        volumes_array_generator_dfs = concentrations_to_volumes(
+            tested_cfps_parameters_df,
+            tested_initial_concentrations_df,
+            tested_normalizer_concentrations_df,
+            tested_autofluorescence_concentrations_df,
+            sample_volume=10000)
+
+        tested_initial_volumes_df = volumes_array_generator_dfs[0]
+        tested_normalizer_volumes_df = volumes_array_generator_dfs[1]
+        tested_autofluorescence_volumes_df = volumes_array_generator_dfs[2]
+
+        tested_distribute_destination_plates_dict = \
+            distribute_destination_plate_generator(
+                tested_initial_volumes_df,
+                tested_normalizer_volumes_df,
+                tested_autofluorescence_volumes_df,
+                starting_well='A1',
+                vertical=True)
+
+        tested_distribute_echo_instructions_dict = \
+            distribute_echo_instructions_generator(
+                tested_distribute_destination_plates_dict)
+
+        # Load reference dictionary
+        with open(
+            os_path.join(
+                    self.REF_FOLDER,
+                    'expected_distribute_echo_instructions_dict.json'
+            ), 'r'
+        ) as fp1:
+            expected_distribute_echo_instructions_dict = (json_load(fp1))
+
+        # Convert dictionaries into dataframes
+        expected_distribute_echo_instructions_dict = {
+            key: DataFrame(expected_distribute_echo_instructions_dict[key])
+            for key in expected_distribute_echo_instructions_dict
+        }
+
+        # Compare dict keys
+        assert tested_distribute_echo_instructions_dict.keys() ==  \
+            expected_distribute_echo_instructions_dict.keys()
+
+        # Compare dict values types
+        expected_type_class = \
+            type(expected_distribute_echo_instructions_dict.values())
+        isinstance(
+            tested_distribute_echo_instructions_dict,
+            expected_type_class)
+
+        # Compare dict values
+        for keys, values in tested_distribute_echo_instructions_dict.items():
+            assert_frame_equal(
+                values,
+                expected_distribute_echo_instructions_dict[keys],
+                check_dtype=False
+                )
+
+    def test_merge_destination_plate_generator(self):
+        input_importer_dfs = input_importer(
+            self.tested_cfps_parameters,
+            self.tested_initial_concentrations,
+            self.tested_normalizer_concentrations,
+            self.tested_autofluorescence_concentrations)
+
+        tested_cfps_parameters_df = input_importer_dfs[0]
+        tested_initial_concentrations_df = input_importer_dfs[1]
+        tested_normalizer_concentrations_df = input_importer_dfs[2]
+        tested_autofluorescence_concentrations_df = input_importer_dfs[3]
+
+        volumes_array_generator_dfs = concentrations_to_volumes(
+            tested_cfps_parameters_df,
+            tested_initial_concentrations_df,
+            tested_normalizer_concentrations_df,
+            tested_autofluorescence_concentrations_df,
+            sample_volume=10000)
+
+        tested_initial_volumes_df = volumes_array_generator_dfs[0]
+        tested_normalizer_volumes_df = volumes_array_generator_dfs[1]
+        tested_autofluorescence_volumes_df = volumes_array_generator_dfs[2]
+
+        samples_merger_dfs = samples_merger(
+            tested_initial_volumes_df,
+            tested_normalizer_volumes_df,
+            tested_autofluorescence_volumes_df)
+
+        tested_merged_plate_1_final = samples_merger_dfs[0]
+        tested_merged_plate_2_final = samples_merger_dfs[1]
+        tested_merged_plate_3_final = samples_merger_dfs[2]
+
+        tested_merge_destination_plates_dict =  \
+            merge_destination_plate_generator(
+                tested_merged_plate_1_final,
+                tested_merged_plate_2_final,
+                tested_merged_plate_3_final,
+                starting_well='A1',
+                vertical=True)
+
+        # Load reference dictionary
+        with open(
+            os_path.join(
+                    self.REF_FOLDER,
+                    'expected_merge_destination_plates_dict.json'
+            ), 'r'
+        ) as fp1:
+            expected_merge_destination_plates_dict = (json_load(fp1))
+
+        # Convert dictionaries into dataframes
+        expected_merge_destination_plates_dict = {
+            key: DataFrame(expected_merge_destination_plates_dict[key])
+            for key in expected_merge_destination_plates_dict
+        }
+
+        # Compare dict keys
+        assert tested_merge_destination_plates_dict.keys() ==  \
+            expected_merge_destination_plates_dict.keys()
+
+        # Compare dict values types
+        expected_type_class = \
+            type(expected_merge_destination_plates_dict.values())
+        isinstance(tested_merge_destination_plates_dict, expected_type_class)
+
+        # Compare dict values
+        for keys, values in tested_merge_destination_plates_dict.items():
+            assert_frame_equal(
+                values,
+                expected_merge_destination_plates_dict[keys],
+                check_dtype=False
+                )
+
+    def test_merge_echo_instructions_generator(self):
+        input_importer_dfs = input_importer(
+            self.tested_cfps_parameters,
+            self.tested_initial_concentrations,
+            self.tested_normalizer_concentrations,
+            self.tested_autofluorescence_concentrations)
+
+        tested_cfps_parameters_df = input_importer_dfs[0]
+        tested_initial_concentrations_df = input_importer_dfs[1]
+        tested_normalizer_concentrations_df = input_importer_dfs[2]
+        tested_autofluorescence_concentrations_df = input_importer_dfs[3]
+
+        volumes_array_generator_dfs = concentrations_to_volumes(
+            tested_cfps_parameters_df,
+            tested_initial_concentrations_df,
+            tested_normalizer_concentrations_df,
+            tested_autofluorescence_concentrations_df,
+            sample_volume=10000)
+
+        tested_initial_volumes_df = volumes_array_generator_dfs[0]
+        tested_normalizer_volumes_df = volumes_array_generator_dfs[1]
+        tested_autofluorescence_volumes_df = volumes_array_generator_dfs[2]
+
+        samples_merger_dfs = samples_merger(
+            tested_initial_volumes_df,
+            tested_normalizer_volumes_df,
+            tested_autofluorescence_volumes_df)
+
+        tested_merged_plate_1_final = samples_merger_dfs[0]
+        tested_merged_plate_2_final = samples_merger_dfs[1]
+        tested_merged_plate_3_final = samples_merger_dfs[2]
+
+        tested_merge_destination_plates_dict =  \
+            merge_destination_plate_generator(
+                tested_merged_plate_1_final,
+                tested_merged_plate_2_final,
+                tested_merged_plate_3_final,
+                starting_well='A1',
+                vertical=True)
+
+        tested_merge_echo_instructions_dict = \
+            merge_echo_instructions_generator(
+                tested_merge_destination_plates_dict)
+
+        # Load reference dictionary
+        with open(
+            os_path.join(
+                    self.REF_FOLDER,
+                    'expected_merge_echo_instructions_dict.json'
+            ), 'r'
+        ) as fp1:
+            expected_merge_echo_instructions_dict = (json_load(fp1))
+
+        # Convert dictionaries into dataframes
+        expected_merge_echo_instructions_dict = {
+            key: DataFrame(expected_merge_echo_instructions_dict[key])
+            for key in expected_merge_echo_instructions_dict
+        }
+
+        # Compare dict keys
+        assert tested_merge_echo_instructions_dict.keys() ==  \
+            expected_merge_echo_instructions_dict.keys()
+
+        # Compare dict values types
+        expected_type_class = \
+            type(expected_merge_echo_instructions_dict.values())
+        isinstance(tested_merge_echo_instructions_dict, expected_type_class)
+
+        # Compare dict values
+        for keys, values in tested_merge_echo_instructions_dict.items():
+            assert_frame_equal(
+                values,
+                expected_merge_echo_instructions_dict[keys],
+                check_dtype=False
+                )
 
     def test_save_echo_instructions(self):
         pass
