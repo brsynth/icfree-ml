@@ -287,9 +287,9 @@ def save_volumes(
         os_mkdir(output_folder)
 
     # Create subfolder for volumes
-    # output_subfolder = os_path.join(output_folder, 'volumes_output')
-    # if not os_path.exists(output_subfolder):
-    #     os_mkdir(output_subfolder)
+    output_subfolder = os_path.join(output_folder, 'volumes_output')
+    if not os_path.exists(output_subfolder):
+        os_mkdir(output_subfolder)
 
     # Get list of cfps parameters and add water
     all_parameters = cfps_parameters_df['Parameter'].tolist()
@@ -297,19 +297,28 @@ def save_volumes(
 
     # Save volumes dataframes in tsv files
     initial_volumes_df.to_csv(
-        os_path.join(output_folder, 'initial_volumes.tsv'),
+        os_path.join(
+            output_folder,
+            output_subfolder,
+            'initial_volumes.tsv'),
         sep='\t',
         header=all_parameters,
         index=False)
 
     normalizer_volumes_df.to_csv(
-        os_path.join(output_folder, 'normalizer_volumes.tsv'),
+        os_path.join(
+            output_folder,
+            output_subfolder,
+            'normalizer_volumes.tsv'),
         sep='\t',
         header=all_parameters,
         index=False)
 
     autofluorescence_volumes_df.to_csv(
-        os_path.join(output_folder, 'autofluorescence_volumes.tsv'),
+        os_path.join(
+            output_folder,
+            output_subfolder,
+            'autofluorescence_volumes.tsv'),
         sep='\t',
         header=all_parameters,
         index=False)
