@@ -292,18 +292,22 @@ class Test(TestCase):
         tested_normalizer_concentrations_df = input_importer_dfs[2]
         tested_autofluorescence_concentrations_df = input_importer_dfs[3]
 
-        volumes_array_generator_dfs = concentrations_to_volumes(
+        concentrations_to_volumes_dfs = concentrations_to_volumes(
             tested_cfps_parameters_df,
             tested_initial_concentrations_df,
             tested_normalizer_concentrations_df,
             tested_autofluorescence_concentrations_df,
             sample_volume=10000)
 
-        tested_initial_volumes_df = volumes_array_generator_dfs[0]
-        tested_normalizer_volumes_df = volumes_array_generator_dfs[1]
-        tested_autofluorescence_volumes_df = volumes_array_generator_dfs[2]
+        tested_initial_volumes_df = concentrations_to_volumes_dfs[0]
+        tested_normalizer_volumes_df = concentrations_to_volumes_dfs[1]
+        tested_autofluorescence_volumes_df = concentrations_to_volumes_dfs[2]
+        tested_initial_volumes_summary = concentrations_to_volumes_dfs[3]
+        tested_normalizer_volumes_summary = concentrations_to_volumes_dfs[4]
+        tested_autofluorescence_volumes_summary = \
+            concentrations_to_volumes_dfs[5]
 
-        # Load refrence files
+        # Load volumes refrence files
         ref_filename = 'expected_initial_volumes'
         with open(
             os_path.join(
@@ -314,8 +318,6 @@ class Test(TestCase):
             expected_initial_volumes = fp.read()
 
         ref_filename = 'expected_autofluorescence_volumes'
-        # if woGOI:
-        #     ref_filename += '_woGOI'
         with open(
             os_path.join(
                     self.REF_FOLDER_VOLUMES,
@@ -325,8 +327,6 @@ class Test(TestCase):
             expected_autofluorescence_volumes = fp.read()
 
         ref_filename = 'expected_normalizer_volumes'
-        # if woGOI:
-        #     ref_filename += '_woGOI'
         with open(
             os_path.join(
                     self.REF_FOLDER_VOLUMES,
@@ -335,14 +335,46 @@ class Test(TestCase):
         ) as fp:
             expected_normalizer_volumes = fp.read()
 
-        # Generate volume files
+        # Load summary volumes refrence files
+        ref_filename = 'expected_initial_volumes_summary'
+        with open(
+            os_path.join(
+                    self.REF_FOLDER_VOLUMES,
+                    f'{ref_filename}.tsv'
+            )
+        ) as fp:
+            expected_initial_volumes_summary = fp.read()
+
+        ref_filename = 'expected_autofluorescence_volumes_summary'
+        with open(
+            os_path.join(
+                    self.REF_FOLDER_VOLUMES,
+                    f'{ref_filename}.tsv'
+            )
+        ) as fp:
+            expected_autofluorescence_volumes_summary = fp.read()
+
+        ref_filename = 'expected_normalizer_volumes_summary'
+        with open(
+            os_path.join(
+                    self.REF_FOLDER_VOLUMES,
+                    f'{ref_filename}.tsv'
+            )
+        ) as fp:
+            expected_normalizer_volumes_summary = fp.read()
+
+        # Generate test volume files
         save_volumes(
-            cfps_parameters_df=tested_cfps_parameters_df,
-            initial_volumes_df=tested_initial_volumes_df,
-            normalizer_volumes_df=tested_normalizer_volumes_df,
-            autofluorescence_volumes_df=tested_autofluorescence_volumes_df,
+            tested_cfps_parameters_df,
+            tested_initial_volumes_df,
+            tested_normalizer_volumes_df,
+            tested_autofluorescence_volumes_df,
+            tested_initial_volumes_summary,
+            tested_normalizer_volumes_summary,
+            tested_autofluorescence_volumes_summary,
             output_folder=output_folder)
 
+        # Load test volume files
         with open(
             os_path.join(
                     output_folder,
@@ -370,11 +402,46 @@ class Test(TestCase):
         ) as fp:
             tested_autofluorescence_volumes = fp.read()
 
-        # Compare files
+        with open(
+            os_path.join(
+                    output_folder,
+                    'volumes_output',
+                    'initial_volumes_summary.tsv'
+            )
+        ) as fp:
+            tested_initial_volumes_summary = fp.read()
+
+        with open(
+            os_path.join(
+                    output_folder,
+                    'volumes_output',
+                    'normalizer_volumes_summary.tsv'
+            )
+        ) as fp:
+            tested_normalizer_volumes_summary = fp.read()
+
+        with open(
+            os_path.join(
+                    output_folder,
+                    'volumes_output',
+                    'autofluorescence_volumes_summary.tsv'
+            )
+        ) as fp:
+            tested_autofluorescence_volumes_summary = fp.read()
+
+        # Compare volumes files
         assert expected_initial_volumes == tested_initial_volumes
         assert expected_normalizer_volumes == tested_normalizer_volumes
         assert expected_autofluorescence_volumes == \
             tested_autofluorescence_volumes
+
+        # Compare volumes summary files
+        assert expected_initial_volumes_summary == \
+            tested_initial_volumes_summary
+        assert expected_normalizer_volumes_summary == \
+            tested_normalizer_volumes_summary
+        assert expected_autofluorescence_volumes_summary == \
+            tested_autofluorescence_volumes_summary
 
     def test_samples_merger(self):
         input_importer_dfs = input_importer(
@@ -496,7 +563,7 @@ class Test(TestCase):
                     'expected_distribute_destination_plates_dict.json'
             ), 'r'
         ) as fp:
-            expected_distribute_destination_plates_dict = (json_load(fp1))
+            expected_distribute_destination_plates_dict = (json_load(fp))
 
         # Convert dictionaries into dataframes
         expected_distribute_destination_plates_dict = {
