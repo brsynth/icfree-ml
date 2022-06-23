@@ -220,7 +220,7 @@ def concentrations_to_volumes(
                     break
             if 0 < value < 10:
                 basicConfig(
-                    filename='volumes.log',
+                    filename='volumes_warning_summary.txt',
                     encoding='utf-8')
                 logger.warning(
                     f'There are {factor} volume(s) < 10 nL. '
