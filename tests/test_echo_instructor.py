@@ -263,53 +263,6 @@ class Test(TestCase):
             modulo_tested_normalizer_volumes_df
             )
 
-    def test_concentrations_to_volumes_min_warning(
-        self,
-        output_folder
-    ):
-        input_importer_dfs = input_importer(
-            self.tested_cfps_parameters,
-            self.tested_initial_concentrations,
-            self.tested_normalizer_concentrations,
-            self.tested_autofluorescence_concentrations)
-
-        tested_cfps_parameters_df = input_importer_dfs[0]
-        tested_initial_concentrations_df = input_importer_dfs[1]
-        tested_normalizer_concentrations_df = input_importer_dfs[2]
-        tested_autofluorescence_concentrations_df = input_importer_dfs[3]
-
-        # Generate test log
-        concentrations_to_volumes(
-            tested_cfps_parameters_df,
-            tested_initial_concentrations_df,
-            tested_normalizer_concentrations_df,
-            tested_autofluorescence_concentrations_df,
-            sample_volume=10000)
-
-        # # Load test log
-        # with open(
-        #     os_path.join(
-        #             output_folder,
-        #             'volumes.log'
-        #     ), 'r'
-        # ) as fp:
-        #     expected_volumes_log = read_json(
-        #         fp,
-        #         orient='split')
-
-        # # Load reference log
-        # with open(
-        #     os_path.join(
-        #             self.REF_FOLDER,
-        #             'expected_volumes.log'
-        #     ), 'r'
-        # ) as fp:
-        #     expected_volumes_log = read_json(
-        #         fp,
-        #         orient='split')
-
-        # Compare Log files for minimum volumes warning
-
     def test_save_volumes_wExistingOutFolder(self):
         with TemporaryDirectory() as tmpFolder:
             self._test_save_volumes(
@@ -859,68 +812,74 @@ class Test(TestCase):
 
         # TEST MERGED ECHO INSTRUCTIONS FILES
         # Load refrence files
-        ref_filename = 'expected_merged_initial_instructions'
+        ref_filename = 'expected_merged_plate_1_final_instructions'
         with open(
             os_path.join(
                     self.REF_FOLDER_INSTRUCTIONS,
+                    'merged',
                     f'{ref_filename}.csv'
             )
         ) as fp7:
-            expected_merged_initial_instructions = fp7.read()
+            expected_merged_plate_1_final_instructions = fp7.read()
 
-        ref_filename = 'expected_merged_normalizer_instructions'
+        ref_filename = 'expected_merged_plate_2_final_instructions'
         with open(
             os_path.join(
                     self.REF_FOLDER_INSTRUCTIONS,
+                    'merged',
                     f'{ref_filename}.csv'
             )
         ) as fp8:
-            expected_merged_normalizer_instructions = fp8.read()
+            expected_merged_plate_2_final_instructions = fp8.read()
 
-        ref_filename = 'expected_merged_autofluorescence_instructions'
+        ref_filename = 'expected_merged_plate_3_final_instructions'
         with open(
             os_path.join(
                     self.REF_FOLDER_INSTRUCTIONS,
+                    'merged',
                     f'{ref_filename}.csv'
             )
         ) as fp9:
-            expected_merged_autofluorescence_instructions = fp9.read()
+            expected_merged_plate_3_final_instructions = fp9.read()
 
         # Load tested merged echo instructions files
         with open(
             os_path.join(
                     output_folder,
+                    'echo_instructions',
                     'merged',
-                    'merged_initial_instructions.csv'
+                    'merged_plate_1_final_instructions.csv'
             )
         ) as fp10:
-            tested_merged_initial_instructions = fp10.read()
+            tested_merged_plate_1_final_instructions = fp10.read()
 
         with open(
             os_path.join(
                     output_folder,
+                    'echo_instructions',
                     'merged',
-                    'merged_normalizer_instructions.csv'
+                    'merged_plate_2_final_instructions.csv'
             )
         ) as fp11:
-            tested_merged_normalizer_instructions = fp11.read()
+            tested_merged_plate_2_final_instructions = fp11.read()
 
         with open(
             os_path.join(
                     output_folder,
+                    'echo_instructions',
                     'merged',
-                    'merged_autofluorescence_instructions.csv'
+                    'merged_plate_3_final_instructions.csv'
             )
         ) as fp12:
-            tested_merged_autofluorescence_instructions = fp12.read()
+            tested_merged_plate_3_final_instructions = fp12.read()
 
         # Compare merged echo instructions files
-        assert expected_merged_initial_instructions == \
-            tested_merged_initial_instructions
-        assert expected_merged_normalizer_instructions == \
-            tested_merged_normalizer_instructions
-        assert expected_merged_autofluorescence_instructions == \
-            tested_merged_autofluorescence_instructions
+        assert expected_merged_plate_1_final_instructions == \
+            tested_merged_plate_1_final_instructions
+        assert expected_merged_plate_2_final_instructions == \
+            tested_merged_plate_2_final_instructions
+        assert expected_merged_plate_3_final_instructions == \
+            tested_merged_plate_3_final_instructions
 
         # TEST DISTRBUTED ECHO INSTRUCTIONS FILES
         # Load refrence files
@@ -958,6 +917,8 @@ class Test(TestCase):
         with open(
             os_path.join(
                     output_folder,
+                    'echo_instructions',
+                    'distributed',
                     'distributed_initial_instructions.csv'
             )
         ) as fp4:
@@ -966,6 +927,8 @@ class Test(TestCase):
         with open(
             os_path.join(
                     output_folder,
+                    'echo_instructions',
+                    'distributed',
                     'distributed_normalizer_instructions.csv'
             )
         ) as fp5:
@@ -974,6 +937,8 @@ class Test(TestCase):
         with open(
             os_path.join(
                     output_folder,
+                    'echo_instructions',
+                    'distributed',
                     'distributed_autofluorescence_instructions.csv'
             )
         ) as fp6:
