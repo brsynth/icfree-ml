@@ -123,6 +123,12 @@ def concentrations_to_volumes(
         DataFrame with converted volumes. 0 is assigned to the GOI-DNA column.
     autofluorescence_volumes_df : DataFrame
         DataFrame with converted volumes. 0 is assigned to the GFP-DNA column.
+    initial_volumes_summary: Series
+        Total volume for each factor in initial_volumes_df.
+    normalizer_volumes_summary: Series
+        Total volume for each factor in normalizer_volumes_df.
+    autofluorescence_volumes_summary: Series
+        Total volume for each factor in autofluorescence_volumes_df.
     """
     # Print out parameters
     logger.info('Converting concentrations to volumes...')
@@ -291,6 +297,12 @@ def save_volumes(
         Copy of initial_volumes_df. 0 is assigned to the GOI-DNA column.
     autofluorescence_volumes_df : DataFrame
         Copy of normalizer_volumes_df. 0 is assigned to the GFP-DNA column.
+    initial_volumes_summary: Series
+        Total volume for each factor in initial_volumes_df.
+    normalizer_volumes_summary: Series
+        Total volume for each factor in normalizer_volumes_df.
+    autofluorescence_volumes_summary: Series
+        Total volume for each factor in autofluorescence_volumes_df.
     output_folder: str
         Path to storage folder for output files. Defaults to working directory.
     """
