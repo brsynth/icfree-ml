@@ -39,10 +39,10 @@ def main():
         logger=logger)
 
     dataset_processor_variables = dataset_processor(dataset)
-    # initial_max = dataset_processor_variables[0]
-    # X_data = dataset_processor_variables[1]
-    # y_data = dataset_processor_variables[2]
-    # y_data_std = dataset_processor_variables[3]
+    initial_max = dataset_processor_variables[0]
+    X_data = dataset_processor_variables[1]
+    y_data = dataset_processor_variables[2]
+    y_data_std = dataset_processor_variables[3]
 
 
 if __name__ == "__main__":
