@@ -22,8 +22,7 @@ from numpy import (
 )
 
 from pandas import (
-    read_csv,
-    concat
+    read_csv
 )
 
 import matplotlib.pyplot as plt
@@ -47,47 +46,87 @@ from icfree.plates_generator.plates_generator import (
     levels_to_concentrations
 )
 
+from logging import (
+    Logger,
+    getLogger,
+)
+
 
 def dataset_generator(
-        data_folder,
-        files_number):
+        data_folder: str,
+        files_number: int,
+        logger: Logger = getLogger(__name__)):
     """
     Merge experimental data into a single dataset
 
-    Args:
-        data_folder (_type_): _description_
-        files_number (_type_): _description_
+    Parameters
+    ----------
+        data_folder: str
+            Path to folder containing experimental data
+        files_number: int
+            Number of files to be merged into a single dataset
 
-    Returns:
-        _type_: _description_
+    Returns
+    -------
+        dataset: ndarray
+            Dataset containing all experimental data
     """
+    # Print out parameters
+    logger.info('Generating dataset from experimental data...')
+    logger.debug(
+        'data folder:\n%s',
+        data_folder
+    )
+
+    logger.debug(
+        'files_number:\n%s',
+        files_number
+    )
+
+    # Read x number of files
     experimental_data = [read_csv(
         data_folder.format(i))
-        for i in range(1, files_number)]
+        for i in range(1, files_number + 1)]
 
-    dataset = concat(experimental_data, ignore_index=True)
-    dataset = dataset.to_numpy()
+    # Concatenate all data into a single dataset
+    dataset = np_concatenate(
+        experimental_data,
+        axis=0)
 
     return dataset
 
 
 def dataset_processor(dataset):
     """
-    Parse and extract features from dataset
+    Extract X and Y from dataset
 
-    Args:
-        dataset (_type_): _description_
+    Parameters
+    ----------
+        dataset: ndarray
+            Dataset containing all experimental data
 
-    Returns:
-        _type_: _description_
+    Returns
+    -------
+        initial_max: list
+            List of maximum concentration values in dataset
+        X_data: ndarray
+            Array of concentrations
+        y_data: ndarray
+            Array of mean yield data or mean fluorescence data
+        y_std_data: ndarray
+            Array of standard deviation values of y_data mean
     """
-    # Store maximum values for normalisation
-    initial_max = []
-
+    # Extract concentrations data
     X_data = dataset[:, 0:11]
+
+    # Extract mean fluorescence data
     y_data = dataset[:, 11]
+
+    # Extract std fluorescence data
     y_std_data = dataset[:, 12]
 
+    # Extract maximimum concentrations for nomalisation
+    initial_max = []
     for i in range(X_data.shape[1]):
         initial_max.append(copy.deepcopy(max(X_data[:, i])))
         X_data[:, i] = X_data[:, i]/max(X_data[:, i])
