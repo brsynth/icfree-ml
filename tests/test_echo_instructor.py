@@ -88,36 +88,36 @@ class Test(TestCase):
                     self.REF_FOLDER,
                     'expected_proCFPS_parameters_df.json'
             ), 'r'
-        ) as fp1:
+        ) as fp:
             expected_cfps_parameters_df = read_json(
-                fp1, orient='split')
+                fp, orient='split')
 
         with open(
             os_path.join(
                     self.REF_FOLDER,
                     'expected_initial_concentrations_df.json'
             ), 'r'
-        ) as fp2:
+        ) as fp:
             expected_initial_concentrations_df = read_json(
-                fp2, orient='split')
+                fp, orient='split')
 
         with open(
             os_path.join(
                     self.REF_FOLDER,
                     'expected_normalizer_concentrations_df.json'
             ), 'r'
-        ) as fp3:
+        ) as fp:
             expected_normalizer_concentrations_df = read_json(
-                fp3, orient='split')
+                fp, orient='split')
 
         with open(
             os_path.join(
                     self.REF_FOLDER,
                     'expected_autofluorescence_concentrations_df.json'
             ), 'r'
-        ) as fp4:
+        ) as fp:
             expected_autofluorescence_concentrations_df = read_json(
-                fp4, orient='split')
+                fp, orient='split')
 
             input_importer_dfs = input_importer(
                 self.tested_cfps_parameters,
@@ -184,9 +184,9 @@ class Test(TestCase):
                     self.REF_FOLDER,
                     'expected_initial_volumes_df.json'
             ), 'r'
-        ) as fp1:
+        ) as fp:
             expected_initial_volumes_df = read_json(
-                fp1,
+                fp,
                 orient='split')
 
         with open(
@@ -194,9 +194,9 @@ class Test(TestCase):
                     self.REF_FOLDER,
                     'expected_normalizer_volumes_df.json'
             ), 'r'
-        ) as fp2:
+        ) as fp:
             expected_normalizer_volumes_df = read_json(
-                fp2,
+                fp,
                 orient='split')
 
         with open(
@@ -204,9 +204,9 @@ class Test(TestCase):
                     self.REF_FOLDER,
                     'expected_autofluorescence_volumes_df.json'
             ), 'r'
-        ) as fp3:
+        ) as fp:
             expected_autofluorescence_volumes_df = read_json(
-                fp3,
+                fp,
                 orient='split')
 
         # Compare dataframes
@@ -263,6 +263,9 @@ class Test(TestCase):
             modulo_tested_normalizer_volumes_df
             )
 
+    def test_concentrations_to_volumes_min_warning(self):
+        pass
+
     def test_save_volumes_wExistingOutFolder(self):
         with TemporaryDirectory() as tmpFolder:
             self._test_save_volumes(
@@ -307,8 +310,8 @@ class Test(TestCase):
                     self.REF_FOLDER_VOLUMES,
                     f'{ref_filename}.tsv'
             )
-        ) as fp1:
-            expected_initial_volumes = fp1.read()
+        ) as fp:
+            expected_initial_volumes = fp.read()
 
         ref_filename = 'expected_autofluorescence_volumes'
         # if woGOI:
@@ -318,8 +321,8 @@ class Test(TestCase):
                     self.REF_FOLDER_VOLUMES,
                     f'{ref_filename}.tsv'
             )
-        ) as fp2:
-            expected_autofluorescence_volumes = fp2.read()
+        ) as fp:
+            expected_autofluorescence_volumes = fp.read()
 
         ref_filename = 'expected_normalizer_volumes'
         # if woGOI:
@@ -329,8 +332,8 @@ class Test(TestCase):
                     self.REF_FOLDER_VOLUMES,
                     f'{ref_filename}.tsv'
             )
-        ) as fp3:
-            expected_normalizer_volumes = fp3.read()
+        ) as fp:
+            expected_normalizer_volumes = fp.read()
 
         # Generate volume files
         save_volumes(
@@ -346,8 +349,8 @@ class Test(TestCase):
                     'volumes_output',
                     'initial_volumes.tsv'
             )
-        ) as fp4:
-            tested_initial_volumes = fp4.read()
+        ) as fp:
+            tested_initial_volumes = fp.read()
 
         with open(
             os_path.join(
@@ -355,8 +358,8 @@ class Test(TestCase):
                     'volumes_output',
                     'normalizer_volumes.tsv'
             )
-        ) as fp5:
-            tested_normalizer_volumes = fp5.read()
+        ) as fp:
+            tested_normalizer_volumes = fp.read()
 
         with open(
             os_path.join(
@@ -364,8 +367,8 @@ class Test(TestCase):
                     'volumes_output',
                     'autofluorescence_volumes.tsv'
             )
-        ) as fp6:
-            tested_autofluorescence_volumes = fp6.read()
+        ) as fp:
+            tested_autofluorescence_volumes = fp.read()
 
         # Compare files
         assert expected_initial_volumes == tested_initial_volumes
@@ -411,9 +414,9 @@ class Test(TestCase):
                     self.REF_FOLDER,
                     'expected_merged_plate_1_final.json'
             ), 'r'
-        ) as fp1:
+        ) as fp:
             expected_merged_plate_1_final = read_json(
-                fp1,
+                fp,
                 orient='split')
 
         with open(
@@ -421,9 +424,9 @@ class Test(TestCase):
                     self.REF_FOLDER,
                     'expected_merged_plate_2_final.json'
             ), 'r'
-        ) as fp2:
+        ) as fp:
             expected_merged_plate_2_final = read_json(
-                fp2,
+                fp,
                 orient='split')
 
         with open(
@@ -431,9 +434,9 @@ class Test(TestCase):
                     self.REF_FOLDER,
                     'expected_merged_plate_3_final.json'
             ), 'r'
-        ) as fp3:
+        ) as fp:
             expected_merged_plate_3_final = read_json(
-                fp3,
+                fp,
                 orient='split')
 
         # Compare dataframes
@@ -492,7 +495,7 @@ class Test(TestCase):
                     self.REF_FOLDER,
                     'expected_distribute_destination_plates_dict.json'
             ), 'r'
-        ) as fp1:
+        ) as fp:
             expected_distribute_destination_plates_dict = (json_load(fp1))
 
         # Convert dictionaries into dataframes
@@ -561,8 +564,8 @@ class Test(TestCase):
                     self.REF_FOLDER,
                     'expected_distribute_echo_instructions_dict.json'
             ), 'r'
-        ) as fp1:
-            expected_distribute_echo_instructions_dict = (json_load(fp1))
+        ) as fp:
+            expected_distribute_echo_instructions_dict = (json_load(fp))
 
         # Convert dictionaries into dataframes
         expected_distribute_echo_instructions_dict = {
@@ -635,8 +638,8 @@ class Test(TestCase):
                     self.REF_FOLDER,
                     'expected_merge_destination_plates_dict.json'
             ), 'r'
-        ) as fp1:
-            expected_merge_destination_plates_dict = (json_load(fp1))
+        ) as fp:
+            expected_merge_destination_plates_dict = (json_load(fp))
 
         # Convert dictionaries into dataframes
         expected_merge_destination_plates_dict = {
@@ -711,8 +714,8 @@ class Test(TestCase):
                     self.REF_FOLDER,
                     'expected_merge_echo_instructions_dict.json'
             ), 'r'
-        ) as fp1:
-            expected_merge_echo_instructions_dict = (json_load(fp1))
+        ) as fp:
+            expected_merge_echo_instructions_dict = (json_load(fp))
 
         # Convert dictionaries into dataframes
         expected_merge_echo_instructions_dict = {
@@ -822,8 +825,8 @@ class Test(TestCase):
                     'merged',
                     f'{ref_filename}.csv'
             )
-        ) as fp7:
-            expected_merged_plate_1_final_instructions = fp7.read()
+        ) as fp:
+            expected_merged_plate_1_final_instructions = fp.read()
 
         ref_filename = 'expected_merged_plate_2_final_instructions'
         with open(
@@ -832,8 +835,8 @@ class Test(TestCase):
                     'merged',
                     f'{ref_filename}.csv'
             )
-        ) as fp8:
-            expected_merged_plate_2_final_instructions = fp8.read()
+        ) as fp:
+            expected_merged_plate_2_final_instructions = fp.read()
 
         ref_filename = 'expected_merged_plate_3_final_instructions'
         with open(
@@ -842,8 +845,8 @@ class Test(TestCase):
                     'merged',
                     f'{ref_filename}.csv'
             )
-        ) as fp9:
-            expected_merged_plate_3_final_instructions = fp9.read()
+        ) as fp:
+            expected_merged_plate_3_final_instructions = fp.read()
 
         # Load tested merged echo instructions files
         with open(
@@ -853,8 +856,8 @@ class Test(TestCase):
                     'merged',
                     'merged_plate_1_final_instructions.csv'
             )
-        ) as fp10:
-            tested_merged_plate_1_final_instructions = fp10.read()
+        ) as fp:
+            tested_merged_plate_1_final_instructions = fp.read()
 
         with open(
             os_path.join(
@@ -863,8 +866,8 @@ class Test(TestCase):
                     'merged',
                     'merged_plate_2_final_instructions.csv'
             )
-        ) as fp11:
-            tested_merged_plate_2_final_instructions = fp11.read()
+        ) as fp:
+            tested_merged_plate_2_final_instructions = fp.read()
 
         with open(
             os_path.join(
@@ -873,8 +876,8 @@ class Test(TestCase):
                     'merged',
                     'merged_plate_3_final_instructions.csv'
             )
-        ) as fp12:
-            tested_merged_plate_3_final_instructions = fp12.read()
+        ) as fp:
+            tested_merged_plate_3_final_instructions = fp.read()
 
         # Compare merged echo instructions files
         assert expected_merged_plate_1_final_instructions == \
@@ -893,8 +896,8 @@ class Test(TestCase):
                     'distributed',
                     f'{ref_filename}.csv'
             )
-        ) as fp1:
-            expected_distributed_initial_instructions = fp1.read()
+        ) as fp:
+            expected_distributed_initial_instructions = fp.read()
 
         ref_filename = 'expected_distributed_normalizer_instructions'
         with open(
@@ -903,8 +906,8 @@ class Test(TestCase):
                     'distributed',
                     f'{ref_filename}.csv'
             )
-        ) as fp2:
-            expected_distributed_normalizer_instructions = fp2.read()
+        ) as fp:
+            expected_distributed_normalizer_instructions = fp.read()
 
         ref_filename = 'expected_distributed_autofluorescence_instructions'
         with open(
@@ -913,8 +916,8 @@ class Test(TestCase):
                     'distributed',
                     f'{ref_filename}.csv'
             )
-        ) as fp3:
-            expected_distributed_autofluorescence_instructions = fp3.read()
+        ) as fp:
+            expected_distributed_autofluorescence_instructions = fp.read()
 
         # Load tested distributed echo instructions files
         with open(
@@ -924,8 +927,8 @@ class Test(TestCase):
                     'distributed',
                     'distributed_initial_instructions.csv'
             )
-        ) as fp4:
-            tested_distributed_initial_instructions = fp4.read()
+        ) as fp:
+            tested_distributed_initial_instructions = fp.read()
 
         with open(
             os_path.join(
@@ -934,8 +937,8 @@ class Test(TestCase):
                     'distributed',
                     'distributed_normalizer_instructions.csv'
             )
-        ) as fp5:
-            tested_distributed_normalizer_instructions = fp5.read()
+        ) as fp:
+            tested_distributed_normalizer_instructions = fp.read()
 
         with open(
             os_path.join(
@@ -944,8 +947,8 @@ class Test(TestCase):
                     'distributed',
                     'distributed_autofluorescence_instructions.csv'
             )
-        ) as fp6:
-            tested_distributed_autofluorescence_instructions = fp6.read()
+        ) as fp:
+            tested_distributed_autofluorescence_instructions = fp.read()
 
         # Compare distributed echo instructions files
         assert expected_distributed_initial_instructions == \
