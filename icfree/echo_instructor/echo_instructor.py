@@ -181,7 +181,10 @@ def concentrations_to_volumes(
 
         normalizer_volumes_df = round(multiply(
             normalizer_concentrations_df,
-            sample_volume_stock_ratio) / 2.5, 0) * 2.5
+            sample_volume_stock_ratio
+            ) / 2.5,
+            0
+        ) * 2.5
         logger.debug(
             'normalizer volumes:\n%s',
             normalizer_volumes_df
@@ -189,7 +192,10 @@ def concentrations_to_volumes(
 
         autofluorescence_volumes_df = round(multiply(
             autofluorescence_concentrations_df,
-            sample_volume_stock_ratio) / 2.5, 0) * 2.5
+            sample_volume_stock_ratio
+            ) / 2.5,
+            0
+        ) * 2.5
         logger.debug(
             'autofluorescence volumes:\n%s',
             autofluorescence_volumes_df
