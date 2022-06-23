@@ -96,7 +96,9 @@ def dataset_generator(
     return dataset
 
 
-def dataset_processor(dataset):
+def dataset_processor(
+    dataset,
+    logger: Logger = getLogger(__name__)):
     """
     Extract X and Y from dataset
 
@@ -116,6 +118,12 @@ def dataset_processor(dataset):
         y_std_data: ndarray
             Array of standard deviation values of y_data mean
     """
+    logger.info('Processing generated dataset...')
+    logger.debug(
+        'dataset:\n%s',
+        dataset
+    )
+
     # Extract concentrations data
     X_data = dataset[:, 0:11]
 
@@ -138,28 +146,36 @@ def dataset_processor(dataset):
 
 
 def create_single_regressor(
-        X,
-        y,
+        X_data,
+        y_data,
         models_number=10,
         visualize=True,
-        model_name="root-model"):
+        model_name="root-model",
+        logger: Logger = getLogger(__name__)):
     """
     _summary_
 
-    Args:
-        X (_type_): _description_
-        y (_type_): _description_
-        models_number (int, optional): _description_. Defaults to 10.
-        visualize (bool, optional): _description_. Defaults to True.
-        model_name (str, optional): _description_. Defaults to "root-model".
+    Parameters
+    ----------
+        X_data: ndarray
+            Array of x data
+        y_data: ndarray
+            Array of mean y data
+        models_number: int
+            _description_. Defaults to 10.
+        visualize: bool
+            _description_. Defaults to True.
+        model_name: str
+            _description_. Defaults to "root-model".
 
-    Returns:
+    Returns
+    -------
         _type_: _description_
     """
     # Train the model
     for i in range(models_number):
-        X_train = X
-        y_train = y
+        X_train = X_data
+        y_train = y_data
 
         MLP = MLPRegressor(
             hidden_layer_sizes=(10, 100, 100, 20),
@@ -172,16 +188,18 @@ def create_single_regressor(
         MLP.fit(X_train, y_train.flatten())
 
     # Evaluate and visualize the output of the model
-    y_pred = MLP.predict(X)
-    score = r2_score(y, y_pred)
+    y_pred = MLP.predict(X_data)
+    score = r2_score(y_data, y_pred)
 
     if visualize:
         model = MLP
-        y_pred = model.predict(X)
-        score = r2_score(y, y_pred)
+        y_pred = model.predict(X_data)
+        score = r2_score(y_data, y_pred)
         fig, ax = plt.subplots()
-        ax.scatter(y, y_pred, edgecolors=(0, 0, 0))
-        ax.plot([y.min(), y.max()], [y.min(), y.max()], 'k--', lw=4)
+        ax.scatter(y_data, y_pred, edgecolors=(0, 0, 0))
+        ax.plot(
+            [y_data.min(), y_data.max()],
+            [y_data.min(), y_data.max()], 'k--', lw=4)
         ax.set_xlabel("Measured")
         ax.set_title(
             "Model prediction for model {}: {}".format(model_name, score))
