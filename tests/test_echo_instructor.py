@@ -53,7 +53,7 @@ class Test(TestCase):
 
     REF_FOLDER_VOLUMES = os_path.join(
         DATA_FOLDER,
-        'output', 'volumes'
+        'output', 'volumes_output'
     )
 
     REF_FOLDER_INSTRUCTIONS = os_path.join(
@@ -304,7 +304,7 @@ class Test(TestCase):
         ref_filename = 'expected_initial_volumes'
         with open(
             os_path.join(
-                    self.REF_FOLDER,
+                    self.REF_FOLDER_VOLUMES,
                     f'{ref_filename}.tsv'
             )
         ) as fp1:
@@ -315,7 +315,7 @@ class Test(TestCase):
         #     ref_filename += '_woGOI'
         with open(
             os_path.join(
-                    self.REF_FOLDER,
+                    self.REF_FOLDER_VOLUMES,
                     f'{ref_filename}.tsv'
             )
         ) as fp2:
@@ -326,7 +326,7 @@ class Test(TestCase):
         #     ref_filename += '_woGOI'
         with open(
             os_path.join(
-                    self.REF_FOLDER,
+                    self.REF_FOLDER_VOLUMES,
                     f'{ref_filename}.tsv'
             )
         ) as fp3:
@@ -343,6 +343,7 @@ class Test(TestCase):
         with open(
             os_path.join(
                     output_folder,
+                    'volumes_output',
                     'initial_volumes.tsv'
             )
         ) as fp4:
@@ -351,6 +352,7 @@ class Test(TestCase):
         with open(
             os_path.join(
                     output_folder,
+                    'volumes_output',
                     'normalizer_volumes.tsv'
             )
         ) as fp5:
@@ -359,6 +361,7 @@ class Test(TestCase):
         with open(
             os_path.join(
                     output_folder,
+                    'volumes_output',
                     'autofluorescence_volumes.tsv'
             )
         ) as fp6:
