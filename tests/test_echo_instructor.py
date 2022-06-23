@@ -859,7 +859,7 @@ class Test(TestCase):
 
         # TEST MERGED ECHO INSTRUCTIONS FILES
         # Load refrence files
-        ref_filename = 'expected_merged_initial_instructions.csv'
+        ref_filename = 'expected_merged_initial_instructions'
         with open(
             os_path.join(
                     self.REF_FOLDER_INSTRUCTIONS,
