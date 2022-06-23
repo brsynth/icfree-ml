@@ -63,12 +63,18 @@ def main():
     initial_volumes_df = concentrations_to_volumes_dfs[0]
     normalizer_volumes_df = concentrations_to_volumes_dfs[1]
     autofluorescence_volumes_df = concentrations_to_volumes_dfs[2]
+    initial_volumes_summary = concentrations_to_volumes_dfs[3]
+    normalizer_volumes_summary = concentrations_to_volumes_dfs[4]
+    autofluorescence_volumes_summary = concentrations_to_volumes_dfs[5]
 
     save_volumes(
         cfps_parameters_df,
         initial_volumes_df,
         normalizer_volumes_df,
         autofluorescence_volumes_df,
+        initial_volumes_summary,
+        normalizer_volumes_summary,
+        autofluorescence_volumes_summary,
         output_folder)
 
     samples_merger_dfs = samples_merger(

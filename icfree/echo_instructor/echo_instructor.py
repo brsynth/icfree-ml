@@ -15,7 +15,8 @@ from numpy import (
 from pandas import (
     read_csv,
     concat,
-    DataFrame
+    DataFrame,
+    Series
 )
 
 from string import (
@@ -255,9 +256,17 @@ def concentrations_to_volumes(
                 'is not concentrated enough.'
             )
 
+    # Sum of volumes for each parameter
+    initial_volumes_summary = initial_volumes_df.sum()
+    normalizer_volumes_summary = normalizer_volumes_df.sum()
+    autofluorescence_volumes_summary = autofluorescence_volumes_df.sum()
+
     return (initial_volumes_df,
             normalizer_volumes_df,
-            autofluorescence_volumes_df)
+            autofluorescence_volumes_df,
+            initial_volumes_summary,
+            normalizer_volumes_summary,
+            autofluorescence_volumes_summary)
 
 
 def save_volumes(
@@ -265,6 +274,9 @@ def save_volumes(
         initial_volumes_df: DataFrame,
         normalizer_volumes_df: DataFrame,
         autofluorescence_volumes_df: DataFrame,
+        initial_volumes_summary: Series,
+        normalizer_volumes_summary: Series,
+        autofluorescence_volumes_summary: Series,
         output_folder: str = DEFAULT_OUTPUT_FOLDER):
     """
     Save volumes dataframes in tsv files
@@ -322,6 +334,31 @@ def save_volumes(
         sep='\t',
         header=all_parameters,
         index=False)
+
+    # Save volumes summary series in tsv files
+    initial_volumes_summary.to_csv(
+        os_path.join(
+            output_folder,
+            output_subfolder,
+            'initial_volumes_summary.tsv'),
+        sep='\t',
+        header=False)
+
+    normalizer_volumes_summary.to_csv(
+        os_path.join(
+            output_folder,
+            output_subfolder,
+            'normalizer_volumes_summary.tsv'),
+        sep='\t',
+        header=False)
+
+    autofluorescence_volumes_summary.to_csv(
+        os_path.join(
+            output_folder,
+            output_subfolder,
+            'autofluorescence_volumes_summary.tsv'),
+        sep='\t',
+        header=False)
 
 
 def samples_merger(
