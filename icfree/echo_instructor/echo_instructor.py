@@ -224,8 +224,11 @@ def concentrations_to_volumes(
         for factor in volumes.columns:
             # Check lower bound
             for vol in volumes[factor].sort_values():
+                # Pass all 0 since it is a correct value
                 if vol != 0:
+                    # Exit the loop at the first non-0 value
                     break
+            # Warn if the value is < 10 nL
             if 0 < vol < 10:
                 basicConfig(
                     filename='volumes_warning_summary.txt',
@@ -235,6 +238,7 @@ def concentrations_to_volumes(
                     'Stock have to be more diluted.\n'
                 )
             # Check upper bound
+            # Warn if the value is > 1000 nL
             v_max = volumes[factor].max()
             if v_max > 1000:
                 basicConfig(
