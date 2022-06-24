@@ -222,16 +222,28 @@ def concentrations_to_volumes(
         autofluorescence_volumes_df
     ]:
         for factor in volumes.columns:
-            for value in volumes[factor].sort_values():
-                if value != 0:
+            # Check lower bound
+            for vol in volumes[factor].sort_values():
+                if vol != 0:
                     break
-            if 0 < value < 10:
+            if 0 < vol < 10:
                 basicConfig(
                     filename='volumes_warning_summary.txt',
                     encoding='utf-8')
                 logger.warning(
-                    f'There are {factor} volume(s) < 10 nL. '
-                    'Stock have to be more diluted.'
+                    f'*** {factor}\nOne volume = {vol} nL (< 10 nL). '
+                    'Stock have to be more diluted.\n'
+                )
+            # Check upper bound
+            v_max = volumes[factor].max()
+            if v_max > 1000:
+                basicConfig(
+                    filename='volumes_warning_summary.txt',
+                    encoding='utf-8')
+                logger.warning(
+                    f'*** {factor}\nOne volume = {v_max} nL (> 1000 nL). '
+                    'Stock have to be more concentrated or pipetting '
+                    'has to be done manually.\n'
                 )
 
     # Add Water column
@@ -250,16 +262,22 @@ def concentrations_to_volumes(
     # WARNING: Vwater < 0 --> increase stock concentration
     # Check if a factor stock is not concentrated enough,
     # i.e. Vwater < 0
+    # WARNING: Vwater > 1000 nL
     for water_volumes in [
         initial_volumes_df['Water'],
         normalizer_volumes_df['Water'],
         autofluorescence_volumes_df['Water']
     ]:
         if water_volumes.min() < 0:
-            logger.warning('*** Volume of added water < 0')
             logger.warning(
+                '*** Water\nVolume of added water < 0. '
                 'It seems that at least a factor stock '
-                'is not concentrated enough.'
+                'is not concentrated enough.\n'
+            )
+        elif water_volumes.max() > 1000:
+            logger.warning(
+                '*** Water\nVolume of added water > 1000 nL. '
+                'Pipetting has to be done manually.\n'
             )
 
     # Sum of volumes for each parameter
