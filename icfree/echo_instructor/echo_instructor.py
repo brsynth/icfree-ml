@@ -340,7 +340,6 @@ def save_volumes(
     # Save volumes dataframes in tsv files
     initial_volumes_df.to_csv(
         os_path.join(
-            output_folder,
             output_subfolder,
             'initial_volumes.tsv'),
         sep='\t',
@@ -349,7 +348,6 @@ def save_volumes(
 
     normalizer_volumes_df.to_csv(
         os_path.join(
-            output_folder,
             output_subfolder,
             'normalizer_volumes.tsv'),
         sep='\t',
@@ -358,7 +356,6 @@ def save_volumes(
 
     autofluorescence_volumes_df.to_csv(
         os_path.join(
-            output_folder,
             output_subfolder,
             'autofluorescence_volumes.tsv'),
         sep='\t',
@@ -368,7 +365,6 @@ def save_volumes(
     # Save volumes summary series in tsv files
     initial_volumes_summary.to_csv(
         os_path.join(
-            output_folder,
             output_subfolder,
             'initial_volumes_summary.tsv'),
         sep='\t',
@@ -376,7 +372,6 @@ def save_volumes(
 
     normalizer_volumes_summary.to_csv(
         os_path.join(
-            output_folder,
             output_subfolder,
             'normalizer_volumes_summary.tsv'),
         sep='\t',
@@ -384,7 +379,6 @@ def save_volumes(
 
     autofluorescence_volumes_summary.to_csv(
         os_path.join(
-            output_folder,
             output_subfolder,
             'autofluorescence_volumes_summary.tsv'),
         sep='\t',
