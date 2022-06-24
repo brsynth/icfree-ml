@@ -263,21 +263,21 @@ def concentrations_to_volumes(
         sample_volume - autofluorescence_volumes_df.sum(axis=1)
     logger.debug('autofluorescence volumes:\n%s', autofluorescence_volumes_df)
 
-    # WARNING: Vwater < 0 --> increase stock concentration
-    # Check if a factor stock is not concentrated enough,
-    # i.e. Vwater < 0
-    # WARNING: Vwater > 1000 nL
+    # Check water added volume
     for water_volumes in [
         initial_volumes_df['Water'],
         normalizer_volumes_df['Water'],
         autofluorescence_volumes_df['Water']
     ]:
+        # Check if a factor stock is not concentrated enough,
+        # WARNING: Vwater < 0 --> increase stock concentration
         if water_volumes.min() < 0:
             logger.warning(
                 '*** Water\nVolume of added water < 0. '
                 'It seems that at least a factor stock '
                 'is not concentrated enough.\n'
             )
+        # WARNING: Vwater > 1000 nL
         elif water_volumes.max() > 1000:
             logger.warning(
                 '*** Water\nVolume of added water > 1000 nL. '
