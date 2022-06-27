@@ -119,13 +119,13 @@ def dataset_processor(dataset):
     # Extract concentrations data
     X_data = dataset[:, 0:11]
 
-    # Extract mean y data
+    # Extract mean fluorescence data
     y_data = dataset[:, 11]
 
-    # Extract std of mean y data
+    # Extract std fluorescence data
     y_std_data = dataset[:, 12]
 
-    # Extract maximimum x values for nomalisation
+    # Extract maximimum concentrations for nomalisation
     initial_max = []
     for i in range(X_data.shape[1]):
         initial_max.append(copy.deepcopy(max(X_data[:, i])))
