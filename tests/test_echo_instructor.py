@@ -63,22 +63,22 @@ class Test(TestCase):
 
     tested_cfps_parameters = os_path.join(
         INPUT_FOLDER,
-        'tested_proCFPS_parameters.tsv'
+        'proCFPS_parameters.tsv'
     )
 
     tested_initial_concentrations = os_path.join(
         INPUT_FOLDER,
-        'tested_initial_concentrations.tsv'
+        'initial_concentrations.tsv'
     )
 
     tested_normalizer_concentrations = os_path.join(
         INPUT_FOLDER,
-        'tested_normalizer_concentrations.tsv'
+        'normalizer_concentrations.tsv'
     )
 
     tested_autofluorescence_concentrations = os_path.join(
         INPUT_FOLDER,
-        'tested_autofluorescence_concentrations.tsv'
+        'autofluorescence_concentrations.tsv'
     )
 
     def test_input_importer(self):
