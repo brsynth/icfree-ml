@@ -102,7 +102,9 @@ def concentrations_to_volumes(
     logger: Logger = getLogger(__name__)
 ):
     """
-    Convert concentrations dataframes into volumes dataframes
+    Convert concentrations dataframes into volumes dataframes.
+    Generate warning report of volumes outside the transfer range of Echo.
+    Generate volumes summary for each volumes DataFrame.
 
     Parameters
     ----------
