@@ -35,7 +35,7 @@ from logging import (
 from .args import (
     DEFAULT_OUTPUT_FOLDER,
     DEFAULT_SAMPLE_VOLUME,
-    DEFAULT_DEAD_VOLUME,
+    DEFAULT_SOURCE_PLATE_DEAD_VOLUME,
     DEFAULT_STARTING_WELL
 )
 
@@ -98,7 +98,7 @@ def concentrations_to_volumes(
     normalizer_concentrations_df: DataFrame,
     autofluorescence_concentrations_df: DataFrame,
     sample_volume: int = DEFAULT_SAMPLE_VOLUME,
-    source_plate_dead_volume: int = DEFAULT_DEAD_VOLUME,
+    source_plate_dead_volume: int = DEFAULT_SOURCE_PLATE_DEAD_VOLUME,
     logger: Logger = getLogger(__name__)
 ):
     """
