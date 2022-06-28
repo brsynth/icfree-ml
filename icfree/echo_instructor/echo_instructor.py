@@ -51,24 +51,24 @@ def input_importer(
     Parameters
     ----------
     cfps_parameters : tsv file
-        Tsv with list of cfps parameters and relative features.
+        TSV of cfps parameters, status, maximum and stock concentrations
     initial_concentrations : tsv file
-        Dataset with concentrations values.
+        Dataset with concentrations values
     normalizer_concentrations : tsv file
-        Copy of initial_concentrations. 0 is assigned to the GOI-DNA column.
+        Copy of initial_concentrations. 0 is assigned to the GOI-DNA column
     autofluorescence_concentrations : tsv file
-        Copy of normalizer_concentrations. 0 is assigned to the GFP-DNA column.
+        Copy of normalizer_concentrations. 0 is assigned to the GFP-DNA column
 
     Returns
     -------
     cfps_parameters_df : DataFrame
-        Dataframe with cfps_parameters data.
+        Dataframe with cfps_parameters data
     initial_volumes_df : DataFrame
-        Dataframe with initial_set_concentrations data.
+        Dataframe with initial_concentrations data
     normalizer_volumes_df : DataFrame
-        Dataframe with normalizer_set_concentrations data.
+        Dataframe with normalizer_concentrations data
     autofluorescence_volumes_df : DataFrame
-        Dataframe with autofluorescence_set_concentrations data.
+        Dataframe with autofluorescence_concentrations data
     """
     cfps_parameters_df = read_csv(
         cfps_parameters,
@@ -109,30 +109,32 @@ def concentrations_to_volumes(
     Parameters
     ----------
     cfps_parameters_df : DataFrame
-        Dataframe with cfps_parameters data.
-    initial_concentrations_df : DataFrame
-        Dataframe with initial_concentrations data.
-    normalizer_concentrations_df : DataFrame
-        Dataframe with normalizer_concentrations data.
-    autofluorescence_concentrations_df : DataFrame
-        Dataframe with autofluorescence_concentrations data.
+        Dataframe with cfps_parameters data
+    initial_volumes_df : DataFrame
+        Dataframe with initial_concentrations data
+    normalizer_volumes_df : DataFrame
+        Dataframe with normalizer_concentrations data
+    autofluorescence_volumes_df : DataFrame
+        Dataframe with autofluorescence_concentrations data
     sample_volume: int
-        Final sample volume in each well. Defaults to 10000 nL.
+        Final sample volume in each well. Defaults to 10000 nL
+    source_plate_dead_volume: int
+        Source plate dead volume. Defaults to 15000 nL
 
     Returns
     -------
     initial_volumes_df : DataFrame
-        DataFrame with converted volumes.
+        DataFrame with converted volumes
     normalizer_volumes_df : DataFrame
-        DataFrame with converted volumes. 0 is assigned to the GOI-DNA column.
+        DataFrame with converted volumes. 0 is assigned to the GOI-DNA column
     autofluorescence_volumes_df : DataFrame
-        DataFrame with converted volumes. 0 is assigned to the GFP-DNA column.
+        DataFrame with converted volumes. 0 is assigned to the GFP-DNA column
     initial_volumes_summary: Series
-        Total volume for each factor in initial_volumes_df.
+        Series with total volume for each factor in initial_volumes_df
     normalizer_volumes_summary: Series
-        Total volume for each factor in normalizer_volumes_df.
+        Series with total volume for each factor in normalizer_volumes_df
     autofluorescence_volumes_summary: Series
-        Total volume for each factor in autofluorescence_volumes_df.
+        Series with total volume for each factor in autofluorescence_volumes_df
     warning_volumes_report: DataFrame
         Report of volumes outside the transfer range of Echo.
     """
@@ -282,7 +284,7 @@ def concentrations_to_volumes(
         vol_min = water_volumes.min()
         vol_max = water_volumes.max()
         if vol_min < 0:
-            warning_volumes_report['Min Report']['water'] = vol_min
+            warning_volumes_report['Min Report']['Water'] = vol_min
             logger.warning(
                 f'*** Water\nVolume of added water = {vol_min} (< 0). '
                 'It seems that at least a factor stock '
@@ -290,13 +292,13 @@ def concentrations_to_volumes(
             )
         # WARNING: Vwater > 1000 nL
         elif vol_max > 1000:
-            warning_volumes_report['Max Report']['water'] = vol_max
+            warning_volumes_report['Max Report']['Water'] = vol_max
             logger.warning(
                 f'*** Water\nVolume of added water = {vol_max} (> 1000 nL). '
                 'Pipetting has to be done manually.\n'
             )
 
-    # Convert Warning Report to Dataframe
+    # Convert Warning Report Dict to Dataframe
     warning_volumes_report = DataFrame.from_dict(warning_volumes_report)
 
     # Sum of volumes for each parameter
@@ -332,24 +334,24 @@ def save_volumes(
         warning_volumes_report: DataFrame,
         output_folder: str = DEFAULT_OUTPUT_FOLDER):
     """
-    Save volumes dataframes in tsv files
+    Save volumes dataframes in TSV files
 
     Parameters
     ----------
     cfps_parameters_df : DataFrame
         Dataframe with cfps_parameters data.
     initial_volumes_df : DataFrame
-        DataFrame with converted volumes.
+        DataFrame with converted volumes
     normalizer_volumes_df : DataFrame
-        Copy of initial_volumes_df. 0 is assigned to the GOI-DNA column.
+        DataFrame with converted volumes. 0 is assigned to the GOI-DNA column
     autofluorescence_volumes_df : DataFrame
-        Copy of normalizer_volumes_df. 0 is assigned to the GFP-DNA column.
+        DataFrame with converted volumes. 0 is assigned to the GFP-DNA column
     initial_volumes_summary: Series
-        Total volume for each factor in initial_volumes_df.
+        Series with total volume for each factor in initial_volumes_df
     normalizer_volumes_summary: Series
-        Total volume for each factor in normalizer_volumes_df.
+        Series with total volume for each factor in normalizer_volumes_df
     autofluorescence_volumes_summary: Series
-        Total volume for each factor in autofluorescence_volumes_df.
+        Series with total volume for each factor in autofluorescence_volumes_df
     warning_volumes_report: DataFrame
         Report of volumes outside the transfer range of Echo.
     output_folder: str
@@ -368,7 +370,7 @@ def save_volumes(
     all_parameters = cfps_parameters_df['Parameter'].tolist()
     all_parameters.append('Water')
 
-    # Save volumes dataframes in tsv files
+    # Save volumes dataframes in TSV files
     initial_volumes_df.to_csv(
         os_path.join(
             output_subfolder,
@@ -393,7 +395,7 @@ def save_volumes(
         header=all_parameters,
         index=False)
 
-    # Save volumes summary series in tsv files
+    # Save volumes summary series in TSV files
     initial_volumes_summary.to_csv(
         os_path.join(
             output_subfolder,
@@ -415,7 +417,7 @@ def save_volumes(
         sep='\t',
         header=False)
 
-    # Save volumes warning report in tsv file
+    # Save volumes warning report in TSV file
     warning_volumes_report.to_csv(
         os_path.join(
             output_subfolder,
@@ -433,20 +435,20 @@ def samples_merger(
     Parameters
     ----------
     initial_volumes_df : DataFrame
-        DataFrame with converted volumes.
+        DataFrame with converted volumes
     normalizer_volumes_df : DataFrame
-        DataFrame with converted volumes. 0 is assigned to the GOI-DNA column.
+        DataFrame with converted volumes. 0 is assigned to the GOI-DNA column
     autofluorescence_volumes_df : DataFrame
-        DataFrame with converted volumes. 0 is assigned to the GFP-DNA column.
+        DataFrame with converted volumes. 0 is assigned to the GFP-DNA column
 
     Returns
     -------
     merged_plate_1_final: DataFrame
-        First DataFrame with merged samples.
+        First DataFrame with merged samples
     merged_plate_2_final: DataFrame
-        Second DataFrame with merged samples.
+        Second DataFrame with merged samples
     merged_plate_3_final: DataFrame
-        Third DataFrame with merged samples.
+        Third DataFrame with merged samples
     """
     # Split volumes dataframes into three subsets
     initial_volumes_df_list = vsplit(
@@ -531,19 +533,19 @@ def distribute_destination_plate_generator(
     initial_volumes_df : DataFrame
         DataFrame with converted volumes.
     normalizer_volumes_df : DataFrame
-        DataFrame with converted volumes. 0 is assigned to the GOI-DNA column.
+        DataFrame with converted volumes. 0 is assigned to the GOI-DNA column
     autofluorescence_volumes_df : DataFrame
-        DataFrame with converted volumes. 0 is assigned to the GFP-DNA column.
+        DataFrame with converted volumes. 0 is assigned to the GFP-DNA column
     starting_well : str
-        Starter well to begin filling the 384 well-plate. Defaults to 'A1'.
+        Starter well to begin filling the 384 well-plate. Defaults to 'A1'
     vertical: bool
-        -True: plate is filled column by column from top to bottom.
-        -False: plate is filled row by row from left to right.
+        -True: plate is filled column by column from top to bottom
+        -False: plate is filled row by row from left to right
 
     Returns
     -------
     distribute_destination_plates_dict: Dict
-        Dict with ditributed destination plates dataframes.
+        Dict with ditributed destination plates dataframes
     """
     volumes_df_dict = {
         'initial_volumes_df': initial_volumes_df,
@@ -631,21 +633,21 @@ def merge_destination_plate_generator(
     Parameters
     ----------
     merged_plate_1_final: DataFrame
-        First DataFrame with merged samples.
+        First DataFrame with merged samples
     merged_plate_2_final: DataFrame
-        Second DataFrame with merged samples.
+        Second DataFrame with merged samples
     merged_plate_3_final: DataFrame
-        Third DataFrame with merged samples.
+        Third DataFrame with merged samples
     starting_well : str
-        Starter well to begin filling the 384 well-plate. Defaults to 'A1'.
+        Starter well to begin filling the 384 well-plate. Defaults to 'A1'
     vertical: bool
-        -True: plate is filled column by column from top to bottom.
-        -False: plate is filled row by row from left to right.
+        -True: plate is filled column by column from top to bottom
+        -False: plate is filled row by row from left to right
 
     Returns
     -------
     merge_destination_plates_dict: Dict
-        Dict with merged destination plates dataframes.
+        Dict with merged destination plates dataframes
     """
     volumes_df_dict = {
         'merged_plate_1_final': merged_plate_1_final,
@@ -729,12 +731,12 @@ def distribute_echo_instructions_generator(
     Parameters
     ----------
         distribute_destination_plates_dict: Dict
-            Dict with distributed destination plates dataframes.
+            Dict with distributed destination plates dataframes
 
     Returns
     -------
         distribute_echo_instructions_dict: Dict
-            Dict with distributed echo instructions dataframes.
+            Dict with distributed echo instructions dataframes
     """
     all_sources = {}
     distribute_echo_instructions_dict = {}
@@ -788,12 +790,12 @@ def merge_echo_instructions_generator(
     Parameters
     ----------
         merge_destination_plates_dict: Dict
-            Dict with merged destination plates dataframes.
+            Dict with merged destination plates dataframes
 
     Returns
     -------
         merge_echo_instructions_dict: Dict
-            Dict with merged echo instructions dataframes.
+            Dict with merged echo instructions dataframes
     """
     all_sources = {}
     merge_echo_instructions_dict = {}
@@ -849,10 +851,10 @@ def save_echo_instructions(
     Parameters
     ----------
         distribute_echo_instructions_dict: Dict
-            Dict with echo distributed instructions dataframes.
+            Dict with echo distributed instructions dataframes
 
         merge_echo_instructions_dict: Dict
-            Dict with echo merged instructions dataframes.
+            Dict with echo merged instructions dataframes
 
         output_folder: str
             Path to output storage folder
