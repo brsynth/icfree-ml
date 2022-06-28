@@ -5,8 +5,8 @@ from brs_utils import (
 )
 
 from .active_learning import (
-    dataset_generator,
-    dataset_processor
+    dataset_generator
+    # dataset_processor
     # create_single_regressor,
     # create_ensemble_regressor,
     # active_learning_array_generator,
@@ -33,12 +33,12 @@ def main():
     data_folder = args.data_folder
     files_number = args.files_number
 
-    dataset = dataset_generator(
+    dataset_generator(
         data_folder,
         files_number,
         logger=logger)
 
-    dataset_processor_variables = dataset_processor(dataset)
+    # dataset_processor_variables = dataset_processor(dataset)
     # initial_max = dataset_processor_variables[0]
     # X_data = dataset_processor_variables[1]
     # y_data = dataset_processor_variables[2]
