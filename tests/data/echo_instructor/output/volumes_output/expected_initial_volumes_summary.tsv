@@ -1,19 +1,19 @@
-Mg-glutamate	1130.0
-k-glutamate	1012.5
-CoA	47.5
-3-PGA	907.5
-NTP	92.5
-NAD	100.0
-Folinic acid	112.5
-Spermidine	105.0
-tRNA	105.0
-Amino acids	10000.0
-CAMP	162.5
-Extract	9000.0
-HEPES	2137.5
-PEG	900.0
-Promoter	2992.5
-RBS	4500.0
-GFP-DNA	15007.5
-GOI-DNA	15007.5
-Water	26680.0
+Mg-glutamate	16130.0
+k-glutamate	16012.5
+CoA	15047.5
+3-PGA	15907.5
+NTP	15092.5
+NAD	15100.0
+Folinic acid	15112.5
+Spermidine	15105.0
+tRNA	15105.0
+Amino acids	25000.0
+CAMP	15162.5
+Extract	24000.0
+HEPES	17137.5
+PEG	15900.0
+Promoter	17992.5
+RBS	19500.0
+GFP-DNA	30007.5
+GOI-DNA	30007.5
+Water	41680.0
