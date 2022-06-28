@@ -93,13 +93,14 @@ def input_importer(
 
 
 def concentrations_to_volumes(
-        cfps_parameters_df: DataFrame,
-        initial_concentrations_df: DataFrame,
-        normalizer_concentrations_df: DataFrame,
-        autofluorescence_concentrations_df: DataFrame,
-        sample_volume: int = DEFAULT_SAMPLE_VOLUME,
-        source_plate_dead_volume: int = DEFAULT_DEAD_VOLUME,
-        logger: Logger = getLogger(__name__)):
+    cfps_parameters_df: DataFrame,
+    initial_concentrations_df: DataFrame,
+    normalizer_concentrations_df: DataFrame,
+    autofluorescence_concentrations_df: DataFrame,
+    sample_volume: int = DEFAULT_SAMPLE_VOLUME,
+    source_plate_dead_volume: int = DEFAULT_DEAD_VOLUME,
+    logger: Logger = getLogger(__name__)
+):
     """
     Convert concentrations dataframes into volumes dataframes
 
@@ -130,6 +131,8 @@ def concentrations_to_volumes(
         Total volume for each factor in normalizer_volumes_df.
     autofluorescence_volumes_summary: Series
         Total volume for each factor in autofluorescence_volumes_df.
+    warning_volumes_report: DataFrame
+        Report of volumes outside the transfer range of Echo.
     """
     # Print out parameters
     logger.info('Converting concentrations to volumes...')
@@ -150,6 +153,12 @@ def concentrations_to_volumes(
         autofluorescence_concentrations_df
     )
     logger.debug('Sample volume:\n%s', sample_volume)
+
+    # Warning volumes
+    warning_volumes_report = {
+        'Min Report': {},
+        'Max Report': {}
+    }
 
     # Exract stock conecentrations from cfps_parameters_df
     stock_concentrations_dict = dict(
@@ -231,6 +240,7 @@ def concentrations_to_volumes(
                     break
             # Warn if the value is < 10 nL
             if 0 < vol < 10:
+                warning_volumes_report['Min Report'][factor] = vol
                 logger.warning(
                     f'*** {factor}\nOne volume = {vol} nL (< 10 nL). '
                     'Stock have to be more diluted.\n'
@@ -239,6 +249,7 @@ def concentrations_to_volumes(
             # Warn if the value is > 1000 nL
             v_max = volumes[factor].max()
             if v_max > 1000:
+                warning_volumes_report['Max Report'][factor] = v_max
                 logger.warning(
                     f'*** {factor}\nOne volume = {v_max} nL (> 1000 nL). '
                     'Stock have to be more concentrated or pipetting '
@@ -266,18 +277,25 @@ def concentrations_to_volumes(
     ]:
         # Check if a factor stock is not concentrated enough,
         # WARNING: Vwater < 0 --> increase stock concentration
-        if water_volumes.min() < 0:
+        vol_min = water_volumes.min()
+        vol_max = water_volumes.max()
+        if vol_min < 0:
+            warning_volumes_report['Min Report']['water'] = vol_min
             logger.warning(
-                '*** Water\nVolume of added water < 0. '
+                f'*** Water\nVolume of added water = {vol_min} (< 0). '
                 'It seems that at least a factor stock '
                 'is not concentrated enough.\n'
             )
         # WARNING: Vwater > 1000 nL
-        elif water_volumes.max() > 1000:
+        elif vol_max > 1000:
+            warning_volumes_report['Max Report']['water'] = vol_max
             logger.warning(
-                '*** Water\nVolume of added water > 1000 nL. '
+                f'*** Water\nVolume of added water = {vol_max} (> 1000 nL). '
                 'Pipetting has to be done manually.\n'
             )
+
+    # Convert Warning Report to Dataframe
+    warning_volumes_report = DataFrame.from_dict(warning_volumes_report)
 
     # Sum of volumes for each parameter
     initial_volumes_summary = initial_volumes_df.sum()
@@ -287,9 +305,9 @@ def concentrations_to_volumes(
     # Add source plate dead volume to sum of volumes for each parameter
     initial_volumes_summary = initial_volumes_summary.add(
         source_plate_dead_volume)
-    normalizer_volumes_summary = normalizer_volumes_df.add(
+    normalizer_volumes_summary = normalizer_volumes_summary.add(
         source_plate_dead_volume)
-    autofluorescence_volumes_summary = autofluorescence_volumes_df.add(
+    autofluorescence_volumes_summary = autofluorescence_volumes_summary.add(
         source_plate_dead_volume)
 
     return (initial_volumes_df,
@@ -297,7 +315,8 @@ def concentrations_to_volumes(
             autofluorescence_volumes_df,
             initial_volumes_summary,
             normalizer_volumes_summary,
-            autofluorescence_volumes_summary)
+            autofluorescence_volumes_summary,
+            warning_volumes_report)
 
 
 def save_volumes(
@@ -308,6 +327,7 @@ def save_volumes(
         initial_volumes_summary: Series,
         normalizer_volumes_summary: Series,
         autofluorescence_volumes_summary: Series,
+        warning_volumes_report: DataFrame,
         output_folder: str = DEFAULT_OUTPUT_FOLDER):
     """
     Save volumes dataframes in tsv files
@@ -328,6 +348,8 @@ def save_volumes(
         Total volume for each factor in normalizer_volumes_df.
     autofluorescence_volumes_summary: Series
         Total volume for each factor in autofluorescence_volumes_df.
+    warning_volumes_report: DataFrame
+        Report of volumes outside the transfer range of Echo.
     output_folder: str
         Path to storage folder for output files. Defaults to working directory.
     """
@@ -390,6 +412,13 @@ def save_volumes(
             'autofluorescence_volumes_summary.tsv'),
         sep='\t',
         header=False)
+
+    # Save volumes warning report in tsv file
+    warning_volumes_report.to_csv(
+        os_path.join(
+            output_subfolder,
+            'warning_volumes_report.tsv'),
+        sep='\t')
 
 
 def samples_merger(
