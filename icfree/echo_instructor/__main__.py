@@ -36,6 +36,7 @@ def main():
     autofluorescence_concentrations = args.autofluo_set
     starting_well = args.starting_well
     sample_volume = args.sample_volume
+    source_plate_dead_volume = args.source_plate_dead_volume
     output_folder = args.output_folder
 
     input_importer_variables = input_importer(
@@ -56,6 +57,7 @@ def main():
             normalizer_concentrations_df,
             autofluorescence_concentrations_df,
             sample_volume,
+            source_plate_dead_volume,
             logger=logger)
     except ValueError:
         exit(1)

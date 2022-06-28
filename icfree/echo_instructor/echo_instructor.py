@@ -29,13 +29,13 @@ from typing import (
 
 from logging import (
     Logger,
-    getLogger,
-    basicConfig
+    getLogger
 )
 
 from .args import (
     DEFAULT_OUTPUT_FOLDER,
     DEFAULT_SAMPLE_VOLUME,
+    DEFAULT_DEAD_VOLUME,
     DEFAULT_STARTING_WELL
 )
 
@@ -98,6 +98,7 @@ def concentrations_to_volumes(
         normalizer_concentrations_df: DataFrame,
         autofluorescence_concentrations_df: DataFrame,
         sample_volume: int = DEFAULT_SAMPLE_VOLUME,
+        source_plate_dead_volume: int = DEFAULT_DEAD_VOLUME,
         logger: Logger = getLogger(__name__)):
     """
     Convert concentrations dataframes into volumes dataframes
@@ -230,9 +231,6 @@ def concentrations_to_volumes(
                     break
             # Warn if the value is < 10 nL
             if 0 < vol < 10:
-                basicConfig(
-                    filename='volumes_warning_summary.txt',
-                    encoding='utf-8')
                 logger.warning(
                     f'*** {factor}\nOne volume = {vol} nL (< 10 nL). '
                     'Stock have to be more diluted.\n'
@@ -241,9 +239,6 @@ def concentrations_to_volumes(
             # Warn if the value is > 1000 nL
             v_max = volumes[factor].max()
             if v_max > 1000:
-                basicConfig(
-                    filename='volumes_warning_summary.txt',
-                    encoding='utf-8')
                 logger.warning(
                     f'*** {factor}\nOne volume = {v_max} nL (> 1000 nL). '
                     'Stock have to be more concentrated or pipetting '
@@ -288,6 +283,14 @@ def concentrations_to_volumes(
     initial_volumes_summary = initial_volumes_df.sum()
     normalizer_volumes_summary = normalizer_volumes_df.sum()
     autofluorescence_volumes_summary = autofluorescence_volumes_df.sum()
+
+    # Add source plate dead volume to sum of volumes for each parameter
+    initial_volumes_summary = initial_volumes_summary.add(
+        source_plate_dead_volume)
+    normalizer_volumes_summary = normalizer_volumes_df.add(
+        source_plate_dead_volume)
+    autofluorescence_volumes_summary = autofluorescence_volumes_df.add(
+        source_plate_dead_volume)
 
     return (initial_volumes_df,
             normalizer_volumes_df,
