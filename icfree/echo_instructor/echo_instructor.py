@@ -15,8 +15,7 @@ from numpy import (
 from pandas import (
     read_csv,
     concat,
-    DataFrame,
-    Series
+    DataFrame
 )
 
 from string import (
