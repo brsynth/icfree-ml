@@ -136,7 +136,7 @@ def concentrations_to_volumes(
     autofluorescence_volumes_summary: Series
         Series with total volume for each factor in autofluorescence_volumes_df
     warning_volumes_report: DataFrame
-        Report of volumes outside the transfer range of Echo.
+        Report of volumes outside the transfer range of Echo
     """
     # Print out parameters
     logger.info('Converting concentrations to volumes...')
@@ -302,9 +302,10 @@ def concentrations_to_volumes(
     warning_volumes_report = DataFrame.from_dict(warning_volumes_report)
 
     # Sum of volumes for each parameter
-    initial_volumes_summary = initial_volumes_df.sum()
-    normalizer_volumes_summary = normalizer_volumes_df.sum()
-    autofluorescence_volumes_summary = autofluorescence_volumes_df.sum()
+    initial_volumes_summary = (initial_volumes_df.sum()).to_frame()
+    normalizer_volumes_summary = (normalizer_volumes_df.sum()).to_frame()
+    autofluorescence_volumes_summary = \
+        (autofluorescence_volumes_df.sum()).to_frame()
 
     # Add source plate dead volume to sum of volumes for each parameter
     initial_volumes_summary = initial_volumes_summary.add(
@@ -328,9 +329,9 @@ def save_volumes(
         initial_volumes_df: DataFrame,
         normalizer_volumes_df: DataFrame,
         autofluorescence_volumes_df: DataFrame,
-        initial_volumes_summary: Series,
-        normalizer_volumes_summary: Series,
-        autofluorescence_volumes_summary: Series,
+        initial_volumes_summary: DataFrame,
+        normalizer_volumes_summary: DataFrame,
+        autofluorescence_volumes_summary: DataFrame,
         warning_volumes_report: DataFrame,
         output_folder: str = DEFAULT_OUTPUT_FOLDER):
     """
@@ -401,21 +402,21 @@ def save_volumes(
             output_subfolder,
             'initial_volumes_summary.tsv'),
         sep='\t',
-        header=False)
+        header=['Sample + Dead Volumes'])
 
     normalizer_volumes_summary.to_csv(
         os_path.join(
             output_subfolder,
             'normalizer_volumes_summary.tsv'),
         sep='\t',
-        header=False)
+        header=['Sample + Dead Volumes'])
 
     autofluorescence_volumes_summary.to_csv(
         os_path.join(
             output_subfolder,
             'autofluorescence_volumes_summary.tsv'),
         sep='\t',
-        header=False)
+        header=['Sample + Dead Volumes'])
 
     # Save volumes warning report in TSV file
     warning_volumes_report.to_csv(
