@@ -1,5 +1,8 @@
+from pytest import (
+    raises as pytest_raises
+)
 from unittest import (
-    TestCase
+    TestCase,
 )
 
 from os import (
@@ -344,8 +347,35 @@ class Test(TestCase):
             modulo_tested_normalizer_volumes_df
             )
 
-    def test_concentrations_to_volumes_warnings(self):
-        pass
+    def test_concentrations_to_volumes_valueerror(self):
+        tested_cfps_parameters = os_path.join(
+                self.INPUT_FOLDER,
+                'proCFPS_parameters_woGOI.tsv'
+                )
+
+        input_importer_dfs = input_importer(
+            tested_cfps_parameters,
+            self.tested_initial_concentrations,
+            self.tested_normalizer_concentrations,
+            self.tested_autofluorescence_concentrations)
+
+        tested_cfps_parameters_df = input_importer_dfs[0]
+        tested_initial_concentrations_df = input_importer_dfs[1]
+        tested_normalizer_concentrations_df = input_importer_dfs[2]
+        tested_autofluorescence_concentrations_df = input_importer_dfs[3]
+
+        value_error = \
+            "Unable to coerce to Series, length must be 18: given 17"
+        with pytest_raises(
+            ValueError,
+                match=value_error):
+            concentrations_to_volumes(
+                tested_cfps_parameters_df,
+                tested_initial_concentrations_df,
+                tested_normalizer_concentrations_df,
+                tested_autofluorescence_concentrations_df,
+                sample_volume=10000,
+                source_plate_dead_volume=15000)
 
     def test_save_volumes_wExistingOutFolder(self):
         with TemporaryDirectory() as tmpFolder:
