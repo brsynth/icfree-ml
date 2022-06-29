@@ -1,0 +1,59 @@
+{
+    "columns":[
+        "Unnamed: 0",
+        "Min Report",
+        "Max Report"
+    ],
+    "data":[
+        [
+            "CoA",
+            2.5,
+            null
+        ],
+        [
+            "NTP",
+            5.0,
+            null
+        ],
+        [
+            "NAD",
+            5.0,
+            null
+        ],
+        [
+            "Folinic acid",
+            5.0,
+            null
+        ],
+        [
+            "Spermidine",
+            5.0,
+            null
+        ],
+        [
+            "tRNA",
+            5.0,
+            null
+        ],
+        [
+            "Amino acids",
+            null,
+            1875.0
+        ],
+        [
+            "GFP-DNA",
+            null,
+            1667.5
+        ],
+        [
+            "GOI-DNA",
+            null,
+            1667.5
+        ],
+        [
+            "Water",
+            null,
+            7212.5
+        ]
+    ]
+}
