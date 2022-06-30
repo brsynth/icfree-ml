@@ -128,11 +128,11 @@ def concentrations_to_volumes(
         DataFrame with converted volumes. 0 is assigned to the GOI-DNA column
     autofluorescence_volumes_df : DataFrame
         DataFrame with converted volumes. 0 is assigned to the GFP-DNA column
-    initial_volumes_summary: Series
+    initial_volumes_summary: DataFrame
         Series with total volume for each factor in initial_volumes_df
-    normalizer_volumes_summary: Series
+    normalizer_volumes_summary: DataFrame
         Series with total volume for each factor in normalizer_volumes_df
-    autofluorescence_volumes_summary: Series
+    autofluorescence_volumes_summary: DataFrame
         Series with total volume for each factor in autofluorescence_volumes_df
     warning_volumes_report: DataFrame
         Report of volumes outside the transfer range of Echo
@@ -346,11 +346,11 @@ def save_volumes(
         DataFrame with converted volumes. 0 is assigned to the GOI-DNA column
     autofluorescence_volumes_df : DataFrame
         DataFrame with converted volumes. 0 is assigned to the GFP-DNA column
-    initial_volumes_summary: Series
+    initial_volumes_summary: DataFrame
         Series with total volume for each factor in initial_volumes_df
-    normalizer_volumes_summary: Series
+    normalizer_volumes_summary: DataFrame
         Series with total volume for each factor in normalizer_volumes_df
-    autofluorescence_volumes_summary: Series
+    autofluorescence_volumes_summary: DataFrame
         Series with total volume for each factor in autofluorescence_volumes_df
     warning_volumes_report: DataFrame
         Report of volumes outside the transfer range of Echo.
