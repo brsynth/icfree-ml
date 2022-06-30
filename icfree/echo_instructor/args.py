@@ -8,6 +8,7 @@ from icfree._version import __version__
 
 DEFAULT_OUTPUT_FOLDER = os_getcwd()
 DEFAULT_SAMPLE_VOLUME = 10000
+DEFAULT_SOURCE_PLATE_DEAD_VOLUME = 15000
 DEFAULT_STARTING_WELL = 'A1'
 
 
@@ -60,6 +61,14 @@ def add_arguments(parser):
     )
 
     parser.add_argument(
+        '-sdv', '--source_plate_dead_volume',
+        type=int,
+        default=DEFAULT_SOURCE_PLATE_DEAD_VOLUME,
+        help=('Dead volume to add in the source plate in nL'
+              f' (default: {DEFAULT_SOURCE_PLATE_DEAD_VOLUME})')
+    )
+
+    parser.add_argument(
         '-sw', '--starting_well',
         type=str,
         default=DEFAULT_STARTING_WELL,
@@ -75,7 +84,7 @@ def add_arguments(parser):
               f' (default: {DEFAULT_OUTPUT_FOLDER})')
     )
 
-    # Add arguments related to the logger
+    # Add logger arguments
     parser = add_logger_args(parser)
 
     parser.add_argument(

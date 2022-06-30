@@ -6,13 +6,13 @@ from brs_utils import (
 
 from .echo_instructor import (
     input_importer,
-    volumes_array_generator,
+    concentrations_to_volumes,
     save_volumes,
     samples_merger,
-    multiple_destination_plate_generator,
-    multiple_echo_instructions_generator,
-    single_destination_plate_generator,
-    single_echo_instructions_generator,
+    distribute_destination_plate_generator,
+    distribute_echo_instructions_generator,
+    merge_destination_plate_generator,
+    merge_echo_instructions_generator,
     save_echo_instructions
 )
 from .args import build_args_parser
@@ -28,80 +28,66 @@ def main():
     # CREATE LOGGER
     logger = create_logger(parser.prog, args.log)
 
+    args = parser.parse_args()
     cfps_parameters = args.cfps
     initial_concentrations = args.init_set
     normalizer_concentrations = args.norm_set
     autofluorescence_concentrations = args.autofluo_set
     starting_well = args.starting_well
     sample_volume = args.sample_volume
+    source_plate_dead_volume = args.source_plate_dead_volume
     output_folder = args.output_folder
 
-    input_importer_variables = input_importer(
+    (cfps_parameters_df,
+    concentrations_df) = input_importer(
         cfps_parameters,
         initial_concentrations,
         normalizer_concentrations,
         autofluorescence_concentrations)
 
-    cfps_parameters_df = input_importer_variables[0]
-    initial_concentrations_df = input_importer_variables[1]
-    normalizer_concentrations_df = input_importer_variables[2]
-    autofluorescence_concentrations_df = input_importer_variables[3]
-
     try:
-        volumes_array_generator_variables = volumes_array_generator(
+        (volumes_df,
+        volumes_summary,
+        warning_volumes_report) = concentrations_to_volumes(
             cfps_parameters_df,
-            initial_concentrations_df,
-            normalizer_concentrations_df,
-            autofluorescence_concentrations_df,
+            concentrations_df,
             sample_volume,
-            logger=logger
-        )
+            source_plate_dead_volume,
+            logger=logger)
     except ValueError:
         exit(1)
 
-    initial_volumes_df = volumes_array_generator_variables[0]
-    normalizer_volumes_df = volumes_array_generator_variables[1]
-    autofluorescence_volumes_df = volumes_array_generator_variables[2]
-
     save_volumes(
         cfps_parameters_df,
-        initial_volumes_df,
-        normalizer_volumes_df,
-        autofluorescence_volumes_df,
+        volumes_df,
+        volumes_summary,
+        warning_volumes_report,
         output_folder)
 
-    samples_merger_variables = samples_merger(
-        initial_volumes_df,
-        normalizer_volumes_df,
-        autofluorescence_volumes_df)
+    merged_plates = samples_merger(volumes_df)
 
-    master_plate_1_final = samples_merger_variables[0]
-    master_plate_2_final = samples_merger_variables[1]
-    master_plate_3_final = samples_merger_variables[2]
+    distribute_destination_plates_dict = \
+        distribute_destination_plate_generator(
+            volumes_df,
+            starting_well,
+            vertical=True)
 
-    multiple_destination_plates_dict = multiple_destination_plate_generator(
-        initial_volumes_df,
-        normalizer_volumes_df,
-        autofluorescence_volumes_df,
+    distribute_echo_instructions_dict = \
+        distribute_echo_instructions_generator(
+            distribute_destination_plates_dict)
+
+    merge_destination_plates_dict = merge_destination_plate_generator(
+        merged_plates,
         starting_well,
         vertical=True)
 
-    multiple_echo_instructions_dict = \
-        multiple_echo_instructions_generator(multiple_destination_plates_dict)
-
-    single_destination_plates_dict = single_destination_plate_generator(
-        master_plate_1_final,
-        master_plate_2_final,
-        master_plate_3_final,
-        starting_well,
-        vertical=True)
-
-    single_echo_instructions_dict = \
-        single_echo_instructions_generator(single_destination_plates_dict)
+    merge_echo_instructions_dict = \
+        merge_echo_instructions_generator(
+            merge_destination_plates_dict)
 
     save_echo_instructions(
-        multiple_echo_instructions_dict,
-        single_echo_instructions_dict,
+        distribute_echo_instructions_dict,
+        merge_echo_instructions_dict,
         output_folder)
 
 

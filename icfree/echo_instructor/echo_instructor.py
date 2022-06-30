@@ -23,7 +23,13 @@ from string import (
 )
 
 from typing import (
-    Dict
+    Dict,
+    List
+)
+
+from logging import (
+    Logger,
+    getLogger
 )
 
 from logging import (
@@ -34,6 +40,7 @@ from logging import (
 from .args import (
     DEFAULT_OUTPUT_FOLDER,
     DEFAULT_SAMPLE_VOLUME,
+    DEFAULT_SOURCE_PLATE_DEAD_VOLUME,
     DEFAULT_STARTING_WELL
 )
 
@@ -49,214 +56,264 @@ def input_importer(
     Parameters
     ----------
     cfps_parameters : tsv file
-        Tsv with list of cfps parameters and relative features.
+        TSV of cfps parameters, status, maximum and stock concentrations
     initial_concentrations : tsv file
-        Dataset with concentrations values.
+        Dataset with concentrations values
     normalizer_concentrations : tsv file
-        Copy of initial_concentrations. 0 is assigned to the GOI-DNA column.
+        Copy of initial_concentrations. 0 is assigned to the GOI-DNA column
     autofluorescence_concentrations : tsv file
-        Copy of normalizer_concentrations. 0 is assigned to the GFP-DNA column.
+        Copy of normalizer_concentrations. 0 is assigned to the GFP-DNA column
 
     Returns
     -------
     cfps_parameters_df : DataFrame
-        Dataframe with cfps_parameters data.
+        Dataframe with cfps_parameters data
     initial_volumes_df : DataFrame
-        Dataframe with initial_set_concentrations data.
+        Dataframe with initial_concentrations data
     normalizer_volumes_df : DataFrame
-        Dataframe with normalizer_set_concentrations data.
+        Dataframe with normalizer_concentrations data
     autofluorescence_volumes_df : DataFrame
-        Dataframe with autofluorescence_set_concentrations data.
+        Dataframe with autofluorescence_concentrations data
     """
     cfps_parameters_df = read_csv(
         cfps_parameters,
         sep='\t')
 
-    initial_concentrations_df = read_csv(
+    concentrations_df = {}
+    concentrations_df['initial'] = read_csv(
         initial_concentrations,
         sep='\t')
 
-    normalizer_concentrations_df = read_csv(
+    concentrations_df['normalizer'] = read_csv(
         normalizer_concentrations,
         sep='\t')
 
-    autofluorescence_concentrations_df = read_csv(
+    concentrations_df['autofluorescence'] = read_csv(
         autofluorescence_concentrations,
         sep='\t')
 
     return (cfps_parameters_df,
-            initial_concentrations_df,
-            normalizer_concentrations_df,
-            autofluorescence_concentrations_df)
+            concentrations_df)
 
 
-def volumes_array_generator(
+def concentrations_to_volumes(
     cfps_parameters_df: DataFrame,
-    initial_concentrations_df: DataFrame,
-    normalizer_concentrations_df: DataFrame,
-    autofluorescence_concentrations_df: DataFrame,
+    concentrations_df: Dict,
     sample_volume: int = DEFAULT_SAMPLE_VOLUME,
+    source_plate_dead_volume: int = DEFAULT_SOURCE_PLATE_DEAD_VOLUME,
     logger: Logger = getLogger(__name__)
 ):
     """
-    Convert concentrations dataframes into volumes dataframes
+    Convert concentrations dataframes into volumes dataframes.
+    Generate warning report of volumes outside the transfer range of Echo.
+    Generate volumes summary for each volumes DataFrame.
 
     Parameters
     ----------
     cfps_parameters_df : DataFrame
-        Dataframe with cfps_parameters data.
-    initial_volumes_df : DataFrame
-        Dataframe with initial_concentrations data.
-    normalizer_volumes_df : DataFrame
-        Dataframe with normalizer_concentrations data.
-    autofluorescence_volumes_df : DataFrame
-        Dataframe with autofluorescence_concentrations data.
+        Dataframe with cfps_parameters data
+    concentrations_df : Dict
+        Dataframes with initial/normalizer/autofluorescence concentrations data
     sample_volume: int
-        Final sample volume in each well. Defaults to 10000 nL.
+        Final sample volume in each well. Defaults to 10000 nL
+    source_plate_dead_volume: int
+        Source plate dead volume. Defaults to 15000 nL
 
     Returns
     -------
-    initial_volumes_df : DataFrame
-        DataFrame with converted volumes.
-    normalizer_volumes_df : DataFrame
-        DataFrame with converted volumes. 0 is assigned to the GOI-DNA column.
-    autofluorescence_volumes_df : DataFrame
-        DataFrame with converted volumes. 0 is assigned to the GFP-DNA column.
+    volumes_df : Dict
+        DataFrames with converted volumes
+        For 'normalizer' key, 0 is assigned to the GOI-DNA column
+    volumes_summary: Series
+        Series with total volume for each factor in
+        initial/normalizer/autofluorescnce_volumes_df
+    warning_volumes_report: DataFrame
+        Report of volumes outside the transfer range of Echo
     """
-
-    # Print out parameters
     logger.info('Converting concentrations to volumes...')
-    logger.debug(
-        'cfps parameters:\n%s',
-        cfps_parameters_df
-    )
-    logger.debug(
-        'initial concentrations:\n%s',
-        initial_concentrations_df
-    )
-    logger.debug(
-        'normalizer concentrations:\n%s',
-        normalizer_concentrations_df
-    )
-    logger.debug(
-        'autofluorescence concentrations:\n%s',
-        autofluorescence_concentrations_df
-    )
+    # Print out parameters
+    logger.debug(f'cfps parameters:\n{cfps_parameters_df}')
     logger.debug('Sample volume:\n%s', sample_volume)
 
     # Exract stock conecentrations from cfps_parameters_df
     stock_concentrations_dict = dict(
-        cfps_parameters_df[['Parameter', 'Stock concentration']].to_numpy())
+        cfps_parameters_df[
+            [
+                'Parameter',
+                'Stock concentration'
+            ]
+        ].to_numpy()
+    )
     stock_concentrations_df = fromiter(
         stock_concentrations_dict.values(),
-        dtype=float)
+        dtype=float
+    )
     logger.debug('Stock concentrations:\n%s', stock_concentrations_df)
 
-    # Calculate coeff for each well
-    coeff = \
+    # Calculate sample volume and stock concentrations ratio for each well
+    sample_volume_stock_ratio = \
         sample_volume / stock_concentrations_df
 
-    # Convert concentrations to volumes
-    try:
-        initial_volumes_df = round(multiply(
-            initial_concentrations_df,
-            coeff) / 2.5, 0) * 2.5
-        logger.debug(
-            'initial volumes:\n%s',
-            initial_volumes_df
-        )
+    volumes_df = {}
+    volumes_summary = {}
+    warning_volumes_report = {
+        'Min Report': {},
+        'Max Report': {}
+    }
 
-        normalizer_volumes_df = round(multiply(
-            normalizer_concentrations_df,
-            coeff) / 2.5, 0) * 2.5
-        logger.debug(
-            'normalizer volumes:\n%s',
-            normalizer_volumes_df
-        )
+    for volumes_name in concentrations_df.keys():
+        # Print out parameters
+        logger.debug(f'{volumes_name} volumes:\n'
+                     '{concentrations_df[volumes_name]}')
 
-        autofluorescence_volumes_df = round(multiply(
-            autofluorescence_concentrations_df,
-            coeff) / 2.5, 0) * 2.5
-        logger.debug(
-            'autofluorescence volumes:\n%s',
-            autofluorescence_volumes_df
-        )
-    except ValueError as e:
-        logger.error(f'*** {e}')
-        logger.error(
-            'It seems that the number of parameters is different '
-            'than the number of stock concentrations. Exiting...'
-        )
-        raise(e)
+        # Convert concentrations into volumes
+        # and make it a multiple of 2.5 (ECHO specs)
+        try:
+            volumes_df[volumes_name] = round(
+                multiply(
+                    concentrations_df[volumes_name],
+                    sample_volume_stock_ratio
+                ) / 2.5, 0
+            ) * 2.5
+            logger.debug(f'{volumes_name} volumes:\n'
+                         '{volumes_df[volumes_name]}')
+        except ValueError as e:
+            logger.error(f'*** {e}')
+            logger.error(
+                'It seems that the number of parameters is different '
+                'from the number of stock concentrations. Exiting...'
+            )
+            raise(e)
 
-    # WARNING: < 10 nL (echo specs) --> have to dilute stock
-    for volumes in [
-        initial_volumes_df,
-        normalizer_volumes_df,
-        autofluorescence_volumes_df
-    ]:
-        for factor in volumes.columns:
-            for value in volumes[factor].sort_values():
-                if value != 0:
-                    break
-            if 0 < value < 10:
-                logger.warning(
-                    f'There are {factor} volume(s) < 10 nL. '
-                    'Stock have to be more diluted.'
-                )
+        # Check volumes
+        # Add Water column
+        volumes_df[volumes_name]['Water'] = \
+            sample_volume - volumes_df[volumes_name].sum(axis=1)
+        # Check volumes
+        warning_volumes_report = check_volumes(
+                volumes_df[volumes_name],
+                lower_bound=10,
+                upper_bound=1000,
+                warning_volumes=warning_volumes_report,
+                logger=logger
+            )
+        logger.debug(f'{volumes_name} volumes:\n{volumes_df[volumes_name]}')
 
-    # Add Water column
-    initial_volumes_df['Water'] = \
-        sample_volume - initial_volumes_df.sum(axis=1)
-    logger.debug('initial volumes:\n%s', initial_volumes_df)
+        # Sum of volumes for each parameter
+        volumes_summary[volumes_name] = \
+            volumes_df[volumes_name].sum().to_frame()
 
-    normalizer_volumes_df['Water'] = \
-        sample_volume - normalizer_volumes_df.sum(axis=1)
-    logger.debug('normalizer volumes:\n%s', normalizer_volumes_df)
+        # Add source plate dead volume to sum of volumes for each parameter
+        volumes_summary[volumes_name] = \
+            volumes_summary[volumes_name].add(source_plate_dead_volume)
 
-    autofluorescence_volumes_df['Water'] = \
-        sample_volume - autofluorescence_volumes_df.sum(axis=1)
-    logger.debug('autofluorescence volumes:\n%s', autofluorescence_volumes_df)
+    # Convert Warning Report Dict to Dataframe
+    warning_volumes_report = DataFrame.from_dict(warning_volumes_report)
 
-    # WARNING: Vwater < 0 --> have to increase stock conentration
-    # Check if a factor stock is not concentrated enough,
-    # i.e. Vwater < 0
-    for water_volumes in [
-        initial_volumes_df['Water'],
-        normalizer_volumes_df['Water'],
-        autofluorescence_volumes_df['Water']
-    ]:
-        if water_volumes.min() < 0:
-            logger.warning('*** Volume of added water < 0')
+    return (volumes_df,
+            volumes_summary,
+            warning_volumes_report)
+
+
+def check_volumes(
+    volumes_df: DataFrame,
+    lower_bound: float,
+    upper_bound: float,
+    warning_volumes: Dict,
+    logger: Logger = getLogger(__name__)
+) -> Dict:
+    """
+    Checks if volumes are between lower and upper bounds.
+    Also checks if a factor is under-concentrated (Vwater < 0).
+
+    Parameters
+    ----------
+    volumes_df : DataFrame
+        Volumes to check
+    lower_bound: float
+        Lower bound
+    upper_bound: float
+        Upper bound
+    logger: Logger
+        Logger
+
+    Returns
+    -------
+    warning_volumes : Dict
+        Dictionnary with volumes outside of bounds
+    """
+    # WARNING: < 10 nL (ECHO min volume transfer limit) --> dilute stock
+    for factor in volumes_df.columns:
+        # Check lower bound
+        for vol in volumes_df[factor].sort_values():
+            # Pass all 0 since it is a correct value
+            if vol != 0:
+                # Exit the loop at the first non-0 value
+                break
+        # Warn if the value is < 10 nL
+        if 0 < vol < lower_bound:
+            warning_volumes['Min Report'][factor] = vol
             logger.warning(
-                'It seems that at least a factor stock '
-                'is not concentrated enough.'
+                f'*** {factor}\nOne volume = {vol} nL (< 10 nL). '
+                'Stock have to be more diluted.\n'
+            )
+        # Check upper bound
+        # Warn if the value is > 1000 nL
+        v_max = volumes_df[factor].max()
+        if v_max > upper_bound:
+            warning_volumes['Max Report'][factor] = v_max
+            logger.warning(
+                f'*** {factor}\nOne volume = {v_max} nL (> 1000 nL). '
+                'Stock have to be more concentrated or pipetting '
+                'has to be done manually.\n'
             )
 
-    return (initial_volumes_df,
-            normalizer_volumes_df,
-            autofluorescence_volumes_df)
+    # Check if a factor stock is not concentrated enough,
+    # WARNING: Vwater < 0 --> increase stock concentration
+    if 'Water' in volumes_df:
+        vol_min_w = volumes_df['Water'].min()
+        if vol_min_w < 0:
+            # Get factor with max value in each line (sample) where Vwater < 0
+            under_conc_fac = list(set(
+                DataFrame(
+                    volumes_df.drop(
+                        volumes_df[volumes_df['Water'] >= 0].index
+                    ).astype('float64'),
+                    dtype='float64'
+                ).idxmax(axis=1)
+            ))
+            warning_volumes['Min Report']['Water'] = vol_min_w
+            for factor in under_conc_fac:
+                logger.warning(
+                    f'*** {factor}\nFactor seems to be under-concentrated '
+                    '(volume of added water < 0).\n'
+                )
+
+    return warning_volumes
 
 
 def save_volumes(
         cfps_parameters_df: DataFrame,
-        initial_volumes_df: DataFrame,
-        normalizer_volumes_df: DataFrame,
-        autofluorescence_volumes_df: DataFrame,
+        volumes_df: Dict,
+        volumes_summary: Dict,
+        warning_volumes_report: DataFrame,
         output_folder: str = DEFAULT_OUTPUT_FOLDER):
     """
-    Save volumes dataframes in tsv files
+    Save volumes dataframes in TSV files
 
     Parameters
     ----------
     cfps_parameters_df : DataFrame
         Dataframe with cfps_parameters data.
-    initial_volumes_df : DataFrame
-        DataFrame with converted volumes.
-    normalizer_volumes_df : DataFrame
-        Copy of initial_volumes_df. 0 is assigned to the GOI-DNA column.
-    autofluorescence_volumes_df : DataFrame
-        Copy of normalizer_volumes_df. 0 is assigned to the GFP-DNA column.
+    volumes_df : Dict
+        DataFrames with converted volumes
+        For 'normalizer' key, 0 is assigned to the GOI-DNA column
+        For 'autofluorescence' key, 0 is assigned to the GFP-DNA column
+    volumes_summary: Dict
+        Series with total volume for each factor in
+        initial/normalizer/autofluorescence_volumes_df
+    warning_volumes_report: DataFrame
+        Report of volumes outside the transfer range of Echo.
     output_folder: str
         Path to storage folder for output files. Defaults to working directory.
     """
@@ -264,274 +321,178 @@ def save_volumes(
     if not os_path.exists(output_folder):
         os_mkdir(output_folder)
 
-    # Store files in user-provided output folder
+    # Create subfolder for volumes
     output_subfolder = os_path.join(output_folder, 'volumes_output')
     if not os_path.exists(output_subfolder):
         os_mkdir(output_subfolder)
 
+    # Get list of cfps parameters and add water
     all_parameters = cfps_parameters_df['Parameter'].tolist()
     all_parameters.append('Water')
 
-    initial_volumes_df.to_csv(
-        os_path.join(output_subfolder, 'initial_volumes.tsv'),
-        sep='\t',
-        header=all_parameters,
-        index=False)
+    # Save volumes dataframes in TSV files
+    for key, value in volumes_df.items():
+        value.to_csv(
+            os_path.join(
+                output_subfolder,
+                f'{key}_volumes.tsv'),
+            sep='\t',
+            header=all_parameters,
+            index=False)
 
-    normalizer_volumes_df.to_csv(
-        os_path.join(output_subfolder, 'normalizer_volumes.tsv'),
-        sep='\t',
-        header=all_parameters,
-        index=False)
+    # Save volumes summary series in TSV files
+    for key, value in volumes_summary.items():
+        value.to_csv(
+            os_path.join(
+                output_subfolder,
+                f'{key}_volumes_summary.tsv'),
+            sep='\t',
+            header=['Sample + Dead Volumes'])
 
-    autofluorescence_volumes_df.to_csv(
-        os_path.join(output_subfolder, 'autofluorescence_volumes.tsv'),
-        sep='\t',
-        header=all_parameters,
-        index=False)
+    # Save volumes warning report in TSV file
+    warning_volumes_report.to_csv(
+        os_path.join(
+            output_subfolder,
+            'warning_volumes_report.tsv'),
+        sep='\t')
 
 
 def samples_merger(
-        initial_volumes_df: DataFrame,
-        normalizer_volumes_df: DataFrame,
-        autofluorescence_volumes_df: DataFrame):
+    volumes_df: Dict,
+    nplicate: int = 3,
+    logger: Logger = getLogger(__name__)
+):
     """
     Merge and triplicate samples into a single dataframe
 
     Parameters
     ----------
-    initial_volumes_df : DataFrame
-        DataFrame with converted volumes.
-    normalizer_volumes_df : DataFrame
-        DataFrame with converted volumes. 0 is assigned to the GOI-DNA column.
-    autofluorescence_volumes_df : DataFrame
-        DataFrame with converted volumes. 0 is assigned to the GFP-DNA column.
+    volumes_df: Dict
+        DataFrames with converted volumes
+        For 'normalizer' key, 0 is assigned to the GOI-DNA column
+        For 'autofluorescence' key, 0 is assigned to the GFP-DNA column
+    nplicate: int
+        Number of copies
+    logger: Logger
 
     Returns
     -------
-    master_plate_1_final: DataFrame
-        First DataFrame with merged samples.
-    master_plate_2_final: DataFrame
-        Second DataFrame with merged samples.
-    master_plate_3_final: DataFrame
-        Third DataFrame with merged samples.
+    merged_plates_final: List[DataFrame]
+        DataFrames with merged samples
     """
+
+    n_split = 3
+
     # Split volumes dataframes into three subsets
-    initial_volumes_df_list = vsplit(
-        initial_volumes_df,
-        3)
+    volumes_df_list = {}
+    for key in volumes_df.keys():
+        volumes_df_list[key] = vsplit(
+        volumes_df[key],
+        n_split)
 
-    normalizer_volumes_df_list = vsplit(
-        normalizer_volumes_df,
-        3)
+    merged_plates_final = []
+    for i_split in range(n_split):
+        # Put together each (i_split)th of volumes_df_list
+        merged_plates = concat(
+            [
+                volumes_df[i_split]
+                for volumes_df in volumes_df_list.values()
+            ],
+            axis=0
+        )
+        # Nplicate merged subsets
+        merged_plates_final.append(
+            concat(
+                [merged_plates]*nplicate,
+                ignore_index=True
+            )
+        )
 
-    autofluorescence_volumes_df_list = vsplit(
-        autofluorescence_volumes_df,
-        3)
-
-    # Merge first subsets from each list
-    master_plate_1 = concat((
-        initial_volumes_df_list[0],
-        normalizer_volumes_df_list[0],
-        autofluorescence_volumes_df_list[0]),
-        axis=0)
-
-    # Triplicate merged subsets
-    master_plate_1_duplicate = master_plate_1.copy()
-    master_plate_1_triplicate = master_plate_1.copy()
-    master_plate_1_final = concat((
-        master_plate_1,
-        master_plate_1_duplicate,
-        master_plate_1_triplicate),
-        axis=0,
-        ignore_index=True)
-
-    # Merge second subsets from each list
-    master_plate_2 = concat((
-        initial_volumes_df_list[1],
-        normalizer_volumes_df_list[1],
-        autofluorescence_volumes_df_list[1]),
-        axis=0)
-
-    # Triplicate merged subsets
-    master_plate_2_duplicate = master_plate_2.copy()
-    master_plate_2_triplicate = master_plate_2.copy()
-    master_plate_2_final = concat((
-        master_plate_2,
-        master_plate_2_duplicate,
-        master_plate_2_triplicate),
-        axis=0,
-        ignore_index=True)
-
-    # Merge third subsets from each list
-    master_plate_3 = concat((
-        initial_volumes_df_list[2],
-        normalizer_volumes_df_list[2],
-        autofluorescence_volumes_df_list[2]),
-        axis=0)
-
-    # Triplicate merged subsets
-    master_plate_3_duplicate = master_plate_3.copy()
-    master_plate_3_triplicate = master_plate_3.copy()
-    master_plate_3_final = concat((
-        master_plate_3,
-        master_plate_3_duplicate,
-        master_plate_3_triplicate),
-        axis=0,
-        ignore_index=True)
-
-    return (master_plate_1_final,
-            master_plate_2_final,
-            master_plate_3_final)
+    return merged_plates_final
 
 
-def multiple_destination_plate_generator(
-        initial_volumes_df: DataFrame,
-        normalizer_volumes_df: DataFrame,
-        autofluorescence_volumes_df: DataFrame,
+def distribute_destination_plate_generator(
+        volumes_df: Dict,
         starting_well: str = DEFAULT_STARTING_WELL,
-        vertical=True):
+        vertical: str = True,
+        logger: Logger = getLogger(__name__)):
     """
     Generate an ensemble of destination plates dataframes
 
     Parameters
     ----------
-    initial_volumes_df : DataFrame
-        DataFrame with converted volumes.
-    normalizer_volumes_df : DataFrame
-        DataFrame with converted volumes. 0 is assigned to the GOI-DNA column.
-    autofluorescence_volumes_df : DataFrame
-        DataFrame with converted volumes. 0 is assigned to the GFP-DNA column.
+    volumes_df : Dict
+        DataFrames with converted volumes
+        For 'normalizer' key, 0 is assigned to the GOI-DNA column
+        For 'autofluorescence' key, 0 is assigned to the GFP-DNA column
     starting_well : str
-        Starter well to begin filling the 384 well-plate. Defaults to 'A1'.
+        Starter well to begin filling the 384 well-plate. Defaults to 'A1'
     vertical: bool
-        -True: plate is filled column by column from top to bottom.
-        -False: plate is filled row by row from left to right.
+        -True: plate is filled column by column from top to bottom
+        -False: plate is filled row by row from left to right
 
     Returns
     -------
-    multiple_destination_plates_dict: Dict
-        Dict with destination plates dataframes.
+    distribute_destination_plates_dict: Dict
+        Dict with ditributed destination plates dataframes
     """
-    volumes_df_dict = {
-        'initial_volumes_df': initial_volumes_df,
-        'normalizer_volumes_df': normalizer_volumes_df,
-        'autofluorescence_volumes_df': autofluorescence_volumes_df}
-
-    volumes_wells_keys = [
-        'initial_volumes_wells',
-        'normalizer_volumes_wells',
-        'autofluorescence_volumes_wells']
-
-    plate_rows = ascii_uppercase
-    plate_rows = list(plate_rows[0:16])
-
-    volumes_wells_list = []
-    all_dataframe = {}
-
-    for volumes_df in volumes_df_dict.values():
-        # Fill destination plates column by column
-        if vertical:
-            from_well = plate_rows.index(starting_well[0]) + \
-                (int(starting_well[1:]) - 1) * 16
-
-            for parameter_name in volumes_df.columns:
-                dataframe = DataFrame(
-                    0.0,
-                    index=plate_rows,
-                    columns=range(1, 25))
-
-                for index, value in enumerate(volumes_df[parameter_name]):
-                    index += from_well
-                    dataframe.iloc[index % 16, index // 16] = value
-
-                all_dataframe[parameter_name] = dataframe
-
-            volumes_wells = volumes_df.copy()
-            names = ['{}{}'.format(
-                plate_rows[(index + from_well) % 16],
-                (index + from_well) // 16 + 1)
-                    for index in volumes_df.index]
-
-            volumes_wells['well_name'] = names
-            volumes_wells_list.append(volumes_wells)
-
-        # Fill destination plates row by row
-        if not vertical:
-            from_well = plate_rows.index(starting_well[0]) * 24 + \
-                int(starting_well[1:]) - 1
-
-            for parameter_name in volumes_df.columns:
-                dataframe = DataFrame(
-                    0.0,
-                    index=plate_rows,
-                    columns=range(1, 25))
-
-                for index, value in enumerate(volumes_df[parameter_name]):
-                    index += from_well
-                    dataframe.iloc[index // 24, index % 24] = value
-
-                all_dataframe[parameter_name] = dataframe
-
-            volumes_wells = volumes_df.copy()
-            names = ['{}{}'.format(
-                plate_rows[index // 24],
-                index % 24 + 1) for index in volumes_wells.index]
-            volumes_wells['well_name'] = names
-            volumes_wells_list.append(volumes_wells)
-
-    multiple_destination_plates_dict = dict(zip(
-        volumes_wells_keys,
-        volumes_wells_list))
-
-    return multiple_destination_plates_dict
+    return _plate_generator(
+        volumes_df,
+        starting_well,
+        vertical,
+        logger=logger
+    )
 
 
-def single_destination_plate_generator(
-        master_plate_1_final: DataFrame,
-        master_plate_2_final: DataFrame,
-        master_plate_3_final: DataFrame,
+def merge_destination_plate_generator(
+        merged_plates: List,
         starting_well: str = DEFAULT_STARTING_WELL,
-        vertical=True):
+        vertical=True,
+        logger: Logger = getLogger(__name__)):
     """
-    Generate a single destination plates dataframe
+    Generate merged destination plates dataframe
 
     Parameters
     ----------
-    master_plate_1_final: DataFrame
-        First DataFrame with merged samples.
-    master_plate_2_final: DataFrame
-        Second DataFrame with merged samples.
-    master_plate_3_final: DataFrame
-        Third DataFrame with merged samples.
+    merged_plates: List[DataFrame]
+        DataFrames with merged samples
     starting_well : str
-        Starter well to begin filling the 384 well-plate. Defaults to 'A1'.
+        Starter well to begin filling the 384 well-plate. Defaults to 'A1'
     vertical: bool
-        -True: plate is filled column by column from top to bottom.
-        -False: plate is filled row by row from left to right.
+        -True: plate is filled column by column from top to bottom
+        -False: plate is filled row by row from left to right
 
     Returns
     -------
-    single_destination_plates_dict: Dict
-        Dict with destination plates dataframes.
+    merge_destination_plates_dict: Dict
+        Dict with merged destination plates dataframes
     """
-    volumes_df_dict = {
-        'master_plate_1_final': master_plate_1_final,
-        'master_plate_2_final': master_plate_2_final,
-        'master_plate_3_final': master_plate_3_final}
+    volumes_wells = {}
+    for i in range(len(merged_plates)):
+        volumes_wells[f'merged_plate_{i+1}'] = \
+            merged_plates[i]
 
-    volumes_wells_keys = [
-        'master_plate_1_volumes_wells',
-        'master_plate_2_volumes_wells',
-        'master_plate_3_volumes_wells']
+    return _plate_generator(
+        volumes_wells,
+        starting_well,
+        vertical,
+        logger=logger
+    )
 
+
+def _plate_generator(
+    wells: Dict,
+    starting_well: str = DEFAULT_STARTING_WELL,
+    vertical: str = True,
+    logger: Logger = getLogger(__name__)
+):
     plate_rows = ascii_uppercase
     plate_rows = list(plate_rows[0:16])
 
     volumes_wells_list = []
     all_dataframe = {}
 
-    for volumes_df in volumes_df_dict.values():
+    for volumes_df in wells.values():
         # Fill destination plates column by column
         if vertical:
             from_well = plate_rows.index(starting_well[0]) + \
@@ -582,41 +543,36 @@ def single_destination_plate_generator(
             volumes_wells['well_name'] = names
             volumes_wells_list.append(volumes_wells)
 
-    single_destination_plates_dict = dict(zip(
-        volumes_wells_keys,
+    distribute_destination_plates_dict = dict(zip(
+        wells.keys(),
         volumes_wells_list))
 
-    return single_destination_plates_dict
+    return distribute_destination_plates_dict
 
 
-def multiple_echo_instructions_generator(
-        multiple_destination_plates_dict: Dict):
+def distribute_echo_instructions_generator(
+        distribute_destination_plates_dict: Dict):
     """
     Generate and dispatch Echo® instructions on multiple plates
 
     Parameters
     ----------
-        multiple_destination_plates_dict: Dict
-            Dict with destination plates dataframes.
-        desired_order: _type_
-            _description_
-        reset_index: _type_
-            _description_
+        distribute_destination_plates_dict: Dict
+            Dict with distributed destination plates dataframes
 
     Returns
     -------
-        multiple_echo_instructions_dict: Dict
-            Dict with echo instructions dataframes.
+        distribute_echo_instructions_dict: Dict
+            Dict with distributed echo instructions dataframes
     """
     all_sources = {}
-    multiple_echo_instructions_dict = {}
-    multiple_echo_instructions_list = []
-    multiple_echo_instructions_dict_keys = [
-        'initial_instructions',
-        'normalizer_instructions',
-        'autofluorescence_instructions']
+    distribute_echo_instructions_dict = {}
+    distribute_echo_instructions_list = []
+    distribute_echo_instructions_dict_keys = list(
+        distribute_destination_plates_dict.keys()
+    )
 
-    for destination_plate in multiple_destination_plates_dict.values():
+    for destination_plate in distribute_destination_plates_dict.values():
 
         for parameter_name in destination_plate.drop(columns=['well_name']):
             worklist = {
@@ -641,44 +597,41 @@ def multiple_echo_instructions_generator(
 
             worklist = DataFrame(worklist)
             all_sources[parameter_name] = worklist
-            echo_instructions = concat(all_sources.values())
+            echo_instructions = concat(
+                all_sources.values()).reset_index(drop=True)
 
-        multiple_echo_instructions_list.append(echo_instructions)
-        multiple_echo_instructions_dict = dict(
-            zip(multiple_echo_instructions_dict_keys,
-                multiple_echo_instructions_list))
+        distribute_echo_instructions_list.append(echo_instructions)
+        distribute_echo_instructions_dict = dict(
+            zip(distribute_echo_instructions_dict_keys,
+                distribute_echo_instructions_list))
 
-    return multiple_echo_instructions_dict
+    return distribute_echo_instructions_dict
 
 
-def single_echo_instructions_generator(
-        single_destination_plates_dict: Dict):
+def merge_echo_instructions_generator(
+        merge_destination_plates_dict: Dict):
     """
     Generate and merge Echo® instructions a single triplicated plate
 
     Parameters
     ----------
-        single_destination_plates_dict: Dict
-            Dict with destination plates dataframes.
-        desired_order: _type_
-            _description_
-        reset_index: _type_
-            _description_
+        merge_destination_plates_dict: Dict
+            Dict with merged destination plates dataframes
 
     Returns
     -------
-        single_echo_instructions_dict: Dict
-            Dict with echo instructions dataframes.
+        merge_echo_instructions_dict: Dict
+            Dict with merged echo instructions dataframes
     """
     all_sources = {}
-    single_echo_instructions_dict = {}
-    single_echo_instructions_list = []
-    single_echo_instructions_dict_keys = [
-        'master_plate_1_final',
-        'master_plate_2_final',
-        'master_plate_3_final']
+    merge_echo_instructions_dict = {}
+    merge_echo_instructions_list = []
+    merge_echo_instructions_dict_keys = [
+        f'{key}_final'
+        for key in merge_destination_plates_dict.keys()
+    ]
 
-    for destination_plate in single_destination_plates_dict.values():
+    for destination_plate in merge_destination_plates_dict.values():
 
         for parameter_name in destination_plate.drop(columns=['well_name']):
             worklist = {
@@ -703,67 +656,70 @@ def single_echo_instructions_generator(
 
             worklist = DataFrame(worklist)
             all_sources[parameter_name] = worklist
-            echo_instructions = concat(all_sources.values())
+            echo_instructions = concat(
+                all_sources.values()).reset_index(drop=True)
 
-        single_echo_instructions_list.append(echo_instructions)
-        single_echo_instructions_dict = dict(
-            zip(single_echo_instructions_dict_keys,
-                single_echo_instructions_list))
+        merge_echo_instructions_list.append(echo_instructions)
+        merge_echo_instructions_dict = dict(
+            zip(merge_echo_instructions_dict_keys,
+                merge_echo_instructions_list))
 
-    return single_echo_instructions_dict
+    return merge_echo_instructions_dict
 
 
 def save_echo_instructions(
-        multiple_echo_instructions_dict: Dict,
-        single_echo_instructions_dict: Dict,
+        distribute_echo_instructions_dict: Dict,
+        merge_echo_instructions_dict: Dict,
         output_folder: str = DEFAULT_OUTPUT_FOLDER):
     """
     Save Echo instructions in csv files
 
     Parameters
     ----------
-        single_echo_instructions_dict: Dict
-            Dict with echo instructions dataframes.
+        distribute_echo_instructions_dict: Dict
+            Dict with echo distributed instructions dataframes
 
-        multiple_echo_instructions_dict: Dict
-            Dict with echo instructions dataframes.
+        merge_echo_instructions_dict: Dict
+            Dict with echo merged instructions dataframes
 
         output_folder: str
             Path to output storage folder
     """
+    # Create output folder if it doesn't exist
     if not os_path.exists(output_folder):
         os_mkdir(output_folder)
-    output_subfolder = os_path.join(output_folder, 'echo_instructions')
 
+    # Create output subfolders if they don't exist
+    output_subfolder = os_path.join(output_folder, 'echo_instructions')
     if not os_path.exists(output_subfolder):
         os_mkdir(output_subfolder)
-    output_subfolder_mul = os_path.join(
-        output_folder, 'echo_instructions', 'multiple'
-    )
 
-    if not os_path.exists(output_subfolder_mul):
-        os_mkdir(output_subfolder_mul)
-    output_subfolder_sin = os_path.join(
-        output_folder, 'echo_instructions', 'single'
-    )
+    output_subfolder_distributed = os_path.join(
+        output_folder, 'echo_instructions', 'distributed')
+    if not os_path.exists(output_subfolder_distributed):
+        os_mkdir(output_subfolder_distributed)
 
-    if not os_path.exists(output_subfolder_sin):
-        os_mkdir(output_subfolder_sin)
+    output_subfolder_merged = os_path.join(
+        output_folder, 'echo_instructions', 'merged')
+    if not os_path.exists(output_subfolder_merged):
+        os_mkdir(output_subfolder_merged)
 
-    for key, value in multiple_echo_instructions_dict.items():
+    # Save distributed Echo instructions in csv files
+    for key, value in distribute_echo_instructions_dict.items():
         value.to_csv(
             os_path.join(
-                output_subfolder_mul,
-                f'{str(key)}.csv'
+                output_subfolder_distributed,
+                f'distributed_{str(key)}_instructions.csv'
             ),
             sep=',',
             index=False,
             encoding='utf-8')
 
-    for key, value in single_echo_instructions_dict.items():
+    # Save merged Echo instructions in csv files
+    for key, value in merge_echo_instructions_dict.items():
         value.to_csv(
             os_path.join(
-                output_subfolder_sin,
+                output_subfolder_merged,
                 f'{str(key)}_instructions.csv'
             ),
             sep=',',
