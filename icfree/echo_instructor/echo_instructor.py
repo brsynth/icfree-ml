@@ -7,19 +7,19 @@ from os import (
 )
 
 from numpy import (
-    fromiter,
-    multiply,
-    vsplit
+    fromiter as np_fromiter,
+    multiply as np_multiply,
+    vsplit as np_vsplit
 )
 
 from pandas import (
-    read_csv,
-    concat,
+    read_csv as pd_read_csv,
+    concat as pd_concat,
     DataFrame
 )
 
 from string import (
-    ascii_uppercase
+    ascii_uppercase as string_ascii_uppercase
 )
 
 from typing import (
@@ -69,19 +69,19 @@ def input_importer(
     autofluorescence_volumes_df : DataFrame
         Dataframe with autofluorescence_concentrations data
     """
-    cfps_parameters_df = read_csv(
+    cfps_parameters_df = pd_read_csv(
         cfps_parameters,
         sep='\t')
 
-    initial_concentrations_df = read_csv(
+    initial_concentrations_df = pd_read_csv(
         initial_concentrations,
         sep='\t')
 
-    normalizer_concentrations_df = read_csv(
+    normalizer_concentrations_df = pd_read_csv(
         normalizer_concentrations,
         sep='\t')
 
-    autofluorescence_concentrations_df = read_csv(
+    autofluorescence_concentrations_df = pd_read_csv(
         autofluorescence_concentrations,
         sep='\t')
 
@@ -173,7 +173,7 @@ def concentrations_to_volumes(
         ].to_numpy()
     )
 
-    stock_concentrations_df = fromiter(
+    stock_concentrations_df = np_fromiter(
         stock_concentrations_dict.values(),
         dtype=float
     )
@@ -188,7 +188,7 @@ def concentrations_to_volumes(
     # and make it a multiple of 2.5 (ECHO specs)
     try:
         initial_volumes_df = round(
-            multiply(
+            np_multiply(
                 initial_concentrations_df,
                 sample_volume_stock_ratio
             ) / 2.5,
@@ -199,7 +199,7 @@ def concentrations_to_volumes(
             initial_volumes_df
         )
 
-        normalizer_volumes_df = round(multiply(
+        normalizer_volumes_df = round(np_multiply(
             normalizer_concentrations_df,
             sample_volume_stock_ratio
             ) / 2.5,
@@ -210,7 +210,7 @@ def concentrations_to_volumes(
             normalizer_volumes_df
         )
 
-        autofluorescence_volumes_df = round(multiply(
+        autofluorescence_volumes_df = round(np_multiply(
             autofluorescence_concentrations_df,
             sample_volume_stock_ratio
             ) / 2.5,
@@ -451,20 +451,20 @@ def samples_merger(
         Third DataFrame with merged samples
     """
     # Split volumes dataframes into three subsets
-    initial_volumes_df_list = vsplit(
+    initial_volumes_df_list = np_vsplit(
         initial_volumes_df,
         3)
 
-    normalizer_volumes_df_list = vsplit(
+    normalizer_volumes_df_list = np_vsplit(
         normalizer_volumes_df,
         3)
 
-    autofluorescence_volumes_df_list = vsplit(
+    autofluorescence_volumes_df_list = np_vsplit(
         autofluorescence_volumes_df,
         3)
 
     # Merge first subsets from each list
-    merged_plate_1 = concat((
+    merged_plate_1 = pd_concat((
         initial_volumes_df_list[0],
         normalizer_volumes_df_list[0],
         autofluorescence_volumes_df_list[0]),
@@ -473,7 +473,7 @@ def samples_merger(
     # Triplicate merged subsets
     merged_plate_1_duplicate = merged_plate_1.copy()
     merged_plate_1_triplicate = merged_plate_1.copy()
-    merged_plate_1_final = concat((
+    merged_plate_1_final = pd_concat((
         merged_plate_1,
         merged_plate_1_duplicate,
         merged_plate_1_triplicate),
@@ -481,7 +481,7 @@ def samples_merger(
         ignore_index=True)
 
     # Merge second subsets from each list
-    merged_plate_2 = concat((
+    merged_plate_2 = pd_concat((
         initial_volumes_df_list[1],
         normalizer_volumes_df_list[1],
         autofluorescence_volumes_df_list[1]),
@@ -490,7 +490,7 @@ def samples_merger(
     # Triplicate merged subsets
     merged_plate_2_duplicate = merged_plate_2.copy()
     merged_plate_2_triplicate = merged_plate_2.copy()
-    merged_plate_2_final = concat((
+    merged_plate_2_final = pd_concat((
         merged_plate_2,
         merged_plate_2_duplicate,
         merged_plate_2_triplicate),
@@ -498,7 +498,7 @@ def samples_merger(
         ignore_index=True)
 
     # Merge third subsets from each list
-    merged_plate_3 = concat((
+    merged_plate_3 = pd_concat((
         initial_volumes_df_list[2],
         normalizer_volumes_df_list[2],
         autofluorescence_volumes_df_list[2]),
@@ -507,7 +507,7 @@ def samples_merger(
     # Triplicate merged subsets
     merged_plate_3_duplicate = merged_plate_3.copy()
     merged_plate_3_triplicate = merged_plate_3.copy()
-    merged_plate_3_final = concat((
+    merged_plate_3_final = pd_concat((
         merged_plate_3,
         merged_plate_3_duplicate,
         merged_plate_3_triplicate),
@@ -557,7 +557,7 @@ def distribute_destination_plate_generator(
         'normalizer_volumes_wells',
         'autofluorescence_volumes_wells']
 
-    plate_rows = ascii_uppercase
+    plate_rows = string_ascii_uppercase
     plate_rows = list(plate_rows[0:16])
 
     volumes_wells_list = []
@@ -659,7 +659,7 @@ def merge_destination_plate_generator(
         'merged_plate_2_volumes_wells',
         'merged_plate_3_volumes_wells']
 
-    plate_rows = ascii_uppercase
+    plate_rows = string_ascii_uppercase
     plate_rows = list(plate_rows[0:16])
 
     volumes_wells_list = []
@@ -771,7 +771,7 @@ def distribute_echo_instructions_generator(
 
             worklist = DataFrame(worklist)
             all_sources[parameter_name] = worklist
-            echo_instructions = concat(
+            echo_instructions = pd_concat(
                 all_sources.values()).reset_index(drop=True)
 
         distribute_echo_instructions_list.append(echo_instructions)
@@ -830,7 +830,7 @@ def merge_echo_instructions_generator(
 
             worklist = DataFrame(worklist)
             all_sources[parameter_name] = worklist
-            echo_instructions = concat(
+            echo_instructions = pd_concat(
                 all_sources.values()).reset_index(drop=True)
 
         merge_echo_instructions_list.append(echo_instructions)
