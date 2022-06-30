@@ -23,7 +23,7 @@ from numpy import (
 )
 
 from pandas import (
-    read_csv,
+    read_csv as pd_read_csv,
     DataFrame
 )
 
@@ -68,7 +68,7 @@ def input_importer(
     cfps_parameters_df : DataFrame
         Pandas dataframe populated with cfps_parameters data
     """
-    cfps_parameters_df = read_csv(
+    cfps_parameters_df = pd_read_csv(
                         cfps_parameters,
                         sep='\t')
 
