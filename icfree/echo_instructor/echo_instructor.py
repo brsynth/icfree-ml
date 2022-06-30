@@ -5,6 +5,7 @@ from os import (
     path as os_path,
     mkdir as os_mkdir
 )
+from this import d
 
 from numpy import (
     fromiter,
@@ -139,29 +140,8 @@ def concentrations_to_volumes(
     """
     # Print out parameters
     logger.info('Converting concentrations to volumes...')
-    logger.debug(
-        'cfps parameters:\n%s',
-        cfps_parameters_df
-    )
-    logger.debug(
-        'initial concentrations:\n%s',
-        initial_concentrations_df
-    )
-    logger.debug(
-        'normalizer concentrations:\n%s',
-        normalizer_concentrations_df
-    )
-    logger.debug(
-        'autofluorescence concentrations:\n%s',
-        autofluorescence_concentrations_df
-    )
+    logger.debug(f'cfps parameters:\n{cfps_parameters_df}')
     logger.debug('Sample volume:\n%s', sample_volume)
-
-    # Warning volumes
-    warning_volumes_report = {
-        'Min Report': {},
-        'Max Report': {}
-    }
 
     # Exract stock conecentrations from cfps_parameters_df
     stock_concentrations_dict = dict(
@@ -172,156 +152,157 @@ def concentrations_to_volumes(
             ]
         ].to_numpy()
     )
-
     stock_concentrations_df = fromiter(
         stock_concentrations_dict.values(),
         dtype=float
     )
-
     logger.debug('Stock concentrations:\n%s', stock_concentrations_df)
 
     # Calculate sample volume and stock concentrations ratio for each well
     sample_volume_stock_ratio = \
         sample_volume / stock_concentrations_df
 
-    # Convert concentrations into volumes
-    # and make it a multiple of 2.5 (ECHO specs)
-    try:
-        initial_volumes_df = round(
-            multiply(
-                initial_concentrations_df,
-                sample_volume_stock_ratio
-            ) / 2.5,
-            0
-        ) * 2.5
-        logger.debug(
-            'initial volumes:\n%s',
-            initial_volumes_df
-        )
+    concentrations_df = {
+        'initial': initial_concentrations_df,
+        'normalizer': normalizer_concentrations_df,
+        'autofluorescence': autofluorescence_concentrations_df,
+    }
+    volumes_df = {}
+    volumes_summary = {}
+    warning_volumes_report = {
+        'Min Report': {},
+        'Max Report': {}
+    }
 
-        normalizer_volumes_df = round(multiply(
-            normalizer_concentrations_df,
-            sample_volume_stock_ratio
-            ) / 2.5,
-            0
-        ) * 2.5
-        logger.debug(
-            'normalizer volumes:\n%s',
-            normalizer_volumes_df
-        )
+    for volumes_name in concentrations_df.keys():
+        logger.debug(f'{volumes_name} volumes:\n{concentrations_df[volumes_name]}')
 
-        autofluorescence_volumes_df = round(multiply(
-            autofluorescence_concentrations_df,
-            sample_volume_stock_ratio
-            ) / 2.5,
-            0
-        ) * 2.5
-        logger.debug(
-            'autofluorescence volumes:\n%s',
-            autofluorescence_volumes_df
-        )
-    except ValueError as e:
-        logger.error(f'*** {e}')
-        logger.error(
-            'It seems that the number of parameters is different '
-            'from the number of stock concentrations. Exiting...'
-        )
-        raise(e)
-
-    # WARNING: < 10 nL (ECHO min volume transfer limit) --> dilute stock
-    for volumes in [
-        initial_volumes_df,
-        normalizer_volumes_df,
-        autofluorescence_volumes_df
-    ]:
-        for factor in volumes.columns:
-            # Check lower bound
-            for vol in volumes[factor].sort_values():
-                # Pass all 0 since it is a correct value
-                if vol != 0:
-                    # Exit the loop at the first non-0 value
-                    break
-            # Warn if the value is < 10 nL
-            if 0 < vol < 10:
-                warning_volumes_report['Min Report'][factor] = vol
-                logger.warning(
-                    f'*** {factor}\nOne volume = {vol} nL (< 10 nL). '
-                    'Stock have to be more diluted.\n'
-                )
-            # Check upper bound
-            # Warn if the value is > 1000 nL
-            v_max = volumes[factor].max()
-            if v_max > 1000:
-                warning_volumes_report['Max Report'][factor] = v_max
-                logger.warning(
-                    f'*** {factor}\nOne volume = {v_max} nL (> 1000 nL). '
-                    'Stock have to be more concentrated or pipetting '
-                    'has to be done manually.\n'
-                )
-
-    # Add Water column
-    initial_volumes_df['Water'] = \
-        sample_volume - initial_volumes_df.sum(axis=1)
-    logger.debug('initial volumes:\n%s', initial_volumes_df)
-
-    normalizer_volumes_df['Water'] = \
-        sample_volume - normalizer_volumes_df.sum(axis=1)
-    logger.debug('normalizer volumes:\n%s', normalizer_volumes_df)
-
-    autofluorescence_volumes_df['Water'] = \
-        sample_volume - autofluorescence_volumes_df.sum(axis=1)
-    logger.debug('autofluorescence volumes:\n%s', autofluorescence_volumes_df)
-
-    # Check water added volume
-    for water_volumes in [
-        initial_volumes_df['Water'],
-        normalizer_volumes_df['Water'],
-        autofluorescence_volumes_df['Water']
-    ]:
-        # Check if a factor stock is not concentrated enough,
-        # WARNING: Vwater < 0 --> increase stock concentration
-        vol_min = water_volumes.min()
-        vol_max = water_volumes.max()
-        if vol_min < 0:
-            warning_volumes_report['Min Report']['Water'] = vol_min
-            logger.warning(
-                f'*** Water\nVolume of added water = {vol_min} (< 0). '
-                'It seems that at least a factor stock '
-                'is not concentrated enough.\n'
+        # Convert concentrations into volumes
+        # and make it a multiple of 2.5 (ECHO specs)
+        try:
+            volumes_df[volumes_name] = round(
+                multiply(
+                    concentrations_df[volumes_name],
+                    sample_volume_stock_ratio
+                ) / 2.5,
+                0
+            ) * 2.5
+            logger.debug(f'{volumes_name} volumes:\n{volumes_df[volumes_name]}')
+        except ValueError as e:
+            logger.error(f'*** {e}')
+            logger.error(
+                'It seems that the number of parameters is different '
+                'from the number of stock concentrations. Exiting...'
             )
-        # WARNING: Vwater > 1000 nL
-        elif vol_max > 1000:
-            warning_volumes_report['Max Report']['Water'] = vol_max
-            logger.warning(
-                f'*** Water\nVolume of added water = {vol_max} (> 1000 nL). '
-                'Pipetting has to be done manually.\n'
+            raise(e)
+
+        # Check volumes
+        # Add Water column
+        volumes_df[volumes_name]['Water'] = \
+            sample_volume - volumes_df[volumes_name].sum(axis=1)
+        # Check volumes
+        warning_volumes_report = check_volumes(
+                volumes_df[volumes_name],
+                lower_bound=10,
+                upper_bound=1000,
+                warning_volumes=warning_volumes_report,
+                logger=logger
             )
+        logger.debug(f'{volumes_name} volumes:\n{volumes_df[volumes_name]}')
+
+        # Sum of volumes for each parameter
+        volumes_summary[volumes_name] = (volumes_df[volumes_name].sum()).to_frame()
+
+        # Add source plate dead volume to sum of volumes for each parameter
+        volumes_summary[volumes_name] = volumes_summary[volumes_name].add(
+            source_plate_dead_volume)
 
     # Convert Warning Report Dict to Dataframe
     warning_volumes_report = DataFrame.from_dict(warning_volumes_report)
 
-    # Sum of volumes for each parameter
-    initial_volumes_summary = (initial_volumes_df.sum()).to_frame()
-    normalizer_volumes_summary = (normalizer_volumes_df.sum()).to_frame()
-    autofluorescence_volumes_summary = \
-        (autofluorescence_volumes_df.sum()).to_frame()
-
-    # Add source plate dead volume to sum of volumes for each parameter
-    initial_volumes_summary = initial_volumes_summary.add(
-        source_plate_dead_volume)
-    normalizer_volumes_summary = normalizer_volumes_summary.add(
-        source_plate_dead_volume)
-    autofluorescence_volumes_summary = autofluorescence_volumes_summary.add(
-        source_plate_dead_volume)
-
-    return (initial_volumes_df,
-            normalizer_volumes_df,
-            autofluorescence_volumes_df,
-            initial_volumes_summary,
-            normalizer_volumes_summary,
-            autofluorescence_volumes_summary,
+    return (volumes_df['initial'],
+            volumes_df['normalizer'],
+            volumes_df['autofluorescence'],
+            volumes_summary['initial'],
+            volumes_summary['normalizer'],
+            volumes_summary['autofluorescence'],
             warning_volumes_report)
 
+def check_volumes(
+    volumes_df: DataFrame,
+    lower_bound: float,
+    upper_bound: float,
+    warning_volumes: Dict,
+    logger: Logger = getLogger(__name__)
+) -> Dict:
+    """
+    Checks if volumes are between lower and upper bounds.
+    Also checks if a factor is under-concentrated (Vwater < 0).
+
+    Parameters
+    ----------
+    volumes_df : DataFrame
+        Volumes to check
+    lower_bound: float
+        Lower bound
+    upper_bound: float
+        Upper bound
+    logger: Logger
+        Logger
+
+    Returns
+    -------
+    warning_volumes : Dict
+        Dictionnary with volumes outside of bounds
+    """
+    # WARNING: < 10 nL (ECHO min volume transfer limit) --> dilute stock
+    for factor in volumes_df.columns:
+        # Check lower bound
+        for vol in volumes_df[factor].sort_values():
+            # Pass all 0 since it is a correct value
+            if vol != 0:
+                # Exit the loop at the first non-0 value
+                break
+        # Warn if the value is < 10 nL
+        if 0 < vol < lower_bound:
+            warning_volumes['Min Report'][factor] = vol
+            logger.warning(
+                f'*** {factor}\nOne volume = {vol} nL (< 10 nL). '
+                'Stock have to be more diluted.\n'
+            )
+        # Check upper bound
+        # Warn if the value is > 1000 nL
+        v_max = volumes_df[factor].max()
+        if v_max > upper_bound:
+            warning_volumes['Max Report'][factor] = v_max
+            logger.warning(
+                f'*** {factor}\nOne volume = {v_max} nL (> 1000 nL). '
+                'Stock have to be more concentrated or pipetting '
+                'has to be done manually.\n'
+            )
+
+    # Check if a factor stock is not concentrated enough,
+    # WARNING: Vwater < 0 --> increase stock concentration
+    if 'Water' in volumes_df:
+        vol_min_w = volumes_df['Water'].min()
+        if vol_min_w < 0:
+            # Get factor with max value in each line (sample) where Vwater < 0
+            under_conc_fac = list(set(
+                DataFrame(
+                    volumes_df.drop(
+                        volumes_df[volumes_df['Water'] >= 0].index
+                    ).astype('float64'),
+                    dtype='float64'
+                ).idxmax(axis=1)
+            ))
+            warning_volumes['Min Report']['Water'] = vol_min_w
+            for factor in under_conc_fac:
+                logger.warning(
+                    f'*** {factor}\nFactor seems to be under-concentrated '
+                    '(volume of added water < 0).\n'
+                )
+
+    return warning_volumes
 
 def save_volumes(
         cfps_parameters_df: DataFrame,
