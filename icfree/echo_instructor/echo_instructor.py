@@ -524,7 +524,7 @@ def distribute_destination_plate_generator(
         normalizer_volumes_df: DataFrame,
         autofluorescence_volumes_df: DataFrame,
         starting_well: str = DEFAULT_STARTING_WELL,
-        vertical=True):
+        vertical: str = True):
     """
     Generate an ensemble of destination plates dataframes
 
