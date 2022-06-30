@@ -5,7 +5,6 @@ from os import (
     path as os_path,
     mkdir as os_mkdir
 )
-from this import d
 
 from numpy import (
     fromiter,
@@ -176,7 +175,8 @@ def concentrations_to_volumes(
     }
 
     for volumes_name in concentrations_df.keys():
-        logger.debug(f'{volumes_name} volumes:\n{concentrations_df[volumes_name]}')
+        logger.debug(f'{volumes_name} volumes:\n'
+                     '{concentrations_df[volumes_name]}')
 
         # Convert concentrations into volumes
         # and make it a multiple of 2.5 (ECHO specs)
@@ -188,7 +188,8 @@ def concentrations_to_volumes(
                 ) / 2.5,
                 0
             ) * 2.5
-            logger.debug(f'{volumes_name} volumes:\n{volumes_df[volumes_name]}')
+            logger.debug(f'{volumes_name} volumes:\n'
+                         '{volumes_df[volumes_name]}')
         except ValueError as e:
             logger.error(f'*** {e}')
             logger.error(
@@ -212,11 +213,12 @@ def concentrations_to_volumes(
         logger.debug(f'{volumes_name} volumes:\n{volumes_df[volumes_name]}')
 
         # Sum of volumes for each parameter
-        volumes_summary[volumes_name] = (volumes_df[volumes_name].sum()).to_frame()
+        volumes_summary[volumes_name] = \
+            volumes_df[volumes_name].sum().to_frame()
 
         # Add source plate dead volume to sum of volumes for each parameter
-        volumes_summary[volumes_name] = volumes_summary[volumes_name].add(
-            source_plate_dead_volume)
+        volumes_summary[volumes_name] = \
+            volumes_summary[volumes_name].add(source_plate_dead_volume)
 
     # Convert Warning Report Dict to Dataframe
     warning_volumes_report = DataFrame.from_dict(warning_volumes_report)
@@ -228,6 +230,7 @@ def concentrations_to_volumes(
             volumes_summary['normalizer'],
             volumes_summary['autofluorescence'],
             warning_volumes_report)
+
 
 def check_volumes(
     volumes_df: DataFrame,
@@ -304,6 +307,7 @@ def check_volumes(
                 )
 
     return warning_volumes
+
 
 def save_volumes(
         cfps_parameters_df: DataFrame,
