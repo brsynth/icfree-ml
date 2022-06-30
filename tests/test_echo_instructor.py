@@ -8,7 +8,9 @@ from unittest import (
 from os import (
     path as os_path
 )
-
+from numpy.testing import (
+    assert_array_equal
+)
 from pandas.testing import (
     assert_frame_equal
 )
@@ -345,6 +347,51 @@ class Test(TestCase):
         assert_frame_equal(
             modulo_expected_normalizer_volumes_df,
             modulo_tested_normalizer_volumes_df
+            )
+
+    def test_concentrations_to_volumes_low_stock_warning(self):
+        tested_cfps_parameters = os_path.join(
+                self.INPUT_FOLDER,
+                'proCFPS_parameters_low_stock.tsv'
+                )
+
+        input_importer_dfs = input_importer(
+            tested_cfps_parameters,
+            self.tested_initial_concentrations,
+            self.tested_normalizer_concentrations,
+            self.tested_autofluorescence_concentrations)
+
+        tested_cfps_parameters_df = input_importer_dfs[0]
+        tested_initial_concentrations_df = input_importer_dfs[1]
+        tested_normalizer_concentrations_df = input_importer_dfs[2]
+        tested_autofluorescence_concentrations_df = input_importer_dfs[3]
+
+        # Generate tested warning report
+        concentrations_to_volumes_variables = concentrations_to_volumes(
+            tested_cfps_parameters_df,
+            tested_initial_concentrations_df,
+            tested_normalizer_concentrations_df,
+            tested_autofluorescence_concentrations_df,
+            sample_volume=10000,
+            source_plate_dead_volume=15000)
+
+        tested_warning_volumes_report_df = \
+            concentrations_to_volumes_variables[6]
+
+        # Load reference warning report
+        with open(
+            os_path.join(
+                    self.REF_FOLDER,
+                    'expected_warning_volumes_report_df_low_stock.json'
+            ), 'r'
+        ) as fp:
+            expected_warning_volumes_report_df = read_json(
+                fp,
+                orient='split')
+
+        assert_array_equal(
+            expected_warning_volumes_report_df,
+            tested_warning_volumes_report_df
             )
 
     def test_concentrations_to_volumes_valueerror(self):
