@@ -24,7 +24,8 @@ from string import (
 )
 
 from typing import (
-    Dict
+    Dict,
+    List
 )
 
 from logging import (
@@ -505,7 +506,8 @@ def distribute_destination_plate_generator(
         normalizer_volumes_df: DataFrame,
         autofluorescence_volumes_df: DataFrame,
         starting_well: str = DEFAULT_STARTING_WELL,
-        vertical: str = True):
+        vertical: str = True,
+        logger: Logger = getLogger(__name__)):
     """
     Generate an ensemble of destination plates dataframes
 
@@ -538,13 +540,77 @@ def distribute_destination_plate_generator(
         'normalizer_volumes_wells',
         'autofluorescence_volumes_wells']
 
+    return _plate_generator(
+        volumes_df_dict,
+        volumes_wells_keys,
+        starting_well,
+        vertical,
+        logger=logger
+    )
+
+
+def merge_destination_plate_generator(
+        merged_plate_1_final: DataFrame,
+        merged_plate_2_final: DataFrame,
+        merged_plate_3_final: DataFrame,
+        starting_well: str = DEFAULT_STARTING_WELL,
+        vertical=True,
+        logger: Logger = getLogger(__name__)):
+    """
+    Generate merged destination plates dataframe
+
+    Parameters
+    ----------
+    merged_plate_1_final: DataFrame
+        First DataFrame with merged samples
+    merged_plate_2_final: DataFrame
+        Second DataFrame with merged samples
+    merged_plate_3_final: DataFrame
+        Third DataFrame with merged samples
+    starting_well : str
+        Starter well to begin filling the 384 well-plate. Defaults to 'A1'
+    vertical: bool
+        -True: plate is filled column by column from top to bottom
+        -False: plate is filled row by row from left to right
+
+    Returns
+    -------
+    merge_destination_plates_dict: Dict
+        Dict with merged destination plates dataframes
+    """
+    volumes_df_dict = {
+        'merged_plate_1_final': merged_plate_1_final,
+        'merged_plate_2_final': merged_plate_2_final,
+        'merged_plate_3_final': merged_plate_3_final}
+
+    volumes_wells_keys = [
+        'merged_plate_1_volumes_wells',
+        'merged_plate_2_volumes_wells',
+        'merged_plate_3_volumes_wells']
+
+    return _plate_generator(
+        volumes_df_dict,
+        volumes_wells_keys,
+        starting_well,
+        vertical,
+        logger=logger
+    )
+
+
+def _plate_generator(
+    volumes_dfs: Dict,
+    volumes_wells_keys: List[str],
+    starting_well: str = DEFAULT_STARTING_WELL,
+    vertical: str = True,
+    logger: Logger = getLogger(__name__)
+):
     plate_rows = ascii_uppercase
     plate_rows = list(plate_rows[0:16])
 
     volumes_wells_list = []
     all_dataframe = {}
 
-    for volumes_df in volumes_df_dict.values():
+    for volumes_df in volumes_dfs.values():
         # Fill destination plates column by column
         if vertical:
             from_well = plate_rows.index(starting_well[0]) + \
@@ -600,108 +666,6 @@ def distribute_destination_plate_generator(
         volumes_wells_list))
 
     return distribute_destination_plates_dict
-
-
-def merge_destination_plate_generator(
-        merged_plate_1_final: DataFrame,
-        merged_plate_2_final: DataFrame,
-        merged_plate_3_final: DataFrame,
-        starting_well: str = DEFAULT_STARTING_WELL,
-        vertical=True):
-    """
-    Generate merged destination plates dataframe
-
-    Parameters
-    ----------
-    merged_plate_1_final: DataFrame
-        First DataFrame with merged samples
-    merged_plate_2_final: DataFrame
-        Second DataFrame with merged samples
-    merged_plate_3_final: DataFrame
-        Third DataFrame with merged samples
-    starting_well : str
-        Starter well to begin filling the 384 well-plate. Defaults to 'A1'
-    vertical: bool
-        -True: plate is filled column by column from top to bottom
-        -False: plate is filled row by row from left to right
-
-    Returns
-    -------
-    merge_destination_plates_dict: Dict
-        Dict with merged destination plates dataframes
-    """
-    volumes_df_dict = {
-        'merged_plate_1_final': merged_plate_1_final,
-        'merged_plate_2_final': merged_plate_2_final,
-        'merged_plate_3_final': merged_plate_3_final}
-
-    volumes_wells_keys = [
-        'merged_plate_1_volumes_wells',
-        'merged_plate_2_volumes_wells',
-        'merged_plate_3_volumes_wells']
-
-    plate_rows = ascii_uppercase
-    plate_rows = list(plate_rows[0:16])
-
-    volumes_wells_list = []
-    all_dataframe = {}
-
-    for volumes_df in volumes_df_dict.values():
-        # Fill destination plates column by column
-        if vertical:
-            from_well = plate_rows.index(starting_well[0]) + \
-                (int(starting_well[1:]) - 1) * 16
-
-            for parameter_name in volumes_df.columns:
-                dataframe = DataFrame(
-                    0.0,
-                    index=plate_rows,
-                    columns=range(1, 25))
-
-                for index, value in enumerate(volumes_df[parameter_name]):
-                    index += from_well
-                    dataframe.iloc[index % 16, index // 16] = value
-
-                all_dataframe[parameter_name] = dataframe
-
-            volumes_wells = volumes_df.copy()
-            names = ['{}{}'.format(
-                plate_rows[(index + from_well) % 16],
-                (index + from_well) // 16 + 1)
-                    for index in volumes_df.index]
-
-            volumes_wells['well_name'] = names
-            volumes_wells_list.append(volumes_wells)
-
-        # Fill destination plates row by row
-        if not vertical:
-            from_well = plate_rows.index(starting_well[0]) * 24 + \
-                int(starting_well[1:]) - 1
-
-            for parameter_name in volumes_df.columns:
-                dataframe = DataFrame(
-                    0.0,
-                    index=plate_rows,
-                    columns=range(1, 25))
-
-                for index, value in enumerate(volumes_df[parameter_name]):
-                    index += from_well
-                    dataframe.iloc[index // 24, index % 24] = value
-
-                all_dataframe[parameter_name] = dataframe
-
-            volumes_wells = volumes_df.copy()
-            names = ['{}{}'.format(
-                plate_rows[index // 24],
-                index % 24 + 1) for index in volumes_wells.index]
-            volumes_wells['well_name'] = names
-            volumes_wells_list.append(volumes_wells)
-
-    merge_destination_plates_dict = dict(zip(
-        volumes_wells_keys,
-        volumes_wells_list))
-
-    return merge_destination_plates_dict
 
 
 def distribute_echo_instructions_generator(
