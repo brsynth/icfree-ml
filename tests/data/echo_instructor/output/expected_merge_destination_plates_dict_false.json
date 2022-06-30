@@ -1,5 +1,5 @@
 {
-    "merged_plate_1_volumes_wells": [
+    "merged_plate_1": [
         {
             "Mg-glutamate": 60.0,
             "k-glutamate": 0.0,
@@ -595,7 +595,7 @@
             "well_name": "B3"
         }
     ],
-    "merged_plate_2_volumes_wells": [
+    "merged_plate_2": [
         {
             "Mg-glutamate": 60.0,
             "k-glutamate": 120.0,
@@ -1191,7 +1191,7 @@
             "well_name": "B3"
         }
     ],
-    "merged_plate_3_volumes_wells": [
+    "merged_plate_3": [
         {
             "Mg-glutamate": 177.5,
             "k-glutamate": 60.0,
