@@ -9,6 +9,7 @@ from icfree._version import __version__
 DEFAULT_OUTPUT_FOLDER = os_getcwd()
 DEFAULT_SAMPLE_VOLUME = 10000
 DEFAULT_SOURCE_PLATE_DEAD_VOLUME = 15000
+DEFAULT_SOURCE_PLATE_MAX_VOLUME = 60000
 DEFAULT_STARTING_WELL = 'A1'
 DEFAULT_NPLICATE = 3
 
@@ -67,6 +68,14 @@ def add_arguments(parser):
         default=DEFAULT_SOURCE_PLATE_DEAD_VOLUME,
         help=('Dead volume to add in the source plate in nL'
               f' (default: {DEFAULT_SOURCE_PLATE_DEAD_VOLUME})')
+    )
+
+    parser.add_argument(
+        '-smv', '--source_plate_max_volume',
+        type=int,
+        default=DEFAULT_SOURCE_PLATE_MAX_VOLUME,
+        help=('Maximum volume capacity of the source plate in nL'
+              f' (default: {DEFAULT_SOURCE_PLATE_MAX_VOLUME})')
     )
 
     parser.add_argument(
