@@ -26,11 +26,6 @@ from typing import (
     Dict
 )
 
-from logging import (
-    Logger,
-    getLogger
-)
-
 from .args import (
     DEFAULT_OUTPUT_FOLDER,
     DEFAULT_SAMPLE_VOLUME,
@@ -118,11 +113,13 @@ def concentrations_to_volumes(
     volumes_df : Dict
         DataFrames with converted volumes
         For 'normalizer' key, 0 is assigned to the GOI-DNA column
-    volumes_summary: Series
-        Series with total volume for each factor in
+    volumes_summary: DataFrame
+        DataFrame with total volume for each factor in
         initial/normalizer/autofluorescnce_volumes_df
     warning_volumes_report: DataFrame
         Report of volumes outside the transfer range of Echo
+    logger: Logger
+        Logger
     """
     logger.info('Converting concentrations to volumes...')
     # Print out parameters
@@ -179,7 +176,6 @@ def concentrations_to_volumes(
             )
             raise(e)
 
-        # Check volumes
         # Add Water column
         volumes_df[volumes_name]['Water'] = \
             sample_volume - volumes_df[volumes_name].sum(axis=1)
@@ -218,7 +214,7 @@ def check_volumes(
 ) -> Dict:
     """
     Checks if volumes are between lower and upper bounds.
-    Also checks if a factor is under-concentrated (Vwater < 0).
+    Checks if a factor stock concentration is low (Vwater < 0).
 
     Parameters
     ----------
@@ -301,10 +297,10 @@ def save_volumes(
         Dataframe with cfps_parameters data.
     volumes_df : Dict
         DataFrames with converted volumes
-        For 'normalizer' key, 0 is assigned to the GOI-DNA column
-        For 'autofluorescence' key, 0 is assigned to the GFP-DNA column
+        For 'normalizer' key, 0 is assigned to GOI-DNA column
+        For 'autofluorescence' key, 0 is assigned to GFP-DNA & GOI-DNA columns
     volumes_summary: Dict
-        Series with total volume for each factor in
+        DataFrame with total volume for each factor in
         initial/normalizer/autofluorescence_volumes_df
     warning_volumes_report: DataFrame
         Report of volumes outside the transfer range of Echo.
@@ -363,11 +359,12 @@ def samples_merger(
     ----------
     volumes_df: Dict
         DataFrames with converted volumes
-        For 'normalizer' key, 0 is assigned to the GOI-DNA column
-        For 'autofluorescence' key, 0 is assigned to the GFP-DNA column
+        For 'normalizer' key, 0 is assigned to GOI-DNA column
+        For 'autofluorescence' key, 0 is assigned to GFP-DNA & GOI-DNA columns
     nplicate: int
         Number of copies
     logger: Logger
+        Logger
 
     Returns
     -------
@@ -420,6 +417,8 @@ def destination_plate_generator(
     vertical: bool
         -True: plate is filled column by column from top to bottom
         -False: plate is filled row by row from left to right
+    logger: Logger
+        Logger
 
     Returns
     -------
