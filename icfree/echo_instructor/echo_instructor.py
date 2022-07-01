@@ -26,6 +26,11 @@ from typing import (
     Dict
 )
 
+from logging import (
+    Logger,
+    getLogger
+)
+
 from .args import (
     DEFAULT_OUTPUT_FOLDER,
     DEFAULT_SAMPLE_VOLUME,
