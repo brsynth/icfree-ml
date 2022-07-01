@@ -26,6 +26,7 @@ def main():
     logger = create_logger(parser.prog, args.log)
 
     args = parser.parse_args()
+    keep_nil_vol = args.keep_nil_vol
     cfps_parameters = args.cfps
     initial_concentrations = args.init_set
     normalizer_concentrations = args.norm_set
@@ -62,21 +63,23 @@ def main():
         warning_volumes_report,
         output_folder)
 
-    merged_plates = samples_merger(volumes, nplicate)
-
     distribute_echo_instructions = \
         echo_instructions_generator(
             volumes,
             starting_well,
             vertical=True,
+            keep_nil_vol=keep_nil_vol,
             logger=logger
         )
+
+    merged_plates = samples_merger(volumes, nplicate)
 
     merge_echo_instructions = \
         echo_instructions_generator(
             merged_plates,
             starting_well,
             vertical=True,
+            keep_nil_vol=keep_nil_vol,
             logger=logger
         )
 

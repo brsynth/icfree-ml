@@ -32,11 +32,7 @@ from logging import (
 )
 
 from .args import (
-    DEFAULT_OUTPUT_FOLDER,
-    DEFAULT_SAMPLE_VOLUME,
-    DEFAULT_SOURCE_PLATE_DEAD_VOLUME,
-    DEFAULT_STARTING_WELL,
-    DEFAULT_NPLICATE
+    DEFAULT_ARGS
 )
 
 
@@ -94,8 +90,8 @@ def input_importer(
 def concentrations_to_volumes(
     cfps_parameters_df: DataFrame,
     concentrations_df: Dict,
-    sample_volume: int = DEFAULT_SAMPLE_VOLUME,
-    source_plate_dead_volume: int = DEFAULT_SOURCE_PLATE_DEAD_VOLUME,
+    sample_volume: int = DEFAULT_ARGS['DEFAULT_SAMPLE_VOLUME'],
+    source_plate_dead_volume: int = DEFAULT_ARGS['DEFAULT_SOURCE_PLATE_DEAD_VOLUME'],
     logger: Logger = getLogger(__name__)
 ):
     """
@@ -289,11 +285,11 @@ def check_volumes(
 
 
 def save_volumes(
-        cfps_parameters_df: DataFrame,
-        volumes_df: Dict,
-        volumes_summary: Dict,
-        warning_volumes_report: DataFrame,
-        output_folder: str = DEFAULT_OUTPUT_FOLDER):
+    cfps_parameters_df: DataFrame,
+    volumes_df: Dict,
+    volumes_summary: Dict,
+    warning_volumes_report: DataFrame,
+    output_folder: str = DEFAULT_ARGS['DEFAULT_OUTPUT_FOLDER']):
     """
     Save volumes dataframes in TSV files
 
@@ -355,7 +351,7 @@ def save_volumes(
 
 def samples_merger(
     volumes: Dict,
-    nplicate: int = DEFAULT_NPLICATE,
+    nplicate: int = DEFAULT_ARGS['DEFAULT_NPLICATE'],
     logger: Logger = getLogger(__name__)
 ) -> Dict:
     """
@@ -407,7 +403,7 @@ def samples_merger(
 
 def destination_plate_generator(
     wells: Dict,
-    starting_well: str = DEFAULT_STARTING_WELL,
+    starting_well: str = DEFAULT_ARGS['DEFAULT_STARTING_WELL'],
     vertical: str = True,
     logger: Logger = getLogger(__name__)
 ) -> Dict:
@@ -459,8 +455,9 @@ def destination_plate_generator(
 
 def echo_instructions_generator(
     volumes: Dict,
-    starting_well: str = DEFAULT_STARTING_WELL,
+    starting_well: str = DEFAULT_ARGS['DEFAULT_STARTING_WELL'],
     vertical: str = True,
+    keep_nil_vol: bool = DEFAULT_ARGS['DEFAULT_KEEP_NIL_VOL'],
     logger: Logger = getLogger(__name__)
 ) -> Dict:
     """
@@ -520,6 +517,11 @@ def echo_instructions_generator(
                 all_sources.values()
             ).reset_index(drop=True)
 
+        if not keep_nil_vol:
+            # Remove instructions where transfer volume = 0
+            instructions = instructions[instructions['Transfer Volume'] != 0]
+            # Re-index
+            instructions.reset_index(drop=True, inplace=True)
         echo_instructions[key] = instructions
 
     return echo_instructions
@@ -528,7 +530,7 @@ def echo_instructions_generator(
 def save_echo_instructions(
     distribute_echo_instructions: Dict,
     merge_echo_instructions: Dict,
-    output_folder: str = DEFAULT_OUTPUT_FOLDER):
+    output_folder: str = DEFAULT_ARGS['DEFAULT_OUTPUT_FOLDER']):
     """
     Save Echo instructions in csv files
 
