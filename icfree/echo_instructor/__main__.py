@@ -9,10 +9,7 @@ from .echo_instructor import (
     concentrations_to_volumes,
     save_volumes,
     samples_merger,
-    distribute_destination_plate_generator,
-    distribute_echo_instructions_generator,
-    merge_destination_plate_generator,
-    merge_echo_instructions_generator,
+    echo_instructions_generator,
     save_echo_instructions
 )
 from .args import build_args_parser
@@ -37,57 +34,55 @@ def main():
     sample_volume = args.sample_volume
     source_plate_dead_volume = args.source_plate_dead_volume
     output_folder = args.output_folder
+    nplicate = args.nplicate
 
     (cfps_parameters_df,
-        concentrations_df) = input_importer(
-            cfps_parameters,
-            initial_concentrations,
-            normalizer_concentrations,
-            autofluorescence_concentrations)
+     concentrations_df) = input_importer(
+        cfps_parameters,
+        initial_concentrations,
+        normalizer_concentrations,
+        autofluorescence_concentrations)
 
     try:
-        (volumes_df,
-            volumes_summary,
-            warning_volumes_report) = concentrations_to_volumes(
-                cfps_parameters_df,
-                concentrations_df,
-                sample_volume,
-                source_plate_dead_volume,
-                logger=logger)
+        (volumes,
+         volumes_summary,
+         warning_volumes_report) = concentrations_to_volumes(
+            cfps_parameters_df,
+            concentrations_df,
+            sample_volume,
+            source_plate_dead_volume,
+            logger=logger)
     except ValueError:
         exit(1)
 
     save_volumes(
         cfps_parameters_df,
-        volumes_df,
+        volumes,
         volumes_summary,
         warning_volumes_report,
         output_folder)
 
-    merged_plates = samples_merger(volumes_df)
+    merged_plates = samples_merger(volumes, nplicate)
 
-    distribute_destination_plates_dict = \
-        distribute_destination_plate_generator(
-            volumes_df,
+    distribute_echo_instructions = \
+        echo_instructions_generator(
+            volumes,
             starting_well,
-            vertical=True)
+            vertical=True,
+            logger=logger
+        )
 
-    distribute_echo_instructions_dict = \
-        distribute_echo_instructions_generator(
-            distribute_destination_plates_dict)
-
-    merge_destination_plates_dict = merge_destination_plate_generator(
-        merged_plates,
-        starting_well,
-        vertical=True)
-
-    merge_echo_instructions_dict = \
-        merge_echo_instructions_generator(
-            merge_destination_plates_dict)
+    merge_echo_instructions = \
+        echo_instructions_generator(
+            merged_plates,
+            starting_well,
+            vertical=True,
+            logger=logger
+        )
 
     save_echo_instructions(
-        distribute_echo_instructions_dict,
-        merge_echo_instructions_dict,
+        distribute_echo_instructions,
+        merge_echo_instructions,
         output_folder)
 
 

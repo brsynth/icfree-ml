@@ -10,6 +10,7 @@ DEFAULT_OUTPUT_FOLDER = os_getcwd()
 DEFAULT_SAMPLE_VOLUME = 10000
 DEFAULT_SOURCE_PLATE_DEAD_VOLUME = 15000
 DEFAULT_STARTING_WELL = 'A1'
+DEFAULT_NPLICATE = 3
 
 
 def build_args_parser(
@@ -82,6 +83,14 @@ def add_arguments(parser):
         default=DEFAULT_OUTPUT_FOLDER,
         help=('Output folder to write output files'
               f' (default: {DEFAULT_OUTPUT_FOLDER})')
+    )
+
+    parser.add_argument(
+        '--nplicate',
+        type=int,
+        default=DEFAULT_NPLICATE,
+        help=('Numbers of copies of volume sets'
+              f' (default: {DEFAULT_NPLICATE})')
     )
 
     # Add logger arguments
