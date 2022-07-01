@@ -35,6 +35,7 @@ def main():
     sample_volume = args.sample_volume
     source_plate_dead_volume = args.source_plate_dead_volume
     output_folder = args.output_folder
+    nplicate = args.nplicate
 
     (cfps_parameters_df,
      concentrations_df) = input_importer(
@@ -62,7 +63,7 @@ def main():
         warning_volumes_report,
         output_folder)
 
-    merged_plates = samples_merger(volumes_df)
+    merged_plates = samples_merger(volumes_df, nplicate)
 
     distribute_destination_plates_dict = \
         destination_plate_generator(

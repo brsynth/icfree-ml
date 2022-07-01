@@ -35,7 +35,8 @@ from .args import (
     DEFAULT_OUTPUT_FOLDER,
     DEFAULT_SAMPLE_VOLUME,
     DEFAULT_SOURCE_PLATE_DEAD_VOLUME,
-    DEFAULT_STARTING_WELL
+    DEFAULT_STARTING_WELL,
+    DEFAULT_NPLICATE
 )
 
 
@@ -354,7 +355,7 @@ def save_volumes(
 
 def samples_merger(
     volumes_df: Dict,
-    nplicate: int = 3,
+    nplicate: int = DEFAULT_NPLICATE,
     logger: Logger = getLogger(__name__)
 ):
     """
