@@ -354,7 +354,7 @@ def save_volumes(
 
 
 def samples_merger(
-    volumes_df: Dict,
+    volumes: Dict,
     nplicate: int = DEFAULT_NPLICATE,
     logger: Logger = getLogger(__name__)
 ) -> Dict:
@@ -363,7 +363,7 @@ def samples_merger(
 
     Parameters
     ----------
-    volumes_df: Dict
+    volumes: Dict
         DataFrames with converted volumes
         For 'normalizer' key, 0 is assigned to GOI-DNA column
         For 'autofluorescence' key, 0 is assigned to GFP-DNA & GOI-DNA columns
@@ -377,22 +377,22 @@ def samples_merger(
     merged_plates_final: List[DataFrame]
         DataFrames with merged samples
     """
-    n_split = len(volumes_df)
+    n_split = len(volumes)
 
     # Split volumes dataframes into three subsets
-    volumes_df_list = {}
-    for key in volumes_df.keys():
-        volumes_df_list[key] = vsplit(
-            volumes_df[key],
+    volumes_list = {}
+    for key in volumes.keys():
+        volumes_list[key] = vsplit(
+            volumes[key],
             n_split)
 
     merged_plates_final = {}
     for i_split in range(n_split):
-        # Put together each (i_split)th of volumes_df_list
+        # Put together each (i_split)th of volumes_list
         merged_plates = concat(
             [
-                volumes_df[i_split]
-                for volumes_df in volumes_df_list.values()
+                _volumes[i_split]
+                for _volumes in volumes_list.values()
             ],
             axis=0
         )
@@ -526,9 +526,9 @@ def echo_instructions_generator(
 
 
 def save_echo_instructions(
-        distribute_echo_instructions: Dict,
-        merge_echo_instructions: Dict,
-        output_folder: str = DEFAULT_OUTPUT_FOLDER):
+    distribute_echo_instructions: Dict,
+    merge_echo_instructions: Dict,
+    output_folder: str = DEFAULT_OUTPUT_FOLDER):
     """
     Save Echo instructions in csv files
 
