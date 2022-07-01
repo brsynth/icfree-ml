@@ -44,7 +44,7 @@ def main():
         autofluorescence_concentrations)
 
     try:
-        (volumes_df,
+        (volumes,
          volumes_summary,
          warning_volumes_report) = concentrations_to_volumes(
             cfps_parameters_df,
@@ -57,22 +57,22 @@ def main():
 
     save_volumes(
         cfps_parameters_df,
-        volumes_df,
+        volumes,
         volumes_summary,
         warning_volumes_report,
         output_folder)
 
-    merged_plates = samples_merger(volumes_df, nplicate)
+    merged_plates = samples_merger(volumes, nplicate)
 
-    distribute_echo_instructions_dict = \
+    distribute_echo_instructions = \
         echo_instructions_generator(
-            volumes_df,
+            volumes,
             starting_well,
             vertical=True,
             logger=logger
         )
 
-    merge_echo_instructions_dict = \
+    merge_echo_instructions = \
         echo_instructions_generator(
             merged_plates,
             starting_well,
@@ -81,8 +81,8 @@ def main():
         )
 
     save_echo_instructions(
-        distribute_echo_instructions_dict,
-        merge_echo_instructions_dict,
+        distribute_echo_instructions,
+        merge_echo_instructions,
         output_folder)
 
 

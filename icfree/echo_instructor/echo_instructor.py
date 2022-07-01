@@ -357,7 +357,7 @@ def samples_merger(
     volumes_df: Dict,
     nplicate: int = DEFAULT_NPLICATE,
     logger: Logger = getLogger(__name__)
-):
+) -> Dict:
     """
     Merge and triplicate samples into a single dataframe
 
@@ -410,7 +410,7 @@ def destination_plate_generator(
     starting_well: str = DEFAULT_STARTING_WELL,
     vertical: str = True,
     logger: Logger = getLogger(__name__)
-):
+) -> Dict:
     """
     Generate merged destination plates dataframe
 
@@ -421,8 +421,8 @@ def destination_plate_generator(
     starting_well : str
         Starter well to begin filling the 384 well-plate. Defaults to 'A1'
     vertical: bool
-        -True: plate is filled column by column from top to bottom
-        -False: plate is filled row by row from left to right
+        - True: plate is filled column by column from top to bottom
+        - False: plate is filled row by row from left to right
     logger: Logger
         Logger
 
@@ -458,7 +458,7 @@ def destination_plate_generator(
 
 
 def echo_instructions_generator(
-    volumes_df: Dict,
+    volumes: Dict,
     starting_well: str = DEFAULT_STARTING_WELL,
     vertical: str = True,
     logger: Logger = getLogger(__name__)
@@ -468,8 +468,13 @@ def echo_instructions_generator(
 
     Parameters
     ----------
-        destination_plates: Dict
-            Dict with destination plates dataframes
+    volumes: Dict
+        DataFrames with merged samples
+    starting_well : str
+        Starter well to begin filling the 384 well-plate. Defaults to 'A1'
+    vertical: bool
+        - True: plate is filled column by column from top to bottom
+        - False: plate is filled row by row from left to right
 
     Returns
     -------
@@ -477,7 +482,7 @@ def echo_instructions_generator(
             Dict with echo instructions dataframes
     """
     destination_plates = destination_plate_generator(
-        volumes_df,
+        volumes,
         starting_well,
         vertical,
         logger
@@ -521,8 +526,8 @@ def echo_instructions_generator(
 
 
 def save_echo_instructions(
-        distribute_echo_instructions_dict: Dict,
-        merge_echo_instructions_dict: Dict,
+        distribute_echo_instructions: Dict,
+        merge_echo_instructions: Dict,
         output_folder: str = DEFAULT_OUTPUT_FOLDER):
     """
     Save Echo instructions in csv files
@@ -558,7 +563,7 @@ def save_echo_instructions(
         os_mkdir(output_subfolder_merged)
 
     # Save distributed Echo instructions in csv files
-    for key, value in distribute_echo_instructions_dict.items():
+    for key, value in distribute_echo_instructions.items():
         value.to_csv(
             os_path.join(
                 output_subfolder_distributed,
@@ -570,7 +575,7 @@ def save_echo_instructions(
 
     # Save merged Echo instructions in csv files
     i = 1
-    for key, value in merge_echo_instructions_dict.items():
+    for key, value in merge_echo_instructions.items():
         value.to_csv(
             os_path.join(
                 output_subfolder_merged,
