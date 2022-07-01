@@ -10,7 +10,6 @@ from .echo_instructor import (
     save_volumes,
     samples_merger,
     echo_instructions_generator,
-    destination_plate_generator,
     save_echo_instructions
 )
 from .args import build_args_parser
@@ -65,26 +64,19 @@ def main():
 
     merged_plates = samples_merger(volumes_df, nplicate)
 
-    distribute_destination_plates_dict = \
-        destination_plate_generator(
-            volumes_df,
-            starting_well,
-            vertical=True)
-
     distribute_echo_instructions_dict = \
         echo_instructions_generator(
-            distribute_destination_plates_dict,
+            volumes_df,
+            starting_well,
+            vertical=True,
             logger=logger
         )
 
-    merge_destination_plates_dict = destination_plate_generator(
-        merged_plates,
-        starting_well,
-        vertical=True)
-
     merge_echo_instructions_dict = \
         echo_instructions_generator(
-            merge_destination_plates_dict,
+            merged_plates,
+            starting_well,
+            vertical=True,
             logger=logger
         )
 

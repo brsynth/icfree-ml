@@ -458,7 +458,9 @@ def destination_plate_generator(
 
 
 def echo_instructions_generator(
-    destination_plates: Dict,
+    volumes_df: Dict,
+    starting_well: str = DEFAULT_STARTING_WELL,
+    vertical: str = True,
     logger: Logger = getLogger(__name__)
 ) -> Dict:
     """
@@ -474,6 +476,13 @@ def echo_instructions_generator(
         echo_instructions: Dict
             Dict with echo instructions dataframes
     """
+    destination_plates = destination_plate_generator(
+        volumes_df,
+        starting_well,
+        vertical,
+        logger
+    )
+
     all_sources = {}
     echo_instructions = {}
 
