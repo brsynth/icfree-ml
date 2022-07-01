@@ -136,11 +136,11 @@ class Test(TestCase):
                 orient='split')
 
             (tested_cfps_parameters_df,
-            tested_concentrations_df) = input_importer(
-                self.tested_cfps_parameters,
-                self.tested_initial_concentrations,
-                self.tested_normalizer_concentrations,
-                self.tested_autofluorescence_concentrations)
+                tested_concentrations_df) = input_importer(
+                    self.tested_cfps_parameters,
+                    self.tested_initial_concentrations,
+                    self.tested_normalizer_concentrations,
+                    self.tested_autofluorescence_concentrations)
 
         # Compare dataframes while ignoring data types
         assert_frame_equal(
@@ -169,19 +169,19 @@ class Test(TestCase):
 
     def test_concentrations_to_volumes(self):
         (tested_cfps_parameters_df,
-        tested_concentrations_df) = input_importer(
-            self.tested_cfps_parameters,
-            self.tested_initial_concentrations,
-            self.tested_normalizer_concentrations,
-            self.tested_autofluorescence_concentrations)
+            tested_concentrations_df) = input_importer(
+                self.tested_cfps_parameters,
+                self.tested_initial_concentrations,
+                self.tested_normalizer_concentrations,
+                self.tested_autofluorescence_concentrations)
 
         (tested_volumes_df,
-        tested_volumes_summary,
-        tested_warning_volumes_report) = concentrations_to_volumes(
-            tested_cfps_parameters_df,
-            tested_concentrations_df,
-            sample_volume=10000,
-            source_plate_dead_volume=15000)
+            tested_volumes_summary,
+            tested_warning_volumes_report) = concentrations_to_volumes(
+                tested_cfps_parameters_df,
+                tested_concentrations_df,
+                sample_volume=10000,
+                source_plate_dead_volume=15000)
 
         # Load references files
         with open(
@@ -339,20 +339,20 @@ class Test(TestCase):
                 )
 
         (tested_cfps_parameters_df,
-        tested_concentrations_df) = input_importer(
-            tested_cfps_parameters,
-            self.tested_initial_concentrations,
-            self.tested_normalizer_concentrations,
-            self.tested_autofluorescence_concentrations)
+            tested_concentrations_df) = input_importer(
+                tested_cfps_parameters,
+                self.tested_initial_concentrations,
+                self.tested_normalizer_concentrations,
+                self.tested_autofluorescence_concentrations)
 
         # Generate tested warning report
         (tested_volumes_df,
-        tested_volumes_summary,
-        tested_warning_volumes_report) = concentrations_to_volumes(
-            tested_cfps_parameters_df,
-            tested_concentrations_df,
-            sample_volume=10000,
-            source_plate_dead_volume=15000)
+            tested_volumes_summary,
+            tested_warning_volumes_report) = concentrations_to_volumes(
+                tested_cfps_parameters_df,
+                tested_concentrations_df,
+                sample_volume=10000,
+                source_plate_dead_volume=15000)
 
         # Load reference warning report
         with open(
@@ -377,11 +377,11 @@ class Test(TestCase):
                 )
 
         (tested_cfps_parameters_df,
-        tested_concentrations_df) = input_importer(
-            tested_cfps_parameters,
-            self.tested_initial_concentrations,
-            self.tested_normalizer_concentrations,
-            self.tested_autofluorescence_concentrations)
+            tested_concentrations_df) = input_importer(
+                tested_cfps_parameters,
+                self.tested_initial_concentrations,
+                self.tested_normalizer_concentrations,
+                self.tested_autofluorescence_concentrations)
 
         value_error = \
             "Unable to coerce to Series, length must be 18: given 17"
@@ -410,19 +410,19 @@ class Test(TestCase):
             output_folder: str
     ):
         (tested_cfps_parameters_df,
-        tested_concentrations_df) = input_importer(
-            self.tested_cfps_parameters,
-            self.tested_initial_concentrations,
-            self.tested_normalizer_concentrations,
-            self.tested_autofluorescence_concentrations)
+            tested_concentrations_df) = input_importer(
+                self.tested_cfps_parameters,
+                self.tested_initial_concentrations,
+                self.tested_normalizer_concentrations,
+                self.tested_autofluorescence_concentrations)
 
         (tested_volumes_df,
-        tested_volumes_summary,
-        tested_warning_volumes_report) = concentrations_to_volumes(
-            tested_cfps_parameters_df,
-            tested_concentrations_df,
-            sample_volume=10000,
-            source_plate_dead_volume=15000)
+            tested_volumes_summary,
+            tested_warning_volumes_report) = concentrations_to_volumes(
+                tested_cfps_parameters_df,
+                tested_concentrations_df,
+                sample_volume=10000,
+                source_plate_dead_volume=15000)
 
         # Load volumes refrence files
         ref_filename = 'expected_initial_volumes'
@@ -581,19 +581,19 @@ class Test(TestCase):
 
     def test_samples_merger(self):
         (tested_cfps_parameters_df,
-        tested_concentrations_df) = input_importer(
-            self.tested_cfps_parameters,
-            self.tested_initial_concentrations,
-            self.tested_normalizer_concentrations,
-            self.tested_autofluorescence_concentrations)
+            tested_concentrations_df) = input_importer(
+                self.tested_cfps_parameters,
+                self.tested_initial_concentrations,
+                self.tested_normalizer_concentrations,
+                self.tested_autofluorescence_concentrations)
 
         (tested_volumes_df,
-        tested_volumes_summary,
-        tested_warning_volumes_report) = concentrations_to_volumes(
-            tested_cfps_parameters_df,
-            tested_concentrations_df,
-            sample_volume=10000,
-            source_plate_dead_volume=15000)
+            tested_volumes_summary,
+            tested_warning_volumes_report) = concentrations_to_volumes(
+                tested_cfps_parameters_df,
+                tested_concentrations_df,
+                sample_volume=10000,
+                source_plate_dead_volume=15000)
 
         samples_merger_dfs = samples_merger(tested_volumes_df)
 
@@ -653,19 +653,19 @@ class Test(TestCase):
 
     def test_distribute_destination_plate_generator_vertical_true(self):
         (tested_cfps_parameters_df,
-        tested_concentrations_df) = input_importer(
-            self.tested_cfps_parameters,
-            self.tested_initial_concentrations,
-            self.tested_normalizer_concentrations,
-            self.tested_autofluorescence_concentrations)
+            tested_concentrations_df) = input_importer(
+                self.tested_cfps_parameters,
+                self.tested_initial_concentrations,
+                self.tested_normalizer_concentrations,
+                self.tested_autofluorescence_concentrations)
 
         (tested_volumes_df,
-        tested_volumes_summary,
-        tested_warning_volumes_report) = concentrations_to_volumes(
-            tested_cfps_parameters_df,
-            tested_concentrations_df,
-            sample_volume=10000,
-            source_plate_dead_volume=15000)
+            tested_volumes_summary,
+            tested_warning_volumes_report) = concentrations_to_volumes(
+                tested_cfps_parameters_df,
+                tested_concentrations_df,
+                sample_volume=10000,
+                source_plate_dead_volume=15000)
 
         tested_distribute_destination_plates_dict = \
             distribute_destination_plate_generator(
@@ -709,19 +709,19 @@ class Test(TestCase):
 
     def test_distribute_destination_plate_generator_vertical_false(self):
         (tested_cfps_parameters_df,
-        tested_concentrations_df) = input_importer(
-            self.tested_cfps_parameters,
-            self.tested_initial_concentrations,
-            self.tested_normalizer_concentrations,
-            self.tested_autofluorescence_concentrations)
+            tested_concentrations_df) = input_importer(
+                self.tested_cfps_parameters,
+                self.tested_initial_concentrations,
+                self.tested_normalizer_concentrations,
+                self.tested_autofluorescence_concentrations)
 
         (tested_volumes_df,
-        tested_volumes_summary,
-        tested_warning_volumes_report) = concentrations_to_volumes(
-            tested_cfps_parameters_df,
-            tested_concentrations_df,
-            sample_volume=10000,
-            source_plate_dead_volume=15000)
+            tested_volumes_summary,
+            tested_warning_volumes_report) = concentrations_to_volumes(
+                tested_cfps_parameters_df,
+                tested_concentrations_df,
+                sample_volume=10000,
+                source_plate_dead_volume=15000)
 
         tested_distribute_destination_plates_dict = \
             distribute_destination_plate_generator(
@@ -765,19 +765,19 @@ class Test(TestCase):
 
     def test_distribute_echo_instructions_generator(self):
         (tested_cfps_parameters_df,
-        tested_concentrations_df) = input_importer(
-            self.tested_cfps_parameters,
-            self.tested_initial_concentrations,
-            self.tested_normalizer_concentrations,
-            self.tested_autofluorescence_concentrations)
+            tested_concentrations_df) = input_importer(
+                self.tested_cfps_parameters,
+                self.tested_initial_concentrations,
+                self.tested_normalizer_concentrations,
+                self.tested_autofluorescence_concentrations)
 
         (tested_volumes_df,
-        tested_volumes_summary,
-        tested_warning_volumes_report) = concentrations_to_volumes(
-            tested_cfps_parameters_df,
-            tested_concentrations_df,
-            sample_volume=10000,
-            source_plate_dead_volume=15000)
+            tested_volumes_summary,
+            tested_warning_volumes_report) = concentrations_to_volumes(
+                tested_cfps_parameters_df,
+                tested_concentrations_df,
+                sample_volume=10000,
+                source_plate_dead_volume=15000)
 
         tested_distribute_destination_plates_dict = \
             distribute_destination_plate_generator(
@@ -825,19 +825,19 @@ class Test(TestCase):
 
     def test_merge_destination_plate_generator_vertical_true(self):
         (tested_cfps_parameters_df,
-        tested_concentrations_df) = input_importer(
-            self.tested_cfps_parameters,
-            self.tested_initial_concentrations,
-            self.tested_normalizer_concentrations,
-            self.tested_autofluorescence_concentrations)
+            tested_concentrations_df) = input_importer(
+                self.tested_cfps_parameters,
+                self.tested_initial_concentrations,
+                self.tested_normalizer_concentrations,
+                self.tested_autofluorescence_concentrations)
 
         (tested_volumes_df,
-        tested_volumes_summary,
-        tested_warning_volumes_report) = concentrations_to_volumes(
-            tested_cfps_parameters_df,
-            tested_concentrations_df,
-            sample_volume=10000,
-            source_plate_dead_volume=15000)
+            tested_volumes_summary,
+            tested_warning_volumes_report) = concentrations_to_volumes(
+                tested_cfps_parameters_df,
+                tested_concentrations_df,
+                sample_volume=10000,
+                source_plate_dead_volume=15000)
 
         samples_merger_dfs = samples_merger(tested_volumes_df)
 
@@ -881,19 +881,19 @@ class Test(TestCase):
 
     def test_merge_destination_plate_generator_vertical_false(self):
         (tested_cfps_parameters_df,
-        tested_concentrations_df) = input_importer(
-            self.tested_cfps_parameters,
-            self.tested_initial_concentrations,
-            self.tested_normalizer_concentrations,
-            self.tested_autofluorescence_concentrations)
+            tested_concentrations_df) = input_importer(
+                self.tested_cfps_parameters,
+                self.tested_initial_concentrations,
+                self.tested_normalizer_concentrations,
+                self.tested_autofluorescence_concentrations)
 
         (tested_volumes_df,
-        tested_volumes_summary,
-        tested_warning_volumes_report) = concentrations_to_volumes(
-            tested_cfps_parameters_df,
-            tested_concentrations_df,
-            sample_volume=10000,
-            source_plate_dead_volume=15000)
+            tested_volumes_summary,
+            tested_warning_volumes_report) = concentrations_to_volumes(
+                tested_cfps_parameters_df,
+                tested_concentrations_df,
+                sample_volume=10000,
+                source_plate_dead_volume=15000)
 
         samples_merger_dfs = samples_merger(tested_volumes_df)
 
@@ -937,19 +937,19 @@ class Test(TestCase):
 
     def test_merge_echo_instructions_generator(self):
         (tested_cfps_parameters_df,
-        tested_concentrations_df) = input_importer(
-            self.tested_cfps_parameters,
-            self.tested_initial_concentrations,
-            self.tested_normalizer_concentrations,
-            self.tested_autofluorescence_concentrations)
+            tested_concentrations_df) = input_importer(
+                self.tested_cfps_parameters,
+                self.tested_initial_concentrations,
+                self.tested_normalizer_concentrations,
+                self.tested_autofluorescence_concentrations)
 
         (tested_volumes_df,
-        tested_volumes_summary,
-        tested_warning_volumes_report) = concentrations_to_volumes(
-            tested_cfps_parameters_df,
-            tested_concentrations_df,
-            sample_volume=10000,
-            source_plate_dead_volume=15000)
+            tested_volumes_summary,
+            tested_warning_volumes_report) = concentrations_to_volumes(
+                tested_cfps_parameters_df,
+                tested_concentrations_df,
+                sample_volume=10000,
+                source_plate_dead_volume=15000)
 
         samples_merger_dfs = samples_merger(tested_volumes_df)
 
@@ -1011,19 +1011,19 @@ class Test(TestCase):
             output_folder: str
             ):
         (tested_cfps_parameters_df,
-        tested_concentrations_df) = input_importer(
-            self.tested_cfps_parameters,
-            self.tested_initial_concentrations,
-            self.tested_normalizer_concentrations,
-            self.tested_autofluorescence_concentrations)
+            tested_concentrations_df) = input_importer(
+                self.tested_cfps_parameters,
+                self.tested_initial_concentrations,
+                self.tested_normalizer_concentrations,
+                self.tested_autofluorescence_concentrations)
 
         (tested_volumes_df,
-        tested_volumes_summary,
-        tested_warning_volumes_report) = concentrations_to_volumes(
-            tested_cfps_parameters_df,
-            tested_concentrations_df,
-            sample_volume=10000,
-            source_plate_dead_volume=15000)
+            tested_volumes_summary,
+            tested_warning_volumes_report) = concentrations_to_volumes(
+                tested_cfps_parameters_df,
+                tested_concentrations_df,
+                sample_volume=10000,
+                source_plate_dead_volume=15000)
 
         samples_merger_dfs = samples_merger(tested_volumes_df)
 
