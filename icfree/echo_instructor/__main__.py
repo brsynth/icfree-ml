@@ -9,10 +9,8 @@ from .echo_instructor import (
     concentrations_to_volumes,
     save_volumes,
     samples_merger,
-    distribute_destination_plate_generator,
-    distribute_echo_instructions_generator,
-    merge_destination_plate_generator,
-    merge_echo_instructions_generator,
+    echo_instructions_generator,
+    destination_plate_generator,
     save_echo_instructions
 )
 from .args import build_args_parser
@@ -39,7 +37,7 @@ def main():
     output_folder = args.output_folder
 
     (cfps_parameters_df,
-    concentrations_df) = input_importer(
+     concentrations_df) = input_importer(
         cfps_parameters,
         initial_concentrations,
         normalizer_concentrations,
@@ -47,8 +45,8 @@ def main():
 
     try:
         (volumes_df,
-        volumes_summary,
-        warning_volumes_report) = concentrations_to_volumes(
+         volumes_summary,
+         warning_volumes_report) = concentrations_to_volumes(
             cfps_parameters_df,
             concentrations_df,
             sample_volume,
@@ -67,23 +65,27 @@ def main():
     merged_plates = samples_merger(volumes_df)
 
     distribute_destination_plates_dict = \
-        distribute_destination_plate_generator(
+        destination_plate_generator(
             volumes_df,
             starting_well,
             vertical=True)
 
     distribute_echo_instructions_dict = \
-        distribute_echo_instructions_generator(
-            distribute_destination_plates_dict)
+        echo_instructions_generator(
+            distribute_destination_plates_dict,
+            logger=logger
+        )
 
-    merge_destination_plates_dict = merge_destination_plate_generator(
+    merge_destination_plates_dict = destination_plate_generator(
         merged_plates,
         starting_well,
         vertical=True)
 
     merge_echo_instructions_dict = \
-        merge_echo_instructions_generator(
-            merge_destination_plates_dict)
+        echo_instructions_generator(
+            merge_destination_plates_dict,
+            logger=logger
+        )
 
     save_echo_instructions(
         distribute_echo_instructions_dict,

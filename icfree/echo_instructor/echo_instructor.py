@@ -23,13 +23,7 @@ from string import (
 )
 
 from typing import (
-    Dict,
-    List
-)
-
-from logging import (
-    Logger,
-    getLogger
+    Dict
 )
 
 from logging import (
@@ -380,17 +374,16 @@ def samples_merger(
     merged_plates_final: List[DataFrame]
         DataFrames with merged samples
     """
-
     n_split = 3
 
     # Split volumes dataframes into three subsets
     volumes_df_list = {}
     for key in volumes_df.keys():
         volumes_df_list[key] = vsplit(
-        volumes_df[key],
-        n_split)
+            volumes_df[key],
+            n_split)
 
-    merged_plates_final = []
+    merged_plates_final = {}
     for i_split in range(n_split):
         # Put together each (i_split)th of volumes_df_list
         merged_plates = concat(
@@ -401,60 +394,26 @@ def samples_merger(
             axis=0
         )
         # Nplicate merged subsets
-        merged_plates_final.append(
-            concat(
-                [merged_plates]*nplicate,
-                ignore_index=True
-            )
+        merged_plates_final[f'merged_plate_{i_split+1}'] = concat(
+            [merged_plates]*nplicate,
+            ignore_index=True
         )
 
     return merged_plates_final
 
 
-def distribute_destination_plate_generator(
-        volumes_df: Dict,
-        starting_well: str = DEFAULT_STARTING_WELL,
-        vertical: str = True,
-        logger: Logger = getLogger(__name__)):
-    """
-    Generate an ensemble of destination plates dataframes
-
-    Parameters
-    ----------
-    volumes_df : Dict
-        DataFrames with converted volumes
-        For 'normalizer' key, 0 is assigned to the GOI-DNA column
-        For 'autofluorescence' key, 0 is assigned to the GFP-DNA column
-    starting_well : str
-        Starter well to begin filling the 384 well-plate. Defaults to 'A1'
-    vertical: bool
-        -True: plate is filled column by column from top to bottom
-        -False: plate is filled row by row from left to right
-
-    Returns
-    -------
-    distribute_destination_plates_dict: Dict
-        Dict with ditributed destination plates dataframes
-    """
-    return _plate_generator(
-        volumes_df,
-        starting_well,
-        vertical,
-        logger=logger
-    )
-
-
-def merge_destination_plate_generator(
-        merged_plates: List,
-        starting_well: str = DEFAULT_STARTING_WELL,
-        vertical=True,
-        logger: Logger = getLogger(__name__)):
+def destination_plate_generator(
+    wells: Dict,
+    starting_well: str = DEFAULT_STARTING_WELL,
+    vertical: str = True,
+    logger: Logger = getLogger(__name__)
+):
     """
     Generate merged destination plates dataframe
 
     Parameters
     ----------
-    merged_plates: List[DataFrame]
+    wells: Dict
         DataFrames with merged samples
     starting_well : str
         Starter well to begin filling the 384 well-plate. Defaults to 'A1'
@@ -464,115 +423,56 @@ def merge_destination_plate_generator(
 
     Returns
     -------
-    merge_destination_plates_dict: Dict
-        Dict with merged destination plates dataframes
+    destination_plates: Dict
+        Dict with destination plates dataframes
     """
-    volumes_wells = {}
-    for i in range(len(merged_plates)):
-        volumes_wells[f'merged_plate_{i+1}'] = \
-            merged_plates[i]
-
-    return _plate_generator(
-        volumes_wells,
-        starting_well,
-        vertical,
-        logger=logger
-    )
-
-
-def _plate_generator(
-    wells: Dict,
-    starting_well: str = DEFAULT_STARTING_WELL,
-    vertical: str = True,
-    logger: Logger = getLogger(__name__)
-):
     plate_rows = ascii_uppercase
     plate_rows = list(plate_rows[0:16])
 
-    volumes_wells_list = []
-    all_dataframe = {}
+    destination_plates = {}
 
-    for volumes_df in wells.values():
+    for well, volumes_df in wells.items():
         # Fill destination plates column by column
         if vertical:
             from_well = plate_rows.index(starting_well[0]) + \
                 (int(starting_well[1:]) - 1) * 16
-
-            for parameter_name in volumes_df.columns:
-                dataframe = DataFrame(
-                    0.0,
-                    index=plate_rows,
-                    columns=range(1, 25))
-
-                for index, value in enumerate(volumes_df[parameter_name]):
-                    index += from_well
-                    dataframe.iloc[index % 16, index // 16] = value
-
-                all_dataframe[parameter_name] = dataframe
-
-            volumes_wells = volumes_df.copy()
             names = ['{}{}'.format(
                 plate_rows[(index + from_well) % 16],
                 (index + from_well) // 16 + 1)
                     for index in volumes_df.index]
-
-            volumes_wells['well_name'] = names
-            volumes_wells_list.append(volumes_wells)
-
         # Fill destination plates row by row
-        if not vertical:
-            from_well = plate_rows.index(starting_well[0]) * 24 + \
-                int(starting_well[1:]) - 1
-
-            for parameter_name in volumes_df.columns:
-                dataframe = DataFrame(
-                    0.0,
-                    index=plate_rows,
-                    columns=range(1, 25))
-
-                for index, value in enumerate(volumes_df[parameter_name]):
-                    index += from_well
-                    dataframe.iloc[index // 24, index % 24] = value
-
-                all_dataframe[parameter_name] = dataframe
-
-            volumes_wells = volumes_df.copy()
+        else:
             names = ['{}{}'.format(
                 plate_rows[index // 24],
-                index % 24 + 1) for index in volumes_wells.index]
-            volumes_wells['well_name'] = names
-            volumes_wells_list.append(volumes_wells)
+                index % 24 + 1) for index in volumes_df.index]
 
-    distribute_destination_plates_dict = dict(zip(
-        wells.keys(),
-        volumes_wells_list))
+        destination_plates[well] = volumes_df.copy()
+        destination_plates[well]['well_name'] = names
 
-    return distribute_destination_plates_dict
+    return destination_plates
 
 
-def distribute_echo_instructions_generator(
-        distribute_destination_plates_dict: Dict):
+def echo_instructions_generator(
+    destination_plates: Dict,
+    logger: Logger = getLogger(__name__)
+) -> Dict:
     """
     Generate and dispatch Echo® instructions on multiple plates
 
     Parameters
     ----------
-        distribute_destination_plates_dict: Dict
-            Dict with distributed destination plates dataframes
+        destination_plates: Dict
+            Dict with destination plates dataframes
 
     Returns
     -------
-        distribute_echo_instructions_dict: Dict
-            Dict with distributed echo instructions dataframes
+        echo_instructions: Dict
+            Dict with echo instructions dataframes
     """
     all_sources = {}
-    distribute_echo_instructions_dict = {}
-    distribute_echo_instructions_list = []
-    distribute_echo_instructions_dict_keys = list(
-        distribute_destination_plates_dict.keys()
-    )
+    echo_instructions = {}
 
-    for destination_plate in distribute_destination_plates_dict.values():
+    for key, destination_plate in destination_plates.items():
 
         for parameter_name in destination_plate.drop(columns=['well_name']):
             worklist = {
@@ -597,74 +497,13 @@ def distribute_echo_instructions_generator(
 
             worklist = DataFrame(worklist)
             all_sources[parameter_name] = worklist
-            echo_instructions = concat(
-                all_sources.values()).reset_index(drop=True)
+            instructions = concat(
+                all_sources.values()
+            ).reset_index(drop=True)
 
-        distribute_echo_instructions_list.append(echo_instructions)
-        distribute_echo_instructions_dict = dict(
-            zip(distribute_echo_instructions_dict_keys,
-                distribute_echo_instructions_list))
+        echo_instructions[key] = instructions
 
-    return distribute_echo_instructions_dict
-
-
-def merge_echo_instructions_generator(
-        merge_destination_plates_dict: Dict):
-    """
-    Generate and merge Echo® instructions a single triplicated plate
-
-    Parameters
-    ----------
-        merge_destination_plates_dict: Dict
-            Dict with merged destination plates dataframes
-
-    Returns
-    -------
-        merge_echo_instructions_dict: Dict
-            Dict with merged echo instructions dataframes
-    """
-    all_sources = {}
-    merge_echo_instructions_dict = {}
-    merge_echo_instructions_list = []
-    merge_echo_instructions_dict_keys = [
-        f'{key}_final'
-        for key in merge_destination_plates_dict.keys()
-    ]
-
-    for destination_plate in merge_destination_plates_dict.values():
-
-        for parameter_name in destination_plate.drop(columns=['well_name']):
-            worklist = {
-                'Source Plate Name': [],
-                'Source Plate Type': [],
-                'Source Well': [],
-                'Destination Plate Name': [],
-                'Destination Well': [],
-                'Transfer Volume': [],
-                'Sample ID': []}
-
-            for index in range(len(destination_plate)):
-                worklist['Source Plate Name'].append('Source[1]')
-                worklist['Source Plate Type'].append('384PP_AQ_GP3')
-                worklist['Source Well'].append(parameter_name)
-                worklist['Destination Plate Name'].append('Destination[1]')
-                worklist['Destination Well'].append(
-                        destination_plate.loc[index, 'well_name'])
-                worklist['Transfer Volume'].append(
-                        destination_plate.loc[index, parameter_name])
-                worklist['Sample ID'].append(parameter_name)
-
-            worklist = DataFrame(worklist)
-            all_sources[parameter_name] = worklist
-            echo_instructions = concat(
-                all_sources.values()).reset_index(drop=True)
-
-        merge_echo_instructions_list.append(echo_instructions)
-        merge_echo_instructions_dict = dict(
-            zip(merge_echo_instructions_dict_keys,
-                merge_echo_instructions_list))
-
-    return merge_echo_instructions_dict
+    return echo_instructions
 
 
 def save_echo_instructions(
@@ -716,12 +555,14 @@ def save_echo_instructions(
             encoding='utf-8')
 
     # Save merged Echo instructions in csv files
+    i = 1
     for key, value in merge_echo_instructions_dict.items():
         value.to_csv(
             os_path.join(
                 output_subfolder_merged,
-                f'{str(key)}_instructions.csv'
+                f'merged_plate_{i}_final_instructions.csv'
             ),
             sep=',',
             index=False,
             encoding='utf-8')
+        i += 1
