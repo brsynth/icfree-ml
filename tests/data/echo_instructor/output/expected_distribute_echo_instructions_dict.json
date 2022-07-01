@@ -1,5 +1,5 @@
 {
-    "initial_instructions": [
+    "initial": [
         {
             "Source Plate Name": "Source[1]",
             "Source Plate Type": "384PP_AQ_GP3",
@@ -1540,7 +1540,7 @@
             "Sample ID": "Water"
         }
     ],
-    "normalizer_instructions": [
+    "normalizer": [
         {
             "Source Plate Name": "Source[1]",
             "Source Plate Type": "384PP_AQ_GP3",
@@ -3081,7 +3081,7 @@
             "Sample ID": "Water"
         }
     ],
-    "autofluorescence_instructions": [
+    "autofluorescence": [
         {
             "Source Plate Name": "Source[1]",
             "Source Plate Type": "384PP_AQ_GP3",

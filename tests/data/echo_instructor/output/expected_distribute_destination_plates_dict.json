@@ -1,5 +1,5 @@
 {
-    "initial_volumes_wells": [
+    "initial": [
         {
             "Mg-glutamate": 60.0,
             "k-glutamate": 0.0,
@@ -199,7 +199,7 @@
             "well_name": "I1"
         }
     ],
-    "normalizer_volumes_wells": [
+    "normalizer": [
         {
             "Mg-glutamate": 60.0,
             "k-glutamate": 0.0,
@@ -399,7 +399,7 @@
             "well_name": "I1"
         }
     ],
-    "autofluorescence_volumes_wells": [
+    "autofluorescence": [
         {
             "Mg-glutamate": 60.0,
             "k-glutamate": 0.0,
