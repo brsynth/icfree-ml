@@ -39,21 +39,21 @@ def main():
     output_folder = args.output_folder
 
     (cfps_parameters_df,
-    concentrations_df) = input_importer(
-        cfps_parameters,
-        initial_concentrations,
-        normalizer_concentrations,
-        autofluorescence_concentrations)
+        concentrations_df) = input_importer(
+            cfps_parameters,
+            initial_concentrations,
+            normalizer_concentrations,
+            autofluorescence_concentrations)
 
     try:
         (volumes_df,
-        volumes_summary,
-        warning_volumes_report) = concentrations_to_volumes(
-            cfps_parameters_df,
-            concentrations_df,
-            sample_volume,
-            source_plate_dead_volume,
-            logger=logger)
+            volumes_summary,
+            warning_volumes_report) = concentrations_to_volumes(
+                cfps_parameters_df,
+                concentrations_df,
+                sample_volume,
+                source_plate_dead_volume,
+                logger=logger)
     except ValueError:
         exit(1)
 
