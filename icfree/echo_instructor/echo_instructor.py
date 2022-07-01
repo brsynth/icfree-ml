@@ -376,7 +376,7 @@ def samples_merger(
     merged_plates_final: List[DataFrame]
         DataFrames with merged samples
     """
-    n_split = 3
+    n_split = len(volumes_df)
 
     # Split volumes dataframes into three subsets
     volumes_df_list = {}
