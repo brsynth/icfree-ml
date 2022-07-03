@@ -6,6 +6,10 @@ from os import (
     mkdir as os_mkdir
 )
 
+from csv import (
+    writer as csv_writer
+)
+
 from numpy import (
     fromiter,
     multiply,
@@ -23,12 +27,19 @@ from string import (
 )
 
 from typing import (
-    Dict
+    Dict,
+    List,
+    Tuple
 )
 
 from logging import (
     Logger,
     getLogger
+)
+
+from math import (
+    ceil,
+    floor
 )
 
 from .args import (
@@ -91,7 +102,6 @@ def concentrations_to_volumes(
     cfps_parameters_df: DataFrame,
     concentrations_df: Dict,
     sample_volume: int = DEFAULT_ARGS['DEFAULT_SAMPLE_VOLUME'],
-    source_plate_dead_volume: int = DEFAULT_ARGS['DEFAULT_SOURCE_PLATE_DEAD_VOLUME'],
     logger: Logger = getLogger(__name__)
 ):
     """
@@ -107,8 +117,6 @@ def concentrations_to_volumes(
         Dataframes with initial/normalizer/autofluorescence concentrations data
     sample_volume: int
         Final sample volume in each well. Defaults to 10000 nL
-    source_plate_dead_volume: int
-        Source plate dead volume. Defaults to 15000 nL
 
     Returns
     -------
@@ -128,7 +136,7 @@ def concentrations_to_volumes(
     logger.debug(f'cfps parameters:\n{cfps_parameters_df}')
     logger.debug('Sample volume:\n%s', sample_volume)
 
-    # Exract stock conecentrations from cfps_parameters_df
+    # Exract stock concentrations from cfps_parameters_df
     stock_concentrations_dict = dict(
         cfps_parameters_df[
             [
@@ -143,12 +151,24 @@ def concentrations_to_volumes(
     )
     logger.debug('Stock concentrations:\n%s', stock_concentrations_df)
 
+    # Exract dead plate volumes from cfps_parameters_df
+    param_dead_volumes = dict(
+        cfps_parameters_df[
+            [
+                'Parameter',
+                'Parameter dead volume'
+            ]
+        ].to_numpy()
+    )
+    param_dead_volumes['Water'] = 0
+    logger.debug('Parameter dead volume:\n%s', param_dead_volumes)
+
     # Calculate sample volume and stock concentrations ratio for each well
     sample_volume_stock_ratio = \
         sample_volume / stock_concentrations_df
 
     volumes_df = {}
-    volumes_summary = {}
+    # volumes_summary = {}
     warning_volumes_report = {
         'Min Report': {},
         'Max Report': {}
@@ -191,19 +211,20 @@ def concentrations_to_volumes(
             )
         logger.debug(f'{volumes_name} volumes:\n{volumes_df[volumes_name]}')
 
-        # Sum of volumes for each parameter
-        volumes_summary[volumes_name] = \
-            volumes_df[volumes_name].sum().to_frame()
+        # # Sum of volumes for each parameter
+        # volumes_summary[volumes_name] = \
+        #     volumes_df[volumes_name].sum().to_frame()
 
-        # Add source plate dead volume to sum of volumes for each parameter
-        volumes_summary[volumes_name] = \
-            volumes_summary[volumes_name].add(source_plate_dead_volume)
+        # # Add source plate dead volume to sum of volumes for each parameter
+        # volumes_summary[volumes_name] = \
+        #     volumes_summary[volumes_name].add(source_plate_dead_volume)
 
     # Convert Warning Report Dict to Dataframe
     warning_volumes_report = DataFrame.from_dict(warning_volumes_report)
 
     return (volumes_df,
-            volumes_summary,
+            # volumes_summary,
+            param_dead_volumes,
             warning_volumes_report)
 
 
@@ -333,13 +354,19 @@ def save_volumes(
             index=False)
 
     # Save volumes summary series in TSV files
-    for key, value in volumes_summary.items():
-        value.to_csv(
-            os_path.join(
-                output_subfolder,
-                f'{key}_volumes_summary.tsv'),
-            sep='\t',
-            header=['Sample + Dead Volumes'])
+    with open(
+        os_path.join(
+            output_subfolder,
+            f'volumes_summary.tsv'
+        ), 'w'
+    ) as csv_file:
+        writer = csv_writer(
+            csv_file,
+            delimiter='\t'
+        )
+        writer.writerow(['', 'Sample + Dead Volumes'])
+        for row in volumes_summary.items():
+            writer.writerow(row)
 
     # Save volumes warning report in TSV file
     warning_volumes_report.to_csv(
@@ -401,19 +428,19 @@ def samples_merger(
     return merged_plates_final
 
 
-def destination_plate_generator(
-    wells: Dict,
-    starting_well: str = DEFAULT_ARGS['DEFAULT_STARTING_WELL'],
+def dst_plate_generator(
+    volumes: Dict,
+    starting_well: str = DEFAULT_ARGS['DEFAULT_DEST_STARTING_WELL'],
     vertical: str = True,
     logger: Logger = getLogger(__name__)
 ) -> Dict:
     """
-    Generate merged destination plates dataframe
+    Generate destination plates dataframe
 
     Parameters
     ----------
-    wells: Dict
-        DataFrames with merged samples
+    volumes: Dict
+        DataFrames with samples
     starting_well : str
         Starter well to begin filling the 384 well-plate. Defaults to 'A1'
     vertical: bool
@@ -424,15 +451,15 @@ def destination_plate_generator(
 
     Returns
     -------
-    destination_plates: Dict
+    plates: Dict
         Dict with destination plates dataframes
     """
     plate_rows = ascii_uppercase
     plate_rows = list(plate_rows[0:16])
 
-    destination_plates = {}
+    plates = {}
 
-    for well, volumes_df in wells.items():
+    for well, volumes_df in volumes.items():
         # Fill destination plates column by column
         if vertical:
             from_well = plate_rows.index(starting_well[0]) + \
@@ -447,16 +474,246 @@ def destination_plate_generator(
                 plate_rows[index // 24],
                 index % 24 + 1) for index in volumes_df.index]
 
-        destination_plates[well] = volumes_df.copy()
-        destination_plates[well]['well_name'] = names
+        plates[well] = volumes_df.copy()
+        plates[well]['well_name'] = names
 
-    return destination_plates
+    return plates
+
+
+def src_plate_generator(
+    volumes: Dict,
+    param_dead_volumes: List[float],
+    plate_dead_volume: int = DEFAULT_ARGS['DEFAULT_SOURCE_PLATE_DEAD_VOLUME'],
+    plate_well_capacity: float = DEFAULT_ARGS['DEFAULT_SOURCE_PLATE_WELL_CAPACITY'],
+    starting_well: str = DEFAULT_ARGS['DEFAULT_SRC_STARTING_WELL'],
+    optimize_well_volumes: List = [],
+    vertical: str = True,
+    nb_wells_plate: int = DEFAULT_ARGS['DEFAULT_PLATE_NB_WELLS'],
+    logger: Logger = getLogger(__name__)
+) -> Dict:
+    """
+    Generate source plate dataframe
+
+    Parameters
+    ----------
+    volumes: Dict
+        DataFrames with factors
+    param_dead_volumes: List
+        Dead volumes of parameters
+    plate_dead_volume
+        Source plate dead volume. Defaults to 15000 nL
+    starting_well : str
+        Starter well to begin filling the 384 well-plate. Defaults to 'A1'
+    optimize_well_volumes: List
+        List of parameters to optimize. set to [] if none
+    vertical: bool
+        - True: plate is filled column by column from top to bottom
+        - False: plate is filled row by row from left to right
+    logger: Logger
+        Logger
+
+    Returns
+    -------
+    plate: Dict
+        Dict with source plate dataframe
+    """
+
+    def convert_index_well(
+        well_i: int,
+        rows: int,
+        cols: int,
+        vertical: str,
+        logger: Logger = getLogger(__name__)
+    ) -> str:
+        """
+        Convert well index into well coordinates
+
+        Parameters
+        ----------
+        well_i: int
+            Well index
+        rows: List
+            Rows alphabet
+        columns: List
+            COlumns alphabet
+        vertical: bool
+            - True: plate is filled column by column from top to bottom
+            - False: plate is filled row by row from left to right
+        logger: Logger
+            Logger
+
+        Returns
+        -------
+        plate: Dict
+            Dict with source plate dataframe
+        """
+        if vertical:
+            return \
+                f'{rows[well_i % len(rows)]}' \
+                f'{columns[well_i // len(rows)]}'
+        else:
+            return \
+                f'{rows[well_i // len(columns)]}' \
+                f'{columns[well_i % len(columns)]}'
+
+    plate_distribution = spread_parameters(
+        volumes=volumes,
+        param_dead_volumes=param_dead_volumes,
+        plate_dead_volume=plate_dead_volume,
+        plate_well_capacity=plate_well_capacity,
+        optimize_well_volumes=optimize_well_volumes,
+        logger=logger
+    )
+
+    # Seek to the starting well
+    columns = [str(i+1) for i in range(24)]
+    rows =  [c for c in list(ascii_uppercase)[:16]]
+    # Convert well coordinates into an integer
+    current_well = \
+        columns.index(starting_well[1:]) * len(rows) \
+        + rows.index(starting_well[0]) % len(columns)
+    available_wells = nb_wells_plate - current_well
+    for parameter in plate_distribution:
+        if current_well > available_wells:
+            logger.warning(f'The plate has {available_wells} available wells '
+                           f'but the current position is {current_well}')
+        if plate_distribution[parameter]['nb_wells'] == 1:
+            plate_distribution[parameter]['wells_ind'] = current_well
+            # Convert well positions into alphanumeric
+            plate_distribution[parameter]['wells'] = convert_index_well(
+                current_well,
+                rows,
+                columns,
+                vertical
+            )
+        else:
+            end_well = current_well + plate_distribution[parameter]['nb_wells']-1
+            plate_distribution[parameter]['wells_ind'] = f'{{{current_well}:{end_well}}}'
+            # Convert well positions into alphanumeric
+            _start_well = convert_index_well(
+                current_well,
+                rows,
+                columns,
+                vertical
+            )
+            _end_well = convert_index_well(
+                end_well,
+                rows,
+                columns,
+                vertical
+            )
+            plate_distribution[parameter]['wells'] = \
+                f'{{{_start_well}:{_end_well}}}'
+        current_well += plate_distribution[parameter]['nb_wells']
+
+    logger.debug(f'plate_distribution: {plate_distribution}')
+    return plate_distribution
+
+
+def spread_parameters(
+    volumes: Dict,
+    param_dead_volumes: List[float],
+    plate_dead_volume: int = DEFAULT_ARGS['DEFAULT_SOURCE_PLATE_DEAD_VOLUME'],
+    plate_well_capacity: float = DEFAULT_ARGS['DEFAULT_SOURCE_PLATE_WELL_CAPACITY'],
+    optimize_well_volumes: List = DEFAULT_ARGS['DEFAULT_OPTIMIZE_VOLUMES'],
+    logger: Logger = getLogger(__name__)
+) -> Dict:
+    """
+    Distribute parameters into the plate wells
+
+    Parameters
+    ----------
+    volumes: Dict
+        DataFrames with factors
+    param_dead_volumes: List
+        Dead volumes of parameters
+    plate_dead_volume
+        Source plate dead volume. Defaults to 15000 nL
+    optimize_well_volumes: List
+        List of parameters to optimize. set to [] if none
+    logger: Logger
+        Logger
+
+    Returns
+    -------
+    plate: Dict
+        Dict with source plate dataframe
+    """
+    vol_sums = {}
+
+    # Sum volumes for each factor over all volume sets
+    for vol_set in volumes.values():
+        for factor in list(vol_set):
+            if factor not in vol_sums:
+                vol_sums[factor] = 0
+            vol_sums[factor] += vol_set[factor].sum()
+
+    # Set number of wells needed
+    plate = {}
+    for factor in param_dead_volumes:
+        if factor not in plate:
+            plate[factor] = {}
+        # Take account of dead volumes
+        # Multiple of 2.5 (ECHO)
+        well_net_capacity = floor(
+            (plate_well_capacity
+            - plate_dead_volume
+            - param_dead_volumes[factor]) / 2.5
+        ) * 2.5
+        logger.debug(f'well_net_capacity: {well_net_capacity}')
+        # Volume w/o dead volumes
+        plate[factor]['nb_wells'] = ceil(
+            vol_sums[factor] / well_net_capacity
+        )
+        # Raw volume per well
+        plate[factor]['raw_volume_per_well'] = \
+            vol_sums[factor] / plate[factor]['nb_wells']
+        # Optimize well volume
+        if (
+            factor in optimize_well_volumes
+            or optimize_well_volumes == ['all']
+        ):
+            # Net volume per well
+            plate[factor]['volume_per_well'] = (
+                plate[factor]['raw_volume_per_well']
+                + plate_dead_volume
+                + param_dead_volumes[factor]
+            )
+            # Multiple of 2.5 (ECHO)
+            plate[factor]['volume_per_well'] = ceil(
+                plate[factor]['volume_per_well'] / 2.5
+            ) * 2.5
+        else:
+            plate[factor]['volume_per_well'] = plate_well_capacity
+        # if plate[factor]['nb_wells'] > 1:
+        #     # Optimize well volume
+        #     if (
+        #         factor in optimize_well_volumes
+        #         or optimize_well_volumes == ['all']
+        #     ):
+        #         # Multiple of 2.5 (ECHO)
+        #         round_vol = ceil(
+        #             plate[factor]['volume_per_well'] / 2.5
+        #         ) * 2.5
+        #         # If the ceil vol > max well volume,
+        #         # then take the floor.
+        #         if round_vol > plate_well_capacity:
+        #             plate[factor]['volume_per_well'] = floor(
+        #                 plate[factor]['volume_per_well'] / 2.5
+        #             ) * 2.5
+        #         else:
+        #             plate[factor]['volume_per_well'] = round_vol
+        #     else: 
+        #         plate[factor]['volume_per_well'] = plate_well_capacity
+
+    logger.debug(f'parameters distribution:\n{plate}')
+    return plate
 
 
 def echo_instructions_generator(
     volumes: Dict,
-    starting_well: str = DEFAULT_ARGS['DEFAULT_STARTING_WELL'],
-    vertical: str = True,
+    source_plate: Dict,
+    starting_well: str = DEFAULT_ARGS['DEFAULT_DEST_STARTING_WELL'],
     keep_nil_vol: bool = DEFAULT_ARGS['DEFAULT_KEEP_NIL_VOL'],
     logger: Logger = getLogger(__name__)
 ) -> Dict:
@@ -467,28 +724,34 @@ def echo_instructions_generator(
     ----------
     volumes: Dict
         DataFrames with merged samples
+    source_plate: Dict
+        Source plate distribution
     starting_well : str
         Starter well to begin filling the 384 well-plate. Defaults to 'A1'
     vertical: bool
         - True: plate is filled column by column from top to bottom
         - False: plate is filled row by row from left to right
+    keep_nil_vol: bool
+        If False, remove transfer volumes = 0 in instructions.
+        Otherwise keep them (default: False)
 
     Returns
     -------
-        echo_instructions: Dict
-            Dict with echo instructions dataframes
+    echo_instructions: Dict
+        Dict with echo instructions dataframes
     """
-    destination_plates = destination_plate_generator(
-        volumes,
-        starting_well,
-        vertical,
-        logger
+
+    dest_plates = dst_plate_generator(
+        volumes=volumes,
+        starting_well=starting_well,
+        vertical=True,
+        logger=logger
     )
 
     all_sources = {}
     echo_instructions = {}
 
-    for key, destination_plate in destination_plates.items():
+    for key, destination_plate in dest_plates.items():
 
         for parameter_name in destination_plate.drop(columns=['well_name']):
             worklist = {
@@ -503,10 +766,13 @@ def echo_instructions_generator(
             for index in range(len(destination_plate)):
                 worklist['Source Plate Name'].append('Source[1]')
                 worklist['Source Plate Type'].append('384PP_AQ_GP3')
-                worklist['Source Well'].append(parameter_name)
+                worklist['Source Well'].append(
+                    source_plate[parameter_name]['wells']
+                )
                 worklist['Destination Plate Name'].append('Destination[1]')
                 worklist['Destination Well'].append(
-                        destination_plate.loc[index, 'well_name'])
+                        destination_plate.loc[index, 'well_name']
+                )
                 worklist['Transfer Volume'].append(
                         destination_plate.loc[index, parameter_name])
                 worklist['Sample ID'].append(parameter_name)
@@ -524,6 +790,7 @@ def echo_instructions_generator(
             instructions.reset_index(drop=True, inplace=True)
         echo_instructions[key] = instructions
 
+    logger.debug(f'echo_instructions: {echo_instructions}')
     return echo_instructions
 
 
