@@ -666,8 +666,10 @@ def spread_parameters(
             vol_sums[factor] / well_net_capacity
         )
         # Raw volume per well
-        plate[factor]['raw_volume_per_well'] = \
-            vol_sums[factor] / plate[factor]['nb_wells']
+        # Multiple of 2.5 (ECHO)
+        plate[factor]['raw_volume_per_well'] = ceil(
+            vol_sums[factor] / plate[factor]['nb_wells'] / 2.5
+            ) * 2.5
         # Optimize well volume
         if (
             factor in optimize_well_volumes
@@ -679,10 +681,6 @@ def spread_parameters(
                 + plate_dead_volume
                 + param_dead_volumes[factor]
             )
-            # Multiple of 2.5 (ECHO)
-            plate[factor]['volume_per_well'] = ceil(
-                plate[factor]['volume_per_well'] / 2.5
-            ) * 2.5
         else:
             plate[factor]['volume_per_well'] = plate_well_capacity
         # if plate[factor]['nb_wells'] > 1:
