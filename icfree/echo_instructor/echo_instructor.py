@@ -28,8 +28,7 @@ from string import (
 
 from typing import (
     Dict,
-    List,
-    Tuple
+    List
 )
 
 from logging import (
@@ -101,7 +100,7 @@ def input_importer(
 def concentrations_to_volumes(
     cfps_parameters_df: DataFrame,
     concentrations_df: Dict,
-    sample_volume: int = DEFAULT_ARGS['DEFAULT_SAMPLE_VOLUME'],
+    sample_volume: int = DEFAULT_ARGS['SAMPLE_VOLUME'],
     logger: Logger = getLogger(__name__)
 ):
     """
@@ -310,8 +309,9 @@ def save_volumes(
     volumes_df: Dict,
     volumes_summary: Dict,
     warning_volumes_report: DataFrame,
-    # source_plate: Dict,
-    output_folder: str = DEFAULT_ARGS['DEFAULT_OUTPUT_FOLDER']):
+    source_plate: Dict,
+    output_folder: str = DEFAULT_ARGS['OUTPUT_FOLDER']
+):
     """
     Save volumes dataframes in TSV files
 
@@ -360,7 +360,7 @@ def save_volumes(
     with open(
         os_path.join(
             output_subfolder,
-            f'volumes_summary.tsv'
+            'volumes_summary.tsv'
         ), 'w'
     ) as csv_file:
         writer = csv_writer(
@@ -378,10 +378,26 @@ def save_volumes(
             'warning_volumes_report.tsv'),
         sep='\t')
 
+    # Save source plate
+    with open(
+        os_path.join(
+            output_folder,
+            'source_plate.tsv'
+        ), 'w'
+    ) as fp:
+        header = 'WELL\tPARAMETER\tVOLUME\n'
+        fp.write(header)
+        for param, param_values in source_plate.items():
+            row = \
+                f'{param_values["wells"]}\t' \
+                f'{param}\t' \
+                f'{param_values["volume_per_well"]}\n'
+            fp.write(row)
+
 
 def samples_merger(
     volumes: Dict,
-    nplicate: int = DEFAULT_ARGS['DEFAULT_NPLICATE'],
+    nplicate: int = DEFAULT_ARGS['NPLICATE'],
     logger: Logger = getLogger(__name__)
 ) -> Dict:
     """
@@ -433,7 +449,7 @@ def samples_merger(
 
 def dst_plate_generator(
     volumes: Dict,
-    starting_well: str = DEFAULT_ARGS['DEFAULT_DEST_STARTING_WELL'],
+    starting_well: str = DEFAULT_ARGS['DEST_STARTING_WELL'],
     vertical: str = True,
     logger: Logger = getLogger(__name__)
 ) -> Dict:
@@ -525,12 +541,12 @@ def convert_index_well(
 def src_plate_generator(
     volumes: Dict,
     param_dead_volumes: List[float],
-    plate_dead_volume: int = DEFAULT_ARGS['DEFAULT_SOURCE_PLATE_DEAD_VOLUME'],
-    plate_well_capacity: float = DEFAULT_ARGS['DEFAULT_SOURCE_PLATE_WELL_CAPACITY'],
-    starting_well: str = DEFAULT_ARGS['DEFAULT_SRC_STARTING_WELL'],
+    plate_dead_volume: int = DEFAULT_ARGS['SOURCE_PLATE_DEAD_VOLUME'],
+    plate_well_capacity: float = DEFAULT_ARGS['SOURCE_PLATE_WELL_CAPACITY'],
+    starting_well: str = DEFAULT_ARGS['SRC_STARTING_WELL'],
     optimize_well_volumes: List = [],
     vertical: str = True,
-    nb_wells_plate: int = DEFAULT_ARGS['DEFAULT_PLATE_NB_WELLS'],
+    plate_dimensions: str = DEFAULT_ARGS['PLATE_DIMENSIONS'],
     logger: Logger = getLogger(__name__)
 ) -> Dict:
     """
@@ -551,6 +567,9 @@ def src_plate_generator(
     vertical: bool
         - True: plate is filled column by column from top to bottom
         - False: plate is filled row by row from left to right
+    plate_dimensions: str
+        Dimensions of the plate given as a string with nb_rows
+        and nb_cols separated by 'x'
     logger: Logger
         Logger
 
@@ -569,9 +588,12 @@ def src_plate_generator(
         logger=logger
     )
 
+    nb_rows, nb_cols = map(int, plate_dimensions.split('x'))
+    nb_wells_plate = nb_rows * nb_cols
     # Seek to the starting well
-    columns = [str(i+1) for i in range(24)]
-    rows =  [c for c in list(ascii_uppercase)[:16]]
+    columns = [str(i+1) for i in range(nb_cols)]
+    # rows = [c for c in list(ascii_uppercase)[:nb_rows]]
+    rows = [f"{i}{j}" for i in ["", "A"] for j in ascii_uppercase]
     # Convert well coordinates into an integer
     current_well = \
         columns.index(starting_well[1:]) * len(rows) \
@@ -580,7 +602,7 @@ def src_plate_generator(
     for parameter in plate_distribution:
         if current_well > available_wells:
             logger.warning(f'The plate has {available_wells} available wells '
-                           f'but the current position is {current_well}')
+                           f'but the current position is {current_well}.')
         if plate_distribution[parameter]['nb_wells'] == 1:
             plate_distribution[parameter]['wells_ind'] = current_well
             # Convert well positions into alphanumeric
@@ -591,8 +613,11 @@ def src_plate_generator(
                 vertical
             )
         else:
-            end_well = current_well + plate_distribution[parameter]['nb_wells']-1
-            plate_distribution[parameter]['wells_ind'] = f'{{{current_well}:{end_well}}}'
+            end_well = \
+                current_well \
+                + plate_distribution[parameter]['nb_wells'] - 1
+            plate_distribution[parameter]['wells_ind'] = \
+                f'{{{current_well}:{end_well}}}'
             # Convert well positions into alphanumeric
             _start_well = convert_index_well(
                 current_well,
@@ -617,9 +642,9 @@ def src_plate_generator(
 def spread_parameters(
     volumes: Dict,
     param_dead_volumes: List[float],
-    plate_dead_volume: int = DEFAULT_ARGS['DEFAULT_SOURCE_PLATE_DEAD_VOLUME'],
-    plate_well_capacity: float = DEFAULT_ARGS['DEFAULT_SOURCE_PLATE_WELL_CAPACITY'],
-    optimize_well_volumes: List = DEFAULT_ARGS['DEFAULT_OPTIMIZE_VOLUMES'],
+    plate_dead_volume: int = DEFAULT_ARGS['SOURCE_PLATE_DEAD_VOLUME'],
+    plate_well_capacity: float = DEFAULT_ARGS['SOURCE_PLATE_WELL_CAPACITY'],
+    optimize_well_volumes: List = DEFAULT_ARGS['OPTIMIZE_VOLUMES'],
     logger: Logger = getLogger(__name__)
 ) -> Dict:
     """
@@ -661,8 +686,8 @@ def spread_parameters(
         # Multiple of 2.5 (ECHO)
         well_net_capacity = floor(
             (plate_well_capacity
-            - plate_dead_volume
-            - param_dead_volumes[factor]) / 2.5
+             - plate_dead_volume
+             - param_dead_volumes[factor]) / 2.5
         ) * 2.5
         logger.debug(f'well_net_capacity: {well_net_capacity}')
         # Volume w/o dead volumes
@@ -705,7 +730,7 @@ def spread_parameters(
         #             ) * 2.5
         #         else:
         #             plate[factor]['volume_per_well'] = round_vol
-        #     else: 
+        #     else:
         #         plate[factor]['volume_per_well'] = plate_well_capacity
 
     logger.debug(f'parameters distribution:\n{plate}')
@@ -715,8 +740,8 @@ def spread_parameters(
 def echo_instructions_generator(
     volumes: Dict,
     source_plate: Dict,
-    starting_well: str = DEFAULT_ARGS['DEFAULT_DEST_STARTING_WELL'],
-    keep_nil_vol: bool = DEFAULT_ARGS['DEFAULT_KEEP_NIL_VOL'],
+    starting_well: str = DEFAULT_ARGS['DEST_STARTING_WELL'],
+    keep_nil_vol: bool = DEFAULT_ARGS['KEEP_NIL_VOL'],
     logger: Logger = getLogger(__name__)
 ) -> Dict:
     """
@@ -799,7 +824,8 @@ def echo_instructions_generator(
 def save_echo_instructions(
     distribute_echo_instructions: Dict,
     merge_echo_instructions: Dict,
-    output_folder: str = DEFAULT_ARGS['DEFAULT_OUTPUT_FOLDER']):
+    output_folder: str = DEFAULT_ARGS['OUTPUT_FOLDER']
+):
     """
     Save Echo instructions in csv files
 

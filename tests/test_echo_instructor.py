@@ -224,25 +224,25 @@ class Test(TestCase):
                 fp,
                 orient='split')
 
-        with open(
-            os_path.join(
-                    self.REF_FOLDER,
-                    'expected_normalizer_volumes_summary_df.json'
-            ), 'r'
-        ) as fp:
-            expected_normalizer_volumes_summary_df = read_json(
-                fp,
-                orient='split')
+        # with open(
+        #     os_path.join(
+        #             self.REF_FOLDER,
+        #             'expected_normalizer_volumes_summary_df.json'
+        #     ), 'r'
+        # ) as fp:
+        #     expected_normalizer_volumes_summary_df = read_json(
+        #         fp,
+        #         orient='split')
 
-        with open(
-            os_path.join(
-                    self.REF_FOLDER,
-                    'expected_autofluorescence_volumes_summary_df.json'
-            ), 'r'
-        ) as fp:
-            expected_autofluorescence_volumes_summary_df = read_json(
-                fp,
-                orient='split')
+        # with open(
+        #     os_path.join(
+        #             self.REF_FOLDER,
+        #             'expected_autofluorescence_volumes_summary_df.json'
+        #     ), 'r'
+        # ) as fp:
+        #     expected_autofluorescence_volumes_summary_df = read_json(
+        #         fp,
+        #         orient='split')
 
         with open(
             os_path.join(
@@ -281,7 +281,7 @@ class Test(TestCase):
             starting_well='A1',
             optimize_well_volumes=['all'],
             vertical=True,
-            nb_wells_plate=384
+            plate_dimensions='16x24'
         )
         tested_volumes_summary = {
             param: volume['nb_wells'] * volume['volume_per_well']
@@ -485,23 +485,23 @@ class Test(TestCase):
         ) as fp:
             expected_initial_volumes_summary = fp.read()
 
-        ref_filename = 'expected_autofluorescence_volumes_summary'
-        with open(
-            os_path.join(
-                    self.REF_FOLDER_VOLUMES,
-                    f'{ref_filename}.tsv'
-            )
-        ) as fp:
-            expected_autofluorescence_volumes_summary = fp.read()
+        # ref_filename = 'expected_autofluorescence_volumes_summary'
+        # with open(
+        #     os_path.join(
+        #             self.REF_FOLDER_VOLUMES,
+        #             f'{ref_filename}.tsv'
+        #     )
+        # ) as fp:
+        #     expected_autofluorescence_volumes_summary = fp.read()
 
-        ref_filename = 'expected_normalizer_volumes_summary'
-        with open(
-            os_path.join(
-                    self.REF_FOLDER_VOLUMES,
-                    f'{ref_filename}.tsv'
-            )
-        ) as fp:
-            expected_normalizer_volumes_summary = fp.read()
+        # ref_filename = 'expected_normalizer_volumes_summary'
+        # with open(
+        #     os_path.join(
+        #             self.REF_FOLDER_VOLUMES,
+        #             f'{ref_filename}.tsv'
+        #     )
+        # ) as fp:
+        #     expected_normalizer_volumes_summary = fp.read()
 
         ref_filename = 'expected_warning_volumes_report'
         with open(
@@ -520,7 +520,7 @@ class Test(TestCase):
             starting_well='A1',
             optimize_well_volumes=['all'],
             vertical=True,
-            nb_wells_plate=384
+            plate_dimensions='16x24'
         )
 
         tested_volumes_summary = {
@@ -534,6 +534,7 @@ class Test(TestCase):
             tested_volumes_df,
             tested_volumes_summary,
             tested_warning_volumes_report,
+            source_plate,
             output_folder=output_folder)
 
         # Load test volume files
@@ -827,7 +828,7 @@ class Test(TestCase):
             starting_well='A1',
             optimize_well_volumes=[],
             vertical=True,
-            nb_wells_plate=384
+            plate_dimensions='16x24'
         )
 
         tested_distribute_echo_instructions_dict = \
@@ -1031,7 +1032,7 @@ class Test(TestCase):
             starting_well='A1',
             optimize_well_volumes=[],
             vertical=True,
-            nb_wells_plate=384
+            plate_dimensions='16x24'
         )
 
         tested_distribute_echo_instructions_dict = \
