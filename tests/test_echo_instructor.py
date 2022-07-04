@@ -279,7 +279,7 @@ class Test(TestCase):
             plate_well_capacity=60000,
             param_dead_volumes=param_dead_volumes,
             starting_well='A1',
-            optimize_well_volumes=[],
+            optimize_well_volumes=['all'],
             vertical=True,
             nb_wells_plate=384
         )
@@ -288,6 +288,12 @@ class Test(TestCase):
             for param, volume in source_plate.items()
         }
 
+        print(expected_initial_volumes_summary_df)
+        print(DataFrame(
+                columns=[0],
+                index=tested_volumes_summary.keys(),
+                data=tested_volumes_summary.values()
+            ))
         assert_frame_equal(
             expected_initial_volumes_summary_df,
             # tested_volumes_summary['initial'],
@@ -512,7 +518,7 @@ class Test(TestCase):
             plate_well_capacity=60000,
             param_dead_volumes=param_dead_volumes,
             starting_well='A1',
-            optimize_well_volumes=[],
+            optimize_well_volumes=['all'],
             vertical=True,
             nb_wells_plate=384
         )
@@ -601,6 +607,8 @@ class Test(TestCase):
         assert expected_autofluorescence_volumes == \
             tested_autofluorescence_volumes
 
+        print(expected_initial_volumes_summary)
+        print(tested_initial_volumes_summary)
         # Compare volumes summary files
         assert expected_initial_volumes_summary == \
             tested_initial_volumes_summary
