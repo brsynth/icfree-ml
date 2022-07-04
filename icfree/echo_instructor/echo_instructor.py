@@ -310,6 +310,7 @@ def save_volumes(
     volumes_df: Dict,
     volumes_summary: Dict,
     warning_volumes_report: DataFrame,
+    # source_plate: Dict,
     output_folder: str = DEFAULT_ARGS['DEFAULT_OUTPUT_FOLDER']):
     """
     Save volumes dataframes in TSV files
@@ -327,6 +328,8 @@ def save_volumes(
         initial/normalizer/autofluorescence_volumes_df
     warning_volumes_report: DataFrame
         Report of volumes outside the transfer range of Echo.
+    source_plate: Dict
+        Source plate
     output_folder: str
         Path to storage folder for output files. Defaults to working directory.
     """
@@ -480,6 +483,45 @@ def dst_plate_generator(
     return plates
 
 
+def convert_index_well(
+    well_i: int,
+    rows: int,
+    cols: int,
+    vertical: str,
+    logger: Logger = getLogger(__name__)
+) -> str:
+    """
+    Convert well index into well coordinates
+
+    Parameters
+    ----------
+    well_i: int
+        Well index
+    rows: List
+        Rows alphabet
+    columns: List
+        Columns alphabet
+    vertical: bool
+        - True: plate is filled column by column from top to bottom
+        - False: plate is filled row by row from left to right
+    logger: Logger
+        Logger
+
+    Returns
+    -------
+    plate: Dict
+        Dict with source plate dataframe
+    """
+    if vertical:
+        return \
+            f'{rows[well_i % len(rows)]}' \
+            f'{cols[well_i // len(rows)]}'
+    else:
+        return \
+            f'{rows[well_i // len(cols)]}' \
+            f'{cols[well_i % len(cols)]}'
+
+
 def src_plate_generator(
     volumes: Dict,
     param_dead_volumes: List[float],
@@ -517,44 +559,6 @@ def src_plate_generator(
     plate: Dict
         Dict with source plate dataframe
     """
-
-    def convert_index_well(
-        well_i: int,
-        rows: int,
-        cols: int,
-        vertical: str,
-        logger: Logger = getLogger(__name__)
-    ) -> str:
-        """
-        Convert well index into well coordinates
-
-        Parameters
-        ----------
-        well_i: int
-            Well index
-        rows: List
-            Rows alphabet
-        columns: List
-            COlumns alphabet
-        vertical: bool
-            - True: plate is filled column by column from top to bottom
-            - False: plate is filled row by row from left to right
-        logger: Logger
-            Logger
-
-        Returns
-        -------
-        plate: Dict
-            Dict with source plate dataframe
-        """
-        if vertical:
-            return \
-                f'{rows[well_i % len(rows)]}' \
-                f'{columns[well_i // len(rows)]}'
-        else:
-            return \
-                f'{rows[well_i // len(columns)]}' \
-                f'{columns[well_i % len(columns)]}'
 
     plate_distribution = spread_parameters(
         volumes=volumes,
