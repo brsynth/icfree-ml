@@ -593,7 +593,7 @@ def src_plate_generator(
     # Seek to the starting well
     columns = [str(i+1) for i in range(nb_cols)]
     # rows = [c for c in list(ascii_uppercase)[:nb_rows]]
-    rows = [f"{i}{j}" for i in ["", "A"] for j in ascii_uppercase]
+    rows = [f"{i}{j}" for i in ["", "A"] for j in ascii_uppercase][:nb_rows]
     # Convert well coordinates into an integer
     current_well = \
         columns.index(starting_well[1:]) * len(rows) \
