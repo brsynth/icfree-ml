@@ -373,11 +373,11 @@ class Test(TestCase):
             "Unable to coerce to Series, length must be 18: given 17"
         with pytest_raises(
             ValueError,
-                match=value_error):
-            concentrations_to_volumes(
-                tested_cfps_parameters_df,
-                tested_concentrations_df,
-                sample_volume=10000)
+            match=value_error):
+                concentrations_to_volumes(
+                    tested_cfps_parameters_df,
+                    tested_concentrations_df,
+                    sample_volume=10000)
 
     def test_save_volumes_wExistingOutFolder(self):
         with TemporaryDirectory() as tmpFolder:
@@ -1299,3 +1299,44 @@ class Test(TestCase):
             ),
             'AF48'
         )
+
+    def test_src_plate_generator(self):
+        (tested_cfps_parameters_df,
+         tested_concentrations_df) = input_importer(
+            self.tested_cfps_parameters,
+            self.tested_initial_concentrations,
+            self.tested_normalizer_concentrations,
+            self.tested_autofluorescence_concentrations)
+
+        (tested_volumes_df,
+         param_dead_volumes,
+         tested_warning_volumes_report) = concentrations_to_volumes(
+            tested_cfps_parameters_df,
+            tested_concentrations_df,
+            sample_volume=10000)
+
+        source_plate = src_plate_generator(
+            volumes=tested_volumes_df,
+            plate_dead_volume=15000,
+            plate_well_capacity=60000,
+            param_dead_volumes=param_dead_volumes,
+            starting_well='Z1',
+            optimize_well_volumes=['all'],
+            vertical=True,
+            plate_dimensions='16x24'
+        )
+
+        keys = list(source_plate.keys())
+        self.assertEqual('A1', source_plate[keys[0]]['wells'])
+
+        with pytest_raises(IndexError) as e:
+            source_plate = src_plate_generator(
+                volumes=tested_volumes_df,
+                plate_dead_volume=15000,
+                plate_well_capacity=60000,
+                param_dead_volumes=param_dead_volumes,
+                starting_well='A24',
+                optimize_well_volumes=['all'],
+                vertical=True,
+                plate_dimensions='16x24'
+            )

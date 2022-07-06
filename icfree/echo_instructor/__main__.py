@@ -44,7 +44,7 @@ def main():
             args.sample_volume,
             logger=logger)
     except ValueError:
-        exit(1)
+        return -1
 
     # print(param_dead_volumes)
     # print(dict(
@@ -54,17 +54,23 @@ def main():
     #   )
     # ))
     # exit()
-    source_plate = src_plate_generator(
-        volumes=volumes,
-        plate_dead_volume=args.source_plate_dead_volume,
-        plate_well_capacity=args.source_plate_well_capacity,
-        param_dead_volumes=param_dead_volumes,
-        starting_well=args.src_starting_well,
-        optimize_well_volumes=args.optimize_well_volumes,
-        vertical=True,
-        plate_dimensions=args.plate_dimensions,
-        logger=logger
-    )
+    try:
+        source_plate = src_plate_generator(
+            volumes=volumes,
+            plate_dead_volume=args.source_plate_dead_volume,
+            plate_well_capacity=args.source_plate_well_capacity,
+            param_dead_volumes=param_dead_volumes,
+            starting_well=args.src_starting_well,
+            optimize_well_volumes=args.optimize_well_volumes,
+            vertical=True,
+            plate_dimensions=args.plate_dimensions,
+            logger=logger
+        )
+    except IndexError:
+        logger.error(
+            'Exiting...'
+        )
+        return -1
 
     distribute_echo_instructions = \
         echo_instructions_generator(

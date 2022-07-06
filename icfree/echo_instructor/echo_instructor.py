@@ -190,8 +190,8 @@ def concentrations_to_volumes(
             logger.debug(f'{volumes_name} volumes:\n'
                          '{volumes_df[volumes_name]}')
         except ValueError as e:
-            logger.error(f'*** {e}')
             logger.error(
+                f'*** {e}'
                 'It seems that the number of parameters is different '
                 'from the number of stock concentrations. Exiting...'
             )
@@ -266,8 +266,8 @@ def check_volumes(
         if 0 < vol < lower_bound:
             warning_volumes['Min Report'][factor] = vol
             logger.warning(
-                f'*** {factor}\nOne volume = {vol} nL (< 10 nL). '
-                'Stock have to be more diluted.\n'
+                f'One volume of {factor} = {vol} nL (< 10 nL). '
+                'Stock have to be more diluted.'
             )
         # Check upper bound
         # Warn if the value is > 1000 nL
@@ -275,9 +275,9 @@ def check_volumes(
         if v_max > upper_bound:
             warning_volumes['Max Report'][factor] = v_max
             logger.warning(
-                f'*** {factor}\nOne volume = {v_max} nL (> 1000 nL). '
+                f'One volume of {factor} = {v_max} nL (> 1000 nL). '
                 'Stock have to be more concentrated or pipetting '
-                'has to be done manually.\n'
+                'has to be done manually.'
             )
 
     # Check if a factor stock is not concentrated enough,
@@ -528,6 +528,12 @@ def convert_index_well(
     plate: Dict
         Dict with source plate dataframe
     """
+    if well_i >= len(rows)*len(cols):
+        logger.error(
+            f'The current well index is {well_i} '
+            f'but the last plate well index is {len(rows)*len(cols)}.'
+        )
+        raise(IndexError)
     if vertical:
         return \
             f'{rows[well_i % len(rows)]}' \
@@ -595,14 +601,20 @@ def src_plate_generator(
     # rows = [c for c in list(ascii_uppercase)[:nb_rows]]
     rows = [f"{i}{j}" for i in ["", "A"] for j in ascii_uppercase][:nb_rows]
     # Convert well coordinates into an integer
-    current_well = \
-        columns.index(starting_well[1:]) * len(rows) \
-        + rows.index(starting_well[0]) % len(columns)
-    available_wells = nb_wells_plate - current_well
+    try:
+        current_well = \
+            columns.index(starting_well[1:]) * len(rows) \
+            + rows.index(starting_well[0]) % len(columns)
+    except ValueError:
+        logger.warning(
+            f'Starting well {starting_well} is ignored '
+            f'because it is out of source plate {nb_rows, nb_cols}.'
+        )
+        starting_well = 'A1'
+        current_well = \
+            columns.index(starting_well[1:]) * len(rows) \
+            + rows.index(starting_well[0]) % len(columns)
     for parameter in plate_distribution:
-        if current_well > available_wells:
-            logger.warning(f'The plate has {available_wells} available wells '
-                           f'but the current position is {current_well}.')
         if plate_distribution[parameter]['nb_wells'] == 1:
             plate_distribution[parameter]['wells_ind'] = current_well
             # Convert well positions into alphanumeric
@@ -610,7 +622,8 @@ def src_plate_generator(
                 current_well,
                 rows,
                 columns,
-                vertical
+                vertical,
+                logger=logger
             )
         else:
             end_well = \
@@ -623,13 +636,15 @@ def src_plate_generator(
                 current_well,
                 rows,
                 columns,
-                vertical
+                vertical,
+                logger=logger
             )
             _end_well = convert_index_well(
                 end_well,
                 rows,
                 columns,
-                vertical
+                vertical,
+                logger=logger
             )
             plate_distribution[parameter]['wells'] = \
                 f'{{{_start_well}:{_end_well}}}'
