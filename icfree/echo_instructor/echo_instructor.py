@@ -385,7 +385,7 @@ def save_volumes(
             'source_plate.tsv'
         ), 'w'
     ) as fp:
-        header = 'WELL\tPARAMETER\tVOLUME\n'
+        header = 'WELL\tPARAMETER\tVOLUME_PER_WELL\n'
         fp.write(header)
         for param, param_values in source_plate.items():
             row = \
