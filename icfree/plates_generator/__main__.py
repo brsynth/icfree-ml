@@ -1,4 +1,16 @@
 import sys
+
+from logging import(
+    Logger,
+    getLogger
+)
+from typing import (
+    Dict
+)
+from brs_utils import (
+    create_logger
+)
+
 from .plates_generator import (
     input_importer,
     input_processor,
@@ -7,11 +19,6 @@ from .plates_generator import (
     plates_generator,
     save_plates,
 )
-
-from brs_utils import (
-    create_logger
-)
-
 from .args import build_args_parser
 
 # def check_results(
@@ -38,19 +45,23 @@ def main():
     input_df = input_importer(args.cfps, logger=logger)
     parameters = input_processor(input_df, logger=logger)
 
-    # PROCESS TO THE SAMPLING
-    try:
-        doe_levels = doe_levels_generator(
-            n_variable_parameters=len(parameters['doe']),
-            doe_nb_concentrations=args.doe_nb_concentrations,
-            doe_concentrations=args.doe_concentrations,
-            doe_nb_samples=args.doe_nb_samples,
-            seed=args.seed,
-            logger=logger
+    # If status of parameters has to be changed
+    if args.all_status is not None:
+        parameters = change_status(
+            parameters,
+            args.all_status,
+            logger
         )
-    except KeyError:
-        logger.error('There is no \'doe\' status in the input file')
-        exit(1)
+
+    # PROCESS TO THE SAMPLING
+    doe_levels = doe_levels_generator(
+        n_variable_parameters=len(parameters['doe']),
+        doe_nb_concentrations=args.doe_nb_concentrations,
+        doe_concentrations=args.doe_concentrations,
+        doe_nb_samples=args.doe_nb_samples,
+        seed=args.seed,
+        logger=logger
+    )
 
     # CONVERT INTO CONCENTRATIONS
     # Read the maximum concentration for each parameter involved in DoE
@@ -98,6 +109,44 @@ def main():
         plates['parameters'],
         args.output_folder
     )
+
+
+def change_status(
+    parameters: Dict,
+    status: str,
+    logger: Logger = getLogger(__name__)
+) -> Dict:
+    """
+    Change status of parameters
+
+    Parameters
+    ----------
+    parameters : Dict
+        Parameters
+    status: str
+        Status to change parameters status into
+    logger: Logger
+        Logger
+
+    Returns
+    -------
+    parameters: Dict
+        Parameters with new status
+    """
+    # Set all status to an empty dict
+    _parameters = {
+        status: {} for status in parameters.keys()
+    }
+    # Copy all values under args.all_status key,
+    # except for status wich contain 'dna'
+    for status, value in parameters.items():
+        if 'dna' not in status:
+            _parameters[status].update(value)
+        else:
+            if status not in _parameters:
+                _parameters[status] = {}
+            _parameters[status].update(value)
+    return _parameters
 
 
 if __name__ == "__main__":
