@@ -26,13 +26,13 @@ with open(
     long_description = f.read()
 
 def get_version():
-    with open(
-        os_path.join(
-            os_path.dirname(os_path.realpath(__file__)),
-            'CHANGELOG.md'
-        ),
-        'r'
-    ) as f:
+    filename = os_path.join(
+        os_path.dirname(os_path.realpath(__file__)),
+        'CHANGELOG.md'
+    )
+    if not os_path.exists(filename):
+        open(filename, 'w').close()
+    with open(filename, 'r') as f:
         lines = f.readlines()
     for line in lines:
         if line.startswith('##'):
