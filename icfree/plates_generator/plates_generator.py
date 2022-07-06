@@ -287,9 +287,12 @@ def plates_generator(
         initial_set_array = [
             np_fromiter(const_concentrations.values(), dtype=float)
         ]
-    else: # Else, add const concentrations to DoE ones
+    else:  # Else, add const concentrations to DoE ones
         initial_set_array = [
-            np_concatenate((concentrations, list(const_concentrations.values())))
+            np_concatenate(
+                (concentrations,
+                 list(const_concentrations.values()))
+            )
             for concentrations in initial_set_array
         ]
     headers += parameters['const']

@@ -1,6 +1,6 @@
 import sys
 
-from logging import(
+from logging import (
     Logger,
     getLogger
 )

@@ -595,7 +595,6 @@ def src_plate_generator(
     )
 
     nb_rows, nb_cols = map(int, plate_dimensions.split('x'))
-    nb_wells_plate = nb_rows * nb_cols
     # Seek to the starting well
     columns = [str(i+1) for i in range(nb_cols)]
     # rows = [c for c in list(ascii_uppercase)[:nb_rows]]

@@ -373,11 +373,12 @@ class Test(TestCase):
             "Unable to coerce to Series, length must be 18: given 17"
         with pytest_raises(
             ValueError,
-            match=value_error):
-                concentrations_to_volumes(
-                    tested_cfps_parameters_df,
-                    tested_concentrations_df,
-                    sample_volume=10000)
+            match=value_error
+        ):
+            concentrations_to_volumes(
+                tested_cfps_parameters_df,
+                tested_concentrations_df,
+                sample_volume=10000)
 
     def test_save_volumes_wExistingOutFolder(self):
         with TemporaryDirectory() as tmpFolder:
@@ -1329,7 +1330,7 @@ class Test(TestCase):
         keys = list(source_plate.keys())
         self.assertEqual('A1', source_plate[keys[0]]['wells'])
 
-        with pytest_raises(IndexError) as e:
+        with pytest_raises(IndexError):
             source_plate = src_plate_generator(
                 volumes=tested_volumes_df,
                 plate_dead_volume=15000,

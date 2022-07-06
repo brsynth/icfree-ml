@@ -81,7 +81,7 @@ def add_arguments(parser):
         '--all-status',
         type=str,
         choices=['doe', 'const'],
-        help=f'CHange status of all parameters (but DNA)',
+        help='Change status of all parameters (but DNA)',
     )
 
     # Add arguments related to the logger
