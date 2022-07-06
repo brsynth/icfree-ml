@@ -21,13 +21,6 @@ from .plates_generator import (
 )
 from .args import build_args_parser
 
-# def check_results(
-#     result_files: Dict,
-#     logger: Logger = getLogger(__name__)
-# ) -> int:
-#     logger.info('lblblb')
-#     logger.debug(f'lblblb{[i for i in result_files]}')
-
 
 def main():
 
