@@ -25,6 +25,7 @@ with open(
 ) as f:
     long_description = f.read()
 
+
 def get_version():
     filename = os_path.join(
         os_path.dirname(os_path.realpath(__file__)),
