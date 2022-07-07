@@ -7,5 +7,4 @@ dependencies:
   - pandas
   - pydoe2
   - brs_utils
-  - xgboost
   - anaconda::scikit-learn
