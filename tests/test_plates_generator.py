@@ -105,14 +105,40 @@ class Test(TestCase):
                     self.INPUT_FOLDER,
                     'proCFPS_parameters.tsv'
             ), 'r'
-        ) as fp2:
-            tested_df = input_importer(fp2)
+        ) as fp:
+            tested_df = input_importer(fp)
 
         tested_dictionary = input_processor(tested_df)
-        TestCase().assertDictEqual(
+        self.assertDictEqual(
                 expected_dictionary,
                 tested_dictionary
             )
+
+    def test_input_processor_woConstStatus(self):
+        with open(
+            os_path.join(
+                    self.REF_FOLDER,
+                    'expected_parameters_const_value_woConst.json'
+            ), 'r'
+        ) as fp:
+            expected_dictionary = (json_load(fp))
+
+        with open(
+            os_path.join(
+                    self.INPUT_FOLDER,
+                    'proCFPS_parameters_woConst.tsv'
+            ), 'r'
+        ) as fp:
+            tested_df = input_importer(fp)
+
+        tested_dictionary = input_processor(tested_df)
+        self.assertDictEqual(
+                expected_dictionary,
+                tested_dictionary
+            )
+
+    def test_input_processor_woDoEStatus(self):
+        pass
 
     def test_doe_levels_generator(self):
         n_variable_parameters = 12
@@ -167,6 +193,9 @@ class Test(TestCase):
             ref_sampling_array
         )
 
+    def test_doe_levels_generator_EmptyStatusArray(self):
+        pass
+
     def test_levels_to_concentrations(self):
         input_df = input_importer(os_path.join(
                 self.INPUT_FOLDER,
@@ -209,6 +238,9 @@ class Test(TestCase):
             tested_concentrations_array,
             ref_concentrations_array
         )
+
+    def test_levels_to_concentrations_EmptyStatusArray(self):
+        pass
 
     def test_plates_generator_all_columns(self):
         with open(
@@ -379,6 +411,12 @@ class Test(TestCase):
         self.assertListEqual(
             tested_columns_normalizer_set,
             tested_columns_autofluorescence_set)
+
+    def test_plates_generator_AllStatusConst(self):
+        pass
+
+    def test_plates_generator_AllStatusDoE(self):
+        pass
 
     def test_save_plates_wExistingOutFolder(self):
         with TemporaryDirectory() as tmpFolder:
