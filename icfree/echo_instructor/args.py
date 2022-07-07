@@ -1,17 +1,24 @@
 from argparse import (
-    ArgumentParser
-    )
+    ArgumentParser,
+    BooleanOptionalAction
+)
 from os import getcwd as os_getcwd
 
 from brs_utils import add_logger_args
 from icfree._version import __version__
 
-DEFAULT_OUTPUT_FOLDER = os_getcwd()
-DEFAULT_SAMPLE_VOLUME = 10000
-DEFAULT_SOURCE_PLATE_DEAD_VOLUME = 15000
-DEFAULT_SOURCE_PLATE_MAX_VOLUME = 60000
-DEFAULT_STARTING_WELL = 'A1'
-DEFAULT_NPLICATE = 3
+DEFAULT_ARGS = {
+    'OUTPUT_FOLDER': os_getcwd(),
+    'SAMPLE_VOLUME': 10000,
+    'SOURCE_PLATE_DEAD_VOLUME': 15000,
+    'DEST_STARTING_WELL': 'A1',
+    'SRC_STARTING_WELL': 'A1',
+    'NPLICATE': 3,
+    'KEEP_NIL_VOL': False,
+    'SOURCE_PLATE_WELL_CAPACITY': 60000,
+    'PLATE_DIMENSIONS': '16x24',
+    'OPTIMIZE_VOLUMES': []
+}
 
 
 def build_args_parser(
@@ -57,49 +64,86 @@ def add_arguments(parser):
     parser.add_argument(
         '-v', '--sample_volume',
         type=int,
-        default=DEFAULT_SAMPLE_VOLUME,
+        default=DEFAULT_ARGS['SAMPLE_VOLUME'],
         help=('Final sample volume in each well in nL'
-              f' (default: {DEFAULT_SAMPLE_VOLUME})')
+              f' (default: {DEFAULT_ARGS["SAMPLE_VOLUME"]})')
     )
 
     parser.add_argument(
         '-sdv', '--source_plate_dead_volume',
         type=int,
-        default=DEFAULT_SOURCE_PLATE_DEAD_VOLUME,
+        default=DEFAULT_ARGS['SOURCE_PLATE_DEAD_VOLUME'],
         help=('Dead volume to add in the source plate in nL'
-              f' (default: {DEFAULT_SOURCE_PLATE_DEAD_VOLUME})')
+              f' (default: {DEFAULT_ARGS["SOURCE_PLATE_DEAD_VOLUME"]})')
     )
 
     parser.add_argument(
-        '-smv', '--source_plate_max_volume',
-        type=int,
-        default=DEFAULT_SOURCE_PLATE_MAX_VOLUME,
-        help=('Maximum volume capacity of the source plate in nL'
-              f' (default: {DEFAULT_SOURCE_PLATE_MAX_VOLUME})')
-    )
-
-    parser.add_argument(
-        '-sw', '--starting_well',
+        '-dsw', '--dest-starting_well',
         type=str,
-        default=DEFAULT_STARTING_WELL,
-        help=('Starter well to begin filling the 384 well-plate.'
-              f' (default: {DEFAULT_STARTING_WELL})')
+        default=DEFAULT_ARGS['DEST_STARTING_WELL'],
+        help=('Starter well of destination plate to begin '
+              'filling the 384 well-plate.'
+              f' (default: {DEFAULT_ARGS["DEST_STARTING_WELL"]})')
+    )
+
+    parser.add_argument(
+        '-ssw', '--src-starting_well',
+        type=str,
+        default=DEFAULT_ARGS['SRC_STARTING_WELL'],
+        help=('Starter well of source plate to begin '
+              'filling the 384 well-plate.'
+              f' (default: {DEFAULT_ARGS["SRC_STARTING_WELL"]})')
     )
 
     parser.add_argument(
         '-of', '--output-folder',
         type=str,
-        default=DEFAULT_OUTPUT_FOLDER,
+        default=DEFAULT_ARGS['OUTPUT_FOLDER'],
         help=('Output folder to write output files'
-              f' (default: {DEFAULT_OUTPUT_FOLDER})')
+              f' (default: {DEFAULT_ARGS["OUTPUT_FOLDER"]})')
     )
 
     parser.add_argument(
         '--nplicate',
         type=int,
-        default=DEFAULT_NPLICATE,
+        default=DEFAULT_ARGS['NPLICATE'],
         help=('Numbers of copies of volume sets'
-              f' (default: {DEFAULT_NPLICATE})')
+              f' (default: {DEFAULT_ARGS["NPLICATE"]})')
+    )
+
+    parser.add_argument(
+        '--keep-nil-vol',
+        action=BooleanOptionalAction,
+        default=DEFAULT_ARGS['KEEP_NIL_VOL'],
+        help='Keep nil volumes in instructions or not (default: yes)'
+    )
+
+    parser.add_argument(
+        '-spwc', '--source_plate_well_capacity',
+        type=int,
+        default=DEFAULT_ARGS['SOURCE_PLATE_WELL_CAPACITY'],
+        help=('Maximum volume capacity of the source plate in nL'
+              f' (default: {DEFAULT_ARGS["SOURCE_PLATE_WELL_CAPACITY"]})')
+    )
+
+    parser.add_argument(
+        '--optimize-well-volumes',
+        nargs='*',
+        default=DEFAULT_ARGS["OPTIMIZE_VOLUMES"],
+        help=('Save volumes in source plate for all factors.'
+              'It may trigger more volume pipetting warnings.'
+              'If list of factors is given (separated by blanks), '
+              'save only for these ones '
+              f'(default: {DEFAULT_ARGS["OPTIMIZE_VOLUMES"]}).')
+    )
+
+    parser.add_argument(
+        '--plate-dimensions',
+        type=str,
+        default=DEFAULT_ARGS['PLATE_DIMENSIONS'],
+        help=(f'Dimensions of plate separated by a \'x\', '
+              'e.g. <nb_rows>x<nb_cols>'
+              f'(default: {DEFAULT_ARGS["PLATE_DIMENSIONS"]}).')
     )
 
     # Add logger arguments

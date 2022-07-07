@@ -1,19 +1,19 @@
-Parameter	Status	Maximum concentration	Stock concentration
-Mg-glutamate	doe	4	168
-k-glutamate	doe	80	3360
-CoA	doe	0.26	210
-3-PGA	doe	30	1400
-NTP	doe	1.5	630
-NAD	doe	0.33	138.6
-Folinic acid	doe	0.068	28.56
-Spermidine	doe	1	420
-tRNA	doe	0.2	84
-Amino acids	doe	1.5	6
-CAMP	doe	0.75	100
-Extract	const	30	300
-HEPES	const	50	2100
-PEG	const	2	200
-Promoter	const	10	300
-RBS	const	10	200
-GFP-DNA	dna_fluo	50	10
-GOI-DNA	dna_goi	50	300
+Parameter	Status	Maximum concentration	Stock concentration	Parameter dead volume
+Mg-glutamate	doe	4	168	0
+k-glutamate	doe	80	3360	0
+CoA	doe	0.26	210	0
+3-PGA	doe	30	1400	0
+NTP	doe	1.5	630	0
+NAD	doe	0.33	138.6	0
+Folinic acid	doe	0.068	28.56	0
+Spermidine	doe	1	420	0
+tRNA	doe	0.2	84	0
+Amino acids	doe	1.5	6	0
+CAMP	doe	0.75	100	0
+Extract	const	30	300	2000
+HEPES	const	50	2100	0
+PEG	const	2	200	4000
+Promoter	const	10	300	0
+RBS	const	10	200	0
+GFP-DNA	dna_fluo	50	10	0
+GOI-DNA	dna_goi	50	300	0

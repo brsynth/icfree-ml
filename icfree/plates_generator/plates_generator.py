@@ -19,7 +19,8 @@ from numpy import (
     abs as np_abs,
     multiply as np_multiply,
     inf as np_inf,
-    ndarray as np_ndarray
+    ndarray as np_ndarray,
+    fromiter as np_fromiter
 )
 
 from pandas import (
@@ -107,6 +108,10 @@ def input_processor(
             :, cfps_parameters_df.columns != 'Status'
         ].set_index('Parameter').T.to_dict('dict')
 
+    for key in ['doe', 'const']:
+        if key not in parameters:
+            parameters[key] = {}
+
     logger.debug(f'PARAMETERS: {parameters}')
 
     return parameters
@@ -149,6 +154,10 @@ def doe_levels_generator(
     levels_array : 2d-array
         N-by-samples array with uniformly spaced values between 0 and 1.
     """
+
+    if n_variable_parameters <= 0:
+        return np_asarray([])
+
     sampling = lhs(
         n_variable_parameters,
         samples=doe_nb_samples,
@@ -199,6 +208,9 @@ def levels_to_concentrations(
     """
     logger.debug(f'LEVELS ARRAY:\n{levels_array}')
     logger.debug(f'MAXIMUM CONCENTRATIONS:\n{maximum_concentrations}')
+    if levels_array is None or levels_array.size <= 0:
+        return np_asarray([])
+
     concentrations = np_multiply(
         levels_array,
         maximum_concentrations
@@ -264,12 +276,25 @@ def plates_generator(
     logger.debug(f'DNA_CONCENTRATIONS: {dna_concentrations}')
     logger.debug(f'PARAMETERS:\n{parameters}')
 
+    # Add DoE combinatorial parameters
     headers = parameters['doe']
+    initial_set_array = doe_concentrations.copy()
+
     # Add constant parameters
-    initial_set_array = [
-        np_concatenate((concentrations, list(const_concentrations.values())))
-        for concentrations in doe_concentrations
-    ]
+    # If the is no DoE concentrations
+    if len(initial_set_array) == 0:
+        # Then fill with const concentrations
+        initial_set_array = [
+            np_fromiter(const_concentrations.values(), dtype=float)
+        ]
+    else:  # Else, add const concentrations to DoE ones
+        initial_set_array = [
+            np_concatenate(
+                (concentrations,
+                 list(const_concentrations.values()))
+            )
+            for concentrations in initial_set_array
+        ]
     headers += parameters['const']
 
     # Add combinatorial parameters
