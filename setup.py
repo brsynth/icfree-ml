@@ -7,7 +7,7 @@ from setuptools import (
 
 
 ## INFOS ##
-package     = 'icfree-ml'
+package     = 'icfree'
 descr       = 'Generate plates for cell-free buffer optimization'
 url         = 'https://github.com/brsynth/icfree-ml/'
 authors     = 'Yorgo El Moubayed, Joan Hérisson'
