@@ -39,6 +39,9 @@ from icfree.plates_generator.plates_generator import (
     plates_generator,
     save_plates
 )
+from icfree.plates_generator.__main__ import (
+    change_status
+)
 
 
 class Test(TestCase):
@@ -531,3 +534,24 @@ class Test(TestCase):
         assert ref_initial_set == tested_initial_set
         assert ref_normalizer_set == tested_normalizer_set
         assert ref_autofluorescence_set == tested_autofluorescence_set
+
+    def test_change_status(self):
+        input_df = input_importer(
+            os_path.join(
+                self.INPUT_FOLDER,
+                'proCFPS_parameters.tsv'
+            )
+        )
+        parameters = input_processor(input_df)
+        parameters = change_status(parameters, 'const')
+        with open(
+            os_path.join(
+                self.REF_FOLDER,
+                'proCFPS_parameters_const.json'
+            ), 'r'
+        ) as fp:
+            expected_parameters = json_load(fp)
+        self.assertDictEqual(
+            parameters,
+            expected_parameters
+        )
