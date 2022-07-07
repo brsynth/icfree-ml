@@ -49,16 +49,16 @@ coverage.xml
 *.mo
 *.pot
 
-# Django stuff:
+# Django stuff
 *.log
 local_settings.py
 db.sqlite3
 
-# Flask stuff:
+# Flask stuff
 instance/
 .webassets-cache
 
-# Scrapy stuff:
+# Scrapy stuff
 .scrapy
 
 # Sphinx documentation
@@ -106,3 +106,6 @@ venv.bak/
 
 cicd-toolkit
 .DS_Store
+
+# tmp active learning folder
+icfree/active_learning/archive
