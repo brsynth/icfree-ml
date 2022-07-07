@@ -540,7 +540,10 @@ class Test(TestCase):
             tested_volumes_summary = {}
             lines = fp.readlines()
             for line in lines[1:]:
-                (param, vol) = line.split('\t')
+                try:
+                    (param, vol) = line.split('\t')
+                except ValueError:
+                    continue
                 tested_volumes_summary[param] = float(vol)
 
         with open(
