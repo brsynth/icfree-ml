@@ -138,7 +138,27 @@ class Test(TestCase):
             )
 
     def test_input_processor_woDoEStatus(self):
-        pass
+        with open(
+            os_path.join(
+                    self.REF_FOLDER,
+                    'expected_parameters_doe_value_woDoE.json'
+            ), 'r'
+        ) as fp:
+            expected_dictionary = (json_load(fp))
+
+        with open(
+            os_path.join(
+                    self.INPUT_FOLDER,
+                    'proCFPS_parameters_woDoE.tsv'
+            ), 'r'
+        ) as fp:
+            tested_df = input_importer(fp)
+
+        tested_dictionary = input_processor(tested_df)
+        self.assertDictEqual(
+                expected_dictionary,
+                tested_dictionary
+            )
 
     def test_doe_levels_generator(self):
         n_variable_parameters = 12
