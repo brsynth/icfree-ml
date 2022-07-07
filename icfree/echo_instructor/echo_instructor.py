@@ -212,7 +212,7 @@ def concentrations_to_volumes(
         volumes_df[volumes_name] = round(
             multiply(
                 concentrations_df[volumes_name],
-                sample_volume_stock_ratio
+                sample_volume_stock_ratio_df
             ) / 2.5, 0
         ) * 2.5
         logger.debug(f'concentrations_df[{volumes_name}]:\n{concentrations_df[volumes_name]}')
@@ -333,7 +333,8 @@ def save_volumes(
     volumes_summary: Dict,
     warning_volumes_report: DataFrame,
     source_plate: Dict,
-    output_folder: str = DEFAULT_ARGS['OUTPUT_FOLDER']
+    output_folder: str = DEFAULT_ARGS['OUTPUT_FOLDER'],
+    logger: Logger = getLogger(__name__)
 ):
     """
     Save volumes dataframes in TSV files
@@ -356,6 +357,8 @@ def save_volumes(
     output_folder: str
         Path to storage folder for output files. Defaults to working directory.
     """
+    logger.debug(f'volumes_df: {volumes_df}')
+
     # Create output folder if it doesn't exist
     if not os_path.exists(output_folder):
         os_mkdir(output_folder)
@@ -365,10 +368,6 @@ def save_volumes(
     if not os_path.exists(output_subfolder):
         os_mkdir(output_subfolder)
 
-    # Get list of cfps parameters and add water
-    all_parameters = cfps_parameters_df['Parameter'].tolist()
-    all_parameters.append('Water')
-
     # Save volumes dataframes in TSV files
     for key, value in volumes_df.items():
         value.to_csv(
@@ -376,7 +375,7 @@ def save_volumes(
                 output_subfolder,
                 f'{key}_volumes.tsv'),
             sep='\t',
-            header=all_parameters,
+            header=volumes_df[key].columns,
             index=False)
 
     # Save volumes summary series in TSV files

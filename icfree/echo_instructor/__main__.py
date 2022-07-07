@@ -109,7 +109,8 @@ def main():
         volumes_summary,
         warning_volumes_report,
         source_plate,
-        args.output_folder
+        args.output_folder,
+        logger=logger
     )
 
 
