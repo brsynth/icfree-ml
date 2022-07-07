@@ -132,13 +132,13 @@ def change_status(
     }
     # Copy all values under args.all_status key,
     # except for status wich contain 'dna'
-    for status, value in parameters.items():
-        if 'dna' not in status:
-            _parameters[status].update(value)
+    for _status, _value in parameters.items():
+        if 'dna' not in _status:
+            _parameters[status].update(_value)
         else:
-            if status not in _parameters:
-                _parameters[status] = {}
-            _parameters[status].update(value)
+            if _status not in _parameters:
+                _parameters[_status] = {}
+            _parameters[_status].update(_value)
     return _parameters
 
 
