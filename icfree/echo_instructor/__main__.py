@@ -33,7 +33,8 @@ def main():
         args.cfps,
         args.init_set,
         args.norm_set,
-        args.autofluo_set)
+        args.autofluo_set,
+        logger=logger)
 
     try:
         (volumes,

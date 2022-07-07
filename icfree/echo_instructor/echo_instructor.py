@@ -19,7 +19,8 @@ from numpy import (
 from pandas import (
     read_csv,
     concat,
-    DataFrame
+    DataFrame,
+    Series
 )
 
 from string import (
@@ -47,10 +48,12 @@ from .args import (
 
 
 def input_importer(
-        cfps_parameters,
-        initial_concentrations,
-        normalizer_concentrations,
-        autofluorescence_concentrations):
+    cfps_parameters,
+    initial_concentrations,
+    normalizer_concentrations,
+    autofluorescence_concentrations,
+    logger: Logger = getLogger(__name__)
+):
     """
     Create concentrations dataframes from tsv files
 
@@ -79,19 +82,23 @@ def input_importer(
     cfps_parameters_df = read_csv(
         cfps_parameters,
         sep='\t')
+    logger.debug(f'cfps_parameters_df: {cfps_parameters_df}')
 
     concentrations_df = {}
     concentrations_df['initial'] = read_csv(
         initial_concentrations,
         sep='\t')
+    logger.debug(f'concentrations_df["initial"]: {concentrations_df["initial"]}')
 
     concentrations_df['normalizer'] = read_csv(
         normalizer_concentrations,
         sep='\t')
+    logger.debug(f'concentrations_df["normalizer"]: {concentrations_df["normalizer"]}')
 
     concentrations_df['autofluorescence'] = read_csv(
         autofluorescence_concentrations,
         sep='\t')
+    logger.debug(f'concentrations_df["autofluorescence"]: {concentrations_df["autofluorescence"]}')
 
     return (cfps_parameters_df,
             concentrations_df)
@@ -133,10 +140,10 @@ def concentrations_to_volumes(
     logger.info('Converting concentrations to volumes...')
     # Print out parameters
     logger.debug(f'cfps parameters:\n{cfps_parameters_df}')
-    logger.debug('Sample volume:\n%s', sample_volume)
+    logger.debug(f'Sample volume: {sample_volume}')
 
     # Exract stock concentrations from cfps_parameters_df
-    stock_concentrations_dict = dict(
+    stock_concentrations = dict(
         cfps_parameters_df[
             [
                 'Parameter',
@@ -144,11 +151,12 @@ def concentrations_to_volumes(
             ]
         ].to_numpy()
     )
-    stock_concentrations_df = fromiter(
-        stock_concentrations_dict.values(),
-        dtype=float
-    )
-    logger.debug('Stock concentrations:\n%s', stock_concentrations_df)
+    logger.debug(f'stock_concentrations: {stock_concentrations}')
+    # stock_concentrations_df = fromiter(
+    #     stock_concentrations_dict.values(),
+    #     dtype=float
+    # )
+    # logger.debug(f'Stock concentrations: {stock_concentrations_df}')
 
     # Exract dead plate volumes from cfps_parameters_df
     param_dead_volumes = dict(
@@ -160,11 +168,32 @@ def concentrations_to_volumes(
         ].to_numpy()
     )
     param_dead_volumes['Water'] = 0
-    logger.debug('Parameter dead volume:\n%s', param_dead_volumes)
+    logger.debug(f'Parameter dead volume:{param_dead_volumes}')
 
     # Calculate sample volume and stock concentrations ratio for each well
-    sample_volume_stock_ratio = \
-        sample_volume / stock_concentrations_df
+    sample_volume_stock_ratio = {
+        param: sample_volume / stock_concentrations[param]
+        for param in stock_concentrations
+    }
+    # sample_volume_stock_ratio = \
+    #     sample_volume / stock_concentrations_df
+    logger.debug(f'sample_volume_stock_ratio: {sample_volume_stock_ratio}')
+    sample_volume_stock_ratio_df = Series(
+        sample_volume_stock_ratio
+    )
+    logger.debug(f'sample_volume_stock_ratio_df: {sample_volume_stock_ratio_df}')
+    # Fit columns order to concentrations
+    first_key = list(concentrations_df.keys())[0]
+    if sample_volume_stock_ratio_df.size != concentrations_df[first_key].columns.size:
+        logger.error(
+            'It seems that the number of parameters is different '
+            'from the number of stock concentrations.'
+        )
+        raise(ValueError)
+    sample_volume_stock_ratio_df = sample_volume_stock_ratio_df[
+        concentrations_df[first_key].columns
+    ]
+    logger.debug(f'sample_volume_stock_ratio_df: {sample_volume_stock_ratio_df}')
 
     volumes_df = {}
     # volumes_summary = {}
@@ -175,27 +204,21 @@ def concentrations_to_volumes(
 
     for volumes_name in concentrations_df.keys():
         # Print out parameters
-        logger.debug(f'{volumes_name} volumes:\n'
-                     '{concentrations_df[volumes_name]}')
+        logger.debug(f'{volumes_name} concentrations:\n'
+                     f'{concentrations_df[volumes_name]}')
 
         # Convert concentrations into volumes
         # and make it a multiple of 2.5 (ECHO specs)
-        try:
-            volumes_df[volumes_name] = round(
-                multiply(
-                    concentrations_df[volumes_name],
-                    sample_volume_stock_ratio
-                ) / 2.5, 0
-            ) * 2.5
-            logger.debug(f'{volumes_name} volumes:\n'
-                         '{volumes_df[volumes_name]}')
-        except ValueError as e:
-            logger.error(
-                f'*** {e}'
-                'It seems that the number of parameters is different '
-                'from the number of stock concentrations. Exiting...'
-            )
-            raise(e)
+        volumes_df[volumes_name] = round(
+            multiply(
+                concentrations_df[volumes_name],
+                sample_volume_stock_ratio
+            ) / 2.5, 0
+        ) * 2.5
+        logger.debug(f'concentrations_df[{volumes_name}]:\n{concentrations_df[volumes_name]}')
+        logger.debug(f'sample_volume_stock_ratio: {sample_volume_stock_ratio}')
+        logger.debug(f'{volumes_name} volumes:\n'
+                        f'{volumes_df[volumes_name]}')
 
         # Add Water column
         volumes_df[volumes_name]['Water'] = \

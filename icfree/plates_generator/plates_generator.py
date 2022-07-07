@@ -112,6 +112,7 @@ def input_processor(
         if key not in parameters:
             parameters[key] = {}
 
+    logger.debug(f'cfps_parameters_df: {cfps_parameters_df}')
     logger.debug(f'PARAMETERS: {parameters}')
 
     return parameters
