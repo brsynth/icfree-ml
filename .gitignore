@@ -107,5 +107,5 @@ venv.bak/
 cicd-toolkit
 .DS_Store
 
-# tmp active learning folder
+# tmp active learning archive folder
 icfree/active_learning/archive
