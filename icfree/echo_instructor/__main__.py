@@ -26,8 +26,6 @@ def main():
     # CREATE LOGGER
     logger = create_logger(parser.prog, args.log)
 
-    args = parser.parse_args()
-
     (cfps_parameters_df,
      concentrations_df) = input_importer(
         args.cfps,
@@ -104,7 +102,6 @@ def main():
     }
 
     save_volumes(
-        cfps_parameters_df,
         volumes,
         volumes_summary,
         warning_volumes_report,

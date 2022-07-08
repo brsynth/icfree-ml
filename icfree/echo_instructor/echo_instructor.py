@@ -13,7 +13,7 @@ from csv import (
 from numpy import (
     fromiter,
     multiply,
-    vsplit
+    array_split
 )
 
 from pandas import (
@@ -233,19 +233,10 @@ def concentrations_to_volumes(
             )
         logger.debug(f'{volumes_name} volumes:\n{volumes_df[volumes_name]}')
 
-        # # Sum of volumes for each parameter
-        # volumes_summary[volumes_name] = \
-        #     volumes_df[volumes_name].sum().to_frame()
-
-        # # Add source plate dead volume to sum of volumes for each parameter
-        # volumes_summary[volumes_name] = \
-        #     volumes_summary[volumes_name].add(source_plate_dead_volume)
-
     # Convert Warning Report Dict to Dataframe
     warning_volumes_report = DataFrame.from_dict(warning_volumes_report)
 
     return (volumes_df,
-            # volumes_summary,
             param_dead_volumes,
             warning_volumes_report)
 
@@ -328,7 +319,6 @@ def check_volumes(
 
 
 def save_volumes(
-    cfps_parameters_df: DataFrame,
     volumes_df: Dict,
     volumes_summary: Dict,
     warning_volumes_report: DataFrame,
@@ -341,8 +331,6 @@ def save_volumes(
 
     Parameters
     ----------
-    cfps_parameters_df : DataFrame
-        Dataframe with cfps_parameters data.
     volumes_df : Dict
         DataFrames with converted volumes
         For 'normalizer' key, 0 is assigned to GOI-DNA column
@@ -446,9 +434,14 @@ def samples_merger(
     # Split volumes dataframes into three subsets
     volumes_list = {}
     for key in volumes.keys():
-        volumes_list[key] = vsplit(
+        sublst_len = len(volumes[key]) // n_split
+        volumes_list[key] = array_split(
             volumes[key],
-            n_split)
+            range(sublst_len, len(volumes[key]), sublst_len)
+        )
+        # vsplit(
+        #     volumes[key],
+        #     n_split)
 
     merged_plates_final = {}
     for i_split in range(n_split):
