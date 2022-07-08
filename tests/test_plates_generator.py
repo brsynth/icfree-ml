@@ -278,8 +278,35 @@ class Test(TestCase):
             ref_concentrations_array
         )
 
-    def test_levels_to_concentrations_EmptyStatusArray(self):
-        pass
+    def test_levels_to_concentrations_EmptyConcentrationsArray(self):
+        input_df = input_importer(os_path.join(
+                self.INPUT_FOLDER,
+                'proCFPS_parameters_woDoE.tsv'
+                ))
+        parameters = input_processor(input_df)
+
+        n_variable_parameters = 0
+        seed = 123
+        doe_levels = doe_levels_generator(
+            n_variable_parameters=n_variable_parameters,
+            seed=seed
+        )
+        max_conc = [
+            v['Maximum concentration']
+            for v in parameters['doe'].values()
+        ]
+
+        # Convert
+        doe_concentrations = levels_to_concentrations(
+            doe_levels,
+            max_conc,
+        )
+        expected_doe_concentrations_array = np_asarray([])
+
+        assert_array_equal(
+            doe_concentrations,
+            expected_doe_concentrations_array
+        )
 
     def test_plates_generator_all_columns(self):
         with open(
