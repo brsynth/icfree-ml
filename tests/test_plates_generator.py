@@ -21,7 +21,8 @@ from pandas import (
 from numpy import (
     append as np_append,
     arange as np_arange,
-    genfromtxt as np_genfromtxt
+    genfromtxt as np_genfromtxt,
+    asarray as np_asarray
 )
 from json import (
     load as json_load
@@ -213,8 +214,26 @@ class Test(TestCase):
             ref_sampling_array
         )
 
-    def test_doe_levels_generator_EmptyStatusArray(self):
-        pass
+    def test_doe_levels_generator_EmptyDoELevelsArray(self):
+        input_df = input_importer(os_path.join(
+                self.INPUT_FOLDER,
+                'proCFPS_parameters_woDoE.tsv'
+                ))
+        input_processor(input_df)
+
+        n_variable_parameters = 0
+        seed = 123
+        doe_levels = doe_levels_generator(
+            n_variable_parameters=n_variable_parameters,
+            seed=seed
+        )
+
+        expected_doe_levels = np_asarray([])
+
+        assert_array_equal(
+            doe_levels,
+            expected_doe_levels
+        )
 
     def test_levels_to_concentrations(self):
         input_df = input_importer(os_path.join(
