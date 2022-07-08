@@ -11,15 +11,15 @@ from csv import (
 )
 
 from numpy import (
-    fromiter as np_fromiter,
-    multiply as np_multiply,
-    vsplit as np_vsplit
+    multiply,
+    array_split
 )
 
 from pandas import (
-    read_csv as pd_read_csv,
-    concat as pd_concat,
-    DataFrame
+    read_csv,
+    concat,
+    DataFrame,
+    Series
 )
 
 from string import (
@@ -47,10 +47,12 @@ from .args import (
 
 
 def input_importer(
-        cfps_parameters,
-        initial_concentrations,
-        normalizer_concentrations,
-        autofluorescence_concentrations):
+    cfps_parameters,
+    initial_concentrations,
+    normalizer_concentrations,
+    autofluorescence_concentrations,
+    logger: Logger = getLogger(__name__)
+):
     """
     Create concentrations dataframes from tsv files
 
@@ -76,22 +78,33 @@ def input_importer(
     autofluorescence_volumes_df : DataFrame
         Dataframe with autofluorescence_concentrations data
     """
-    cfps_parameters_df = pd_read_csv(
+    cfps_parameters_df = read_csv(
         cfps_parameters,
         sep='\t')
+    logger.debug(f'cfps_parameters_df: {cfps_parameters_df}')
 
     concentrations_df = {}
-    concentrations_df['initial'] = pd_read_csv(
+    concentrations_df['initial'] = read_csv(
         initial_concentrations,
         sep='\t')
+    logger.debug(
+        f'concentrations_df["initial"]: {concentrations_df["initial"]}'
+    )
 
-    concentrations_df['normalizer'] = pd_read_csv(
+    concentrations_df['normalizer'] = read_csv(
         normalizer_concentrations,
         sep='\t')
+    logger.debug(
+        f'concentrations_df["normalizer"]: {concentrations_df["normalizer"]}'
+    )
 
-    concentrations_df['autofluorescence'] = pd_read_csv(
+    concentrations_df['autofluorescence'] = read_csv(
         autofluorescence_concentrations,
         sep='\t')
+    logger.debug(
+        'concentrations_df["autofluorescence"]: '
+        f'{concentrations_df["autofluorescence"]}'
+    )
 
     return (cfps_parameters_df,
             concentrations_df)
@@ -133,10 +146,10 @@ def concentrations_to_volumes(
     logger.info('Converting concentrations to volumes...')
     # Print out parameters
     logger.debug(f'cfps parameters:\n{cfps_parameters_df}')
-    logger.debug('Sample volume:\n%s', sample_volume)
+    logger.debug(f'Sample volume: {sample_volume}')
 
     # Exract stock concentrations from cfps_parameters_df
-    stock_concentrations_dict = dict(
+    stock_concentrations = dict(
         cfps_parameters_df[
             [
                 'Parameter',
@@ -144,11 +157,12 @@ def concentrations_to_volumes(
             ]
         ].to_numpy()
     )
-    stock_concentrations_df = np_fromiter(
-        stock_concentrations_dict.values(),
-        dtype=float
-    )
-    logger.debug('Stock concentrations:\n%s', stock_concentrations_df)
+    logger.debug(f'stock_concentrations: {stock_concentrations}')
+    # stock_concentrations_df = fromiter(
+    #     stock_concentrations_dict.values(),
+    #     dtype=float
+    # )
+    # logger.debug(f'Stock concentrations: {stock_concentrations_df}')
 
     # Exract dead plate volumes from cfps_parameters_df
     param_dead_volumes = dict(
@@ -160,11 +174,37 @@ def concentrations_to_volumes(
         ].to_numpy()
     )
     param_dead_volumes['Water'] = 0
-    logger.debug('Parameter dead volume:\n%s', param_dead_volumes)
+    logger.debug(f'Parameter dead volume:{param_dead_volumes}')
 
     # Calculate sample volume and stock concentrations ratio for each well
-    sample_volume_stock_ratio = \
-        sample_volume / stock_concentrations_df
+    sample_volume_stock_ratio = {
+        param: sample_volume / stock_concentrations[param]
+        for param in stock_concentrations
+    }
+    # sample_volume_stock_ratio = \
+    #     sample_volume / stock_concentrations_df
+    logger.debug(f'sample_volume_stock_ratio: {sample_volume_stock_ratio}')
+    sample_volume_stock_ratio_df = Series(
+        sample_volume_stock_ratio
+    )
+    logger.debug(
+        f'sample_volume_stock_ratio_df: {sample_volume_stock_ratio_df}'
+    )
+    # Fit columns order to concentrations
+    first_key = list(concentrations_df.keys())[0]
+    if sample_volume_stock_ratio_df.size != \
+       concentrations_df[first_key].columns.size:
+        logger.error(
+            'It seems that the number of parameters is different '
+            'from the number of stock concentrations.'
+        )
+        raise(ValueError)
+    sample_volume_stock_ratio_df = sample_volume_stock_ratio_df[
+        concentrations_df[first_key].columns
+    ]
+    logger.debug(
+        f'sample_volume_stock_ratio_df: {sample_volume_stock_ratio_df}'
+    )
 
     volumes_df = {}
     # volumes_summary = {}
@@ -175,27 +215,24 @@ def concentrations_to_volumes(
 
     for volumes_name in concentrations_df.keys():
         # Print out parameters
-        logger.debug(f'{volumes_name} volumes:\n'
-                     '{concentrations_df[volumes_name]}')
+        logger.debug(f'{volumes_name} concentrations:\n'
+                     f'{concentrations_df[volumes_name]}')
 
         # Convert concentrations into volumes
         # and make it a multiple of 2.5 (ECHO specs)
-        try:
-            volumes_df[volumes_name] = round(
-                np_multiply(
-                    concentrations_df[volumes_name],
-                    sample_volume_stock_ratio
-                ) / 2.5, 0
-            ) * 2.5
-            logger.debug(f'{volumes_name} volumes:\n'
-                         '{volumes_df[volumes_name]}')
-        except ValueError as e:
-            logger.error(
-                f'*** {e}'
-                'It seems that the number of parameters is different '
-                'from the number of stock concentrations. Exiting...'
-            )
-            raise(e)
+        volumes_df[volumes_name] = round(
+            multiply(
+                concentrations_df[volumes_name],
+                sample_volume_stock_ratio_df
+            ) / 2.5, 0
+        ) * 2.5
+        logger.debug(
+            f'concentrations_df[{volumes_name}]:\n'
+            f'{concentrations_df[volumes_name]}'
+        )
+        logger.debug(f'sample_volume_stock_ratio: {sample_volume_stock_ratio}')
+        logger.debug(f'{volumes_name} volumes:\n'
+                     f'{volumes_df[volumes_name]}')
 
         # Add Water column
         volumes_df[volumes_name]['Water'] = \
@@ -210,19 +247,10 @@ def concentrations_to_volumes(
             )
         logger.debug(f'{volumes_name} volumes:\n{volumes_df[volumes_name]}')
 
-        # # Sum of volumes for each parameter
-        # volumes_summary[volumes_name] = \
-        #     volumes_df[volumes_name].sum().to_frame()
-
-        # # Add source plate dead volume to sum of volumes for each parameter
-        # volumes_summary[volumes_name] = \
-        #     volumes_summary[volumes_name].add(source_plate_dead_volume)
-
     # Convert Warning Report Dict to Dataframe
     warning_volumes_report = DataFrame.from_dict(warning_volumes_report)
 
     return (volumes_df,
-            # volumes_summary,
             param_dead_volumes,
             warning_volumes_report)
 
@@ -305,20 +333,18 @@ def check_volumes(
 
 
 def save_volumes(
-    cfps_parameters_df: DataFrame,
     volumes_df: Dict,
     volumes_summary: Dict,
     warning_volumes_report: DataFrame,
     source_plate: Dict,
-    output_folder: str = DEFAULT_ARGS['OUTPUT_FOLDER']
+    output_folder: str = DEFAULT_ARGS['OUTPUT_FOLDER'],
+    logger: Logger = getLogger(__name__)
 ):
     """
     Save volumes dataframes in TSV files
 
     Parameters
     ----------
-    cfps_parameters_df : DataFrame
-        Dataframe with cfps_parameters data.
     volumes_df : Dict
         DataFrames with converted volumes
         For 'normalizer' key, 0 is assigned to GOI-DNA column
@@ -333,6 +359,8 @@ def save_volumes(
     output_folder: str
         Path to storage folder for output files. Defaults to working directory.
     """
+    logger.debug(f'volumes_df: {volumes_df}')
+
     # Create output folder if it doesn't exist
     if not os_path.exists(output_folder):
         os_mkdir(output_folder)
@@ -342,10 +370,6 @@ def save_volumes(
     if not os_path.exists(output_subfolder):
         os_mkdir(output_subfolder)
 
-    # Get list of cfps parameters and add water
-    all_parameters = cfps_parameters_df['Parameter'].tolist()
-    all_parameters.append('Water')
-
     # Save volumes dataframes in TSV files
     for key, value in volumes_df.items():
         value.to_csv(
@@ -353,7 +377,7 @@ def save_volumes(
                 output_subfolder,
                 f'{key}_volumes.tsv'),
             sep='\t',
-            header=all_parameters,
+            header=volumes_df[key].columns,
             index=False)
 
     # Save volumes summary series in TSV files
@@ -424,14 +448,19 @@ def samples_merger(
     # Split volumes dataframes into three subsets
     volumes_list = {}
     for key in volumes.keys():
-        volumes_list[key] = np_vsplit(
+        sublst_len = len(volumes[key]) // n_split
+        volumes_list[key] = array_split(
             volumes[key],
-            n_split)
+            range(sublst_len, len(volumes[key]), sublst_len)
+        )
+        # vsplit(
+        #     volumes[key],
+        #     n_split)
 
     merged_plates_final = {}
     for i_split in range(n_split):
         # Put together each (i_split)th of volumes_list
-        merged_plates = pd_concat(
+        merged_plates = concat(
             [
                 _volumes[i_split]
                 for _volumes in volumes_list.values()
@@ -439,7 +468,7 @@ def samples_merger(
             axis=0
         )
         # Nplicate merged subsets
-        merged_plates_final[f'merged_plate_{i_split+1}'] = pd_concat(
+        merged_plates_final[f'merged_plate_{i_split+1}'] = concat(
             [merged_plates]*nplicate,
             ignore_index=True
         )
@@ -822,7 +851,7 @@ def echo_instructions_generator(
 
             worklist = DataFrame(worklist)
             all_sources[parameter_name] = worklist
-            instructions = pd_concat(
+            instructions = concat(
                 all_sources.values()
             ).reset_index(drop=True)
 

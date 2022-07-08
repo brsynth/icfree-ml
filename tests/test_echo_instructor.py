@@ -144,8 +144,6 @@ class Test(TestCase):
                 self.tested_normalizer_concentrations,
                 self.tested_autofluorescence_concentrations)
 
-        print(expected_cfps_parameters_df)
-        print(tested_cfps_parameters_df)
         # Compare dataframes while ignoring data types
         assert_frame_equal(
             expected_cfps_parameters_df,
@@ -240,7 +238,7 @@ class Test(TestCase):
             os_path.join(
                 self.REF_FOLDER,
                 'volumes_output',
-                'expected_volumes_summary.tsv'
+                'volumes_summary.tsv'
             )
         ) as fp:
             expected_volumes_summary = {}
@@ -361,7 +359,6 @@ class Test(TestCase):
                 self.INPUT_FOLDER,
                 'proCFPS_parameters_woGOI.tsv'
                 )
-
         (tested_cfps_parameters_df,
          tested_concentrations_df) = input_importer(
             tested_cfps_parameters,
@@ -369,207 +366,16 @@ class Test(TestCase):
             self.tested_normalizer_concentrations,
             self.tested_autofluorescence_concentrations)
 
-        value_error = \
-            "Unable to coerce to Series, length must be 18: given 17"
+        # value_error = \
+        #     "Unable to coerce to Series, length must be 18: given 17"
         with pytest_raises(
             ValueError,
-            match=value_error
+            # match=value_error
         ):
             concentrations_to_volumes(
                 tested_cfps_parameters_df,
                 tested_concentrations_df,
                 sample_volume=10000)
-
-    def test_save_volumes_wExistingOutFolder(self):
-        with TemporaryDirectory() as tmpFolder:
-            self._test_save_volumes(
-                output_folder=tmpFolder
-            )
-
-    def test_save_volumes_woExistingOutFolder(self):
-        self._test_save_volumes(
-            output_folder=NamedTemporaryFile().name
-        )
-
-    def _test_save_volumes(
-            self,
-            output_folder: str
-    ):
-        (tested_cfps_parameters_df,
-         tested_concentrations_df) = input_importer(
-            self.tested_cfps_parameters,
-            self.tested_initial_concentrations,
-            self.tested_normalizer_concentrations,
-            self.tested_autofluorescence_concentrations)
-
-        (tested_volumes_df,
-         param_dead_volumes,
-         tested_warning_volumes_report) = concentrations_to_volumes(
-            tested_cfps_parameters_df,
-            tested_concentrations_df,
-            sample_volume=10000)
-
-        # Load volumes refrence files
-        ref_filename = 'expected_initial_volumes'
-        with open(
-            os_path.join(
-                    self.REF_FOLDER_VOLUMES,
-                    f'{ref_filename}.tsv'
-            )
-        ) as fp:
-            expected_initial_volumes = fp.read()
-
-        ref_filename = 'expected_autofluorescence_volumes'
-        with open(
-            os_path.join(
-                    self.REF_FOLDER_VOLUMES,
-                    f'{ref_filename}.tsv'
-            )
-        ) as fp:
-            expected_autofluorescence_volumes = fp.read()
-
-        ref_filename = 'expected_normalizer_volumes'
-        with open(
-            os_path.join(
-                    self.REF_FOLDER_VOLUMES,
-                    f'{ref_filename}.tsv'
-            )
-        ) as fp:
-            expected_normalizer_volumes = fp.read()
-
-        # Load summary volumes refrence files
-        with open(
-            os_path.join(
-                self.REF_FOLDER_VOLUMES,
-                'expected_volumes_summary.tsv'
-            )
-        ) as fp:
-            expected_volumes_summary = {}
-            lines = fp.readlines()
-            for line in lines[1:]:
-                (param, vol) = line.split('\t')
-                expected_volumes_summary[param] = float(vol)
-
-        # ref_filename = 'expected_autofluorescence_volumes_summary'
-        # with open(
-        #     os_path.join(
-        #             self.REF_FOLDER_VOLUMES,
-        #             f'{ref_filename}.tsv'
-        #     )
-        # ) as fp:
-        #     expected_autofluorescence_volumes_summary = fp.read()
-
-        # ref_filename = 'expected_normalizer_volumes_summary'
-        # with open(
-        #     os_path.join(
-        #             self.REF_FOLDER_VOLUMES,
-        #             f'{ref_filename}.tsv'
-        #     )
-        # ) as fp:
-        #     expected_normalizer_volumes_summary = fp.read()
-
-        ref_filename = 'expected_warning_volumes_report'
-        with open(
-            os_path.join(
-                    self.REF_FOLDER_VOLUMES,
-                    f'{ref_filename}.tsv'
-            )
-        ) as fp:
-            expected_warning_volumes_report = fp.read()
-
-        source_plate = src_plate_generator(
-            volumes=tested_volumes_df,
-            plate_dead_volume=15000,
-            plate_well_capacity=60000,
-            param_dead_volumes=param_dead_volumes,
-            starting_well='A1',
-            optimize_well_volumes=['all'],
-            vertical=True,
-            plate_dimensions='16x24'
-        )
-
-        tested_volumes_summary = {
-            param: volume['nb_wells'] * volume['volume_per_well']
-            for param, volume in source_plate.items()
-        }
-
-        # Generate test volume files
-        save_volumes(
-            tested_cfps_parameters_df,
-            tested_volumes_df,
-            tested_volumes_summary,
-            tested_warning_volumes_report,
-            source_plate,
-            output_folder=output_folder)
-
-        # Load test volume files
-        with open(
-            os_path.join(
-                    output_folder,
-                    'volumes_output',
-                    'initial_volumes.tsv'
-            )
-        ) as fp:
-            tested_initial_volumes = fp.read()
-
-        with open(
-            os_path.join(
-                    output_folder,
-                    'volumes_output',
-                    'normalizer_volumes.tsv'
-            )
-        ) as fp:
-            tested_normalizer_volumes = fp.read()
-
-        with open(
-            os_path.join(
-                    output_folder,
-                    'volumes_output',
-                    'autofluorescence_volumes.tsv'
-            )
-        ) as fp:
-            tested_autofluorescence_volumes = fp.read()
-
-        with open(
-            os_path.join(
-                output_folder,
-                'volumes_output',
-                'volumes_summary.tsv'
-            )
-        ) as fp:
-            tested_volumes_summary = {}
-            lines = fp.readlines()
-            for line in lines[1:]:
-                try:
-                    (param, vol) = line.split('\t')
-                except ValueError:
-                    continue
-                tested_volumes_summary[param] = float(vol)
-
-        with open(
-            os_path.join(
-                    output_folder,
-                    'volumes_output',
-                    'warning_volumes_report.tsv'
-            )
-        ) as fp:
-            tested_warning_volumes_report = fp.read()
-
-        # Compare volumes files
-        assert expected_initial_volumes == tested_initial_volumes
-        assert expected_normalizer_volumes == tested_normalizer_volumes
-        assert expected_autofluorescence_volumes == \
-            tested_autofluorescence_volumes
-
-        # Compare volumes summary files
-        self.assertDictEqual(
-            expected_volumes_summary,
-            tested_volumes_summary
-        )
-
-        # Compare warning volumes reports
-        assert expected_warning_volumes_report == \
-            tested_warning_volumes_report
 
     def test_samples_merger(self):
         (tested_cfps_parameters_df,
@@ -933,24 +739,77 @@ class Test(TestCase):
     def test_save_echo_instructions_wExistingOutFolder(self):
         with TemporaryDirectory() as tmpFolder:
             self._test_save_echo_instructions(
+                input_folder=self.INPUT_FOLDER,
+                ref_folder=self.REF_FOLDER,
                 output_folder=tmpFolder
             )
 
     def test_save_echo_instructions_woExistingOutFolder(self):
         self._test_save_echo_instructions(
+            input_folder=self.INPUT_FOLDER,
+            ref_folder=self.REF_FOLDER,
             output_folder=NamedTemporaryFile().name
         )
 
     def _test_save_echo_instructions(
+        self,
+        input_folder,
+        ref_folder,
+        output_folder
+    ):
+        concentrations = {}
+        distributed = {}
+        for set in ['initial', 'normalizer', 'autofluorescence']:
+            concentrations[set] = os_path.join(
+                input_folder,
+                f'{set}_concentrations.tsv'
+            )
+            distributed[set] = os_path.join(
+                ref_folder,
+                'echo_instructions',
+                'distributed',
+                f'distributed_{set}_instructions.csv'
+            )
+        merged = []
+        for i in range(3):
+            merged.append(
+                os_path.join(
+                    ref_folder,
+                    'echo_instructions',
+                    'merged',
+                    f'merged_plate_{i+1}_final_instructions.csv'
+                )
+            )
+        input_file = os_path.join(
+            input_folder,
+            'proCFPS_parameters.tsv'
+        )
+        self.__test_save_echo_instructions(
+            tested_cfps_parameters=input_file,
+            concentrations=concentrations,
+            expected_merged=merged,
+            expected_distributed=distributed,
+            output_folder=output_folder
+        )
+
+    def __test_save_echo_instructions(
             self,
+            tested_cfps_parameters,
+            concentrations,
+            expected_merged,
+            expected_distributed,
             output_folder: str
             ):
+        tested_initial_concentrations = concentrations['initial']
+        tested_normalizer_concentrations = concentrations['normalizer']
+        tested_autofluorescence_concentrations = \
+            concentrations['autofluorescence']
         (tested_cfps_parameters_df,
          tested_concentrations_df) = input_importer(
-            self.tested_cfps_parameters,
-            self.tested_initial_concentrations,
-            self.tested_normalizer_concentrations,
-            self.tested_autofluorescence_concentrations)
+            tested_cfps_parameters,
+            tested_initial_concentrations,
+            tested_normalizer_concentrations,
+            tested_autofluorescence_concentrations)
 
         (tested_volumes_df,
          param_dead_volumes,
@@ -1004,145 +863,240 @@ class Test(TestCase):
 
         # TEST MERGED ECHO INSTRUCTIONS FILES
         # Load refrence files
-        ref_filename = 'expected_merged_plate_1_final_instructions'
-        with open(
-            os_path.join(
-                    self.REF_FOLDER_INSTRUCTIONS,
-                    'merged',
-                    f'{ref_filename}.csv'
-            )
-        ) as fp:
-            expected_merged_plate_1_final_instructions = fp.read()
-
-        ref_filename = 'expected_merged_plate_2_final_instructions'
-        with open(
-            os_path.join(
-                    self.REF_FOLDER_INSTRUCTIONS,
-                    'merged',
-                    f'{ref_filename}.csv'
-            )
-        ) as fp:
-            expected_merged_plate_2_final_instructions = fp.read()
-
-        ref_filename = 'expected_merged_plate_3_final_instructions'
-        with open(
-            os_path.join(
-                    self.REF_FOLDER_INSTRUCTIONS,
-                    'merged',
-                    f'{ref_filename}.csv'
-            )
-        ) as fp:
-            expected_merged_plate_3_final_instructions = fp.read()
+        expected_merged_files = []
+        for _expected_merged in expected_merged:
+            with open(_expected_merged) as fp:
+                expected_merged_files.append(fp.read())
 
         # Load tested merged echo instructions files
-        with open(
-            os_path.join(
-                    output_folder,
-                    'echo_instructions',
-                    'merged',
-                    'merged_plate_1_final_instructions.csv'
-            )
-        ) as fp:
-            tested_merged_plate_1_final_instructions = fp.read()
-
-        with open(
-            os_path.join(
-                    output_folder,
-                    'echo_instructions',
-                    'merged',
-                    'merged_plate_2_final_instructions.csv'
-            )
-        ) as fp:
-            tested_merged_plate_2_final_instructions = fp.read()
-
-        with open(
-            os_path.join(
-                    output_folder,
-                    'echo_instructions',
-                    'merged',
-                    'merged_plate_3_final_instructions.csv'
-            )
-        ) as fp:
-            tested_merged_plate_3_final_instructions = fp.read()
+        tested_merged_files = []
+        for i in range(len(expected_merged_files)):
+            with open(
+                os_path.join(
+                        output_folder,
+                        'echo_instructions',
+                        'merged',
+                        f'merged_plate_{i+1}_final_instructions.csv'
+                )
+            ) as fp:
+                tested_merged_files.append(fp.read())
 
         # Compare merged echo instructions files
-        assert expected_merged_plate_1_final_instructions == \
-            tested_merged_plate_1_final_instructions
-        assert expected_merged_plate_2_final_instructions == \
-            tested_merged_plate_2_final_instructions
-        assert expected_merged_plate_3_final_instructions == \
-            tested_merged_plate_3_final_instructions
+        for i in range(len(tested_merged_files)):
+            assert expected_merged_files[i] == \
+                tested_merged_files[i]
 
         # TEST DISTRBUTED ECHO INSTRUCTIONS FILES
         # Load refrence files
-        ref_filename = 'expected_distributed_initial_instructions'
+        for set in expected_distributed.keys():
+            ref_filename = expected_distributed[set]
+            with open(ref_filename) as fp:
+                expected_distributed_file = fp.read()
+            # Load tested distributed echo instructions files
+            with open(
+                os_path.join(
+                        output_folder,
+                        'echo_instructions',
+                        'distributed',
+                        f'distributed_{set}_instructions.csv'
+                )
+            ) as fp:
+                tested_distributed_file = fp.read()
+            # Compare distributed echo instructions files
+            assert expected_distributed_file == \
+                tested_distributed_file
+
+    def test_save_volumes_wExistingOutFolder(self):
+        with TemporaryDirectory() as tmpFolder:
+            self._test_save_volumes(
+                cfps_file=self.tested_cfps_parameters,
+                input_folder=self.INPUT_FOLDER,
+                ref_folder=self.REF_FOLDER_VOLUMES,
+                output_folder=tmpFolder
+            )
+
+    def test_save_volumes_woExistingOutFolder(self):
+        self._test_save_volumes(
+            cfps_file=self.tested_cfps_parameters,
+            input_folder=self.INPUT_FOLDER,
+            ref_folder=self.REF_FOLDER_VOLUMES,
+            output_folder=NamedTemporaryFile().name
+        )
+
+    def test_save_volumes_PaulData(self):
+        input_folder = os_path.join(
+            self.INPUT_FOLDER,
+            'Paul'
+        )
+        ref_folder = os_path.join(
+            self.REF_FOLDER,
+            'Paul',
+            'volumes_output'
+        )
+        cfps_file = os_path.join(
+            self.INPUT_FOLDER,
+            'Paul',
+            'proCFPS_parameters.tsv'
+        )
+        with TemporaryDirectory() as tmpFolder:
+            self._test_save_volumes(
+                cfps_file=cfps_file,
+                input_folder=input_folder,
+                ref_folder=ref_folder,
+                output_folder=tmpFolder
+            )
+
+    def _test_save_volumes(
+        self,
+        cfps_file,
+        input_folder,
+        ref_folder,
+        output_folder
+    ):
+        concentrations = {}
+        volumes = {}
+        for set in ['initial', 'normalizer', 'autofluorescence']:
+            concentrations[set] = os_path.join(
+                input_folder,
+                f'{set}_concentrations.tsv'
+            )
+            volumes[set] = os_path.join(
+                ref_folder,
+                f'{set}_volumes.tsv'
+            )
+        volumes_report = {}
+        volumes_report['warning'] = os_path.join(
+            ref_folder,
+            'warning_volumes_report.tsv'
+        )
+        volumes_report['summary'] = os_path.join(
+            ref_folder,
+            'volumes_summary.tsv'
+        )
+        self.__test_save_volumes(
+            tested_cfps_parameters=cfps_file,
+            concentrations=concentrations,
+            expected_volumes=volumes,
+            expected_volumes_report=volumes_report,
+            output_folder=output_folder
+        )
+
+    def __test_save_volumes(
+            self,
+            tested_cfps_parameters,
+            concentrations,
+            expected_volumes,
+            expected_volumes_report,
+            output_folder: str
+            ):
+        tested_initial_concentrations = concentrations['initial']
+        tested_normalizer_concentrations = concentrations['normalizer']
+        tested_autofluorescence_concentrations = \
+            concentrations['autofluorescence']
+        (tested_cfps_parameters_df,
+         tested_concentrations_df) = input_importer(
+            tested_cfps_parameters,
+            tested_initial_concentrations,
+            tested_normalizer_concentrations,
+            tested_autofluorescence_concentrations)
+
+        (tested_volumes_df,
+         param_dead_volumes,
+         tested_warning_volumes_report) = concentrations_to_volumes(
+            tested_cfps_parameters_df,
+            tested_concentrations_df,
+            sample_volume=10000)
+
+        source_plate = src_plate_generator(
+            volumes=tested_volumes_df,
+            plate_dead_volume=15000,
+            plate_well_capacity=60000,
+            param_dead_volumes=param_dead_volumes,
+            starting_well='A1',
+            optimize_well_volumes=['all'],
+            vertical=True,
+            plate_dimensions='16x24'
+        )
+
+        tested_volumes_summary = {
+            param: volume['nb_wells'] * volume['volume_per_well']
+            for param, volume in source_plate.items()
+        }
+
+        # Generate test volume files
+        save_volumes(
+            tested_volumes_df,
+            tested_volumes_summary,
+            tested_warning_volumes_report,
+            source_plate,
+            output_folder=output_folder)
+
+        for set, filename in expected_volumes.items():
+            print(filename, os_path.join(
+                        output_folder,
+                        'volumes_output',
+                        f'{set}_volumes.tsv'
+                ))
+            # Load volumes refrence files
+            with open(filename) as fp:
+                ref_volumes = fp.read()
+            # Load test volume files
+            with open(
+                os_path.join(
+                        output_folder,
+                        'volumes_output',
+                        f'{set}_volumes.tsv'
+                )
+            ) as fp:
+                tested_volumes = fp.read()
+            # Compare volumes files
+            assert ref_volumes == tested_volumes
+
+        # Load summary volumes refrence files
+        with open(expected_volumes_report['summary']) as fp:
+            expected_volumes_summary = {}
+            lines = fp.readlines()
+            for line in lines[1:]:
+                (param, vol) = line.split('\t')
+                expected_volumes_summary[param] = float(vol)
+
+        with open(expected_volumes_report['warning']) as fp:
+            expected_warning_volumes_report = fp.read()
+
         with open(
             os_path.join(
-                    self.REF_FOLDER_INSTRUCTIONS,
-                    'distributed',
-                    f'{ref_filename}.csv'
+                output_folder,
+                'volumes_output',
+                'volumes_summary.tsv'
             )
         ) as fp:
-            expected_distributed_initial_instructions = fp.read()
+            tested_volumes_summary = {}
+            lines = fp.readlines()
+            for line in lines[1:]:
+                try:
+                    (param, vol) = line.split('\t')
+                except ValueError:
+                    continue
+                tested_volumes_summary[param] = float(vol)
 
-        ref_filename = 'expected_distributed_normalizer_instructions'
-        with open(
-            os_path.join(
-                    self.REF_FOLDER_INSTRUCTIONS,
-                    'distributed',
-                    f'{ref_filename}.csv'
-            )
-        ) as fp:
-            expected_distributed_normalizer_instructions = fp.read()
-
-        ref_filename = 'expected_distributed_autofluorescence_instructions'
-        with open(
-            os_path.join(
-                    self.REF_FOLDER_INSTRUCTIONS,
-                    'distributed',
-                    f'{ref_filename}.csv'
-            )
-        ) as fp:
-            expected_distributed_autofluorescence_instructions = fp.read()
-
-        # Load tested distributed echo instructions files
         with open(
             os_path.join(
                     output_folder,
-                    'echo_instructions',
-                    'distributed',
-                    'distributed_initial_instructions.csv'
+                    'volumes_output',
+                    'warning_volumes_report.tsv'
             )
         ) as fp:
-            tested_distributed_initial_instructions = fp.read()
+            tested_warning_volumes_report = fp.read()
 
-        with open(
-            os_path.join(
-                    output_folder,
-                    'echo_instructions',
-                    'distributed',
-                    'distributed_normalizer_instructions.csv'
-            )
-        ) as fp:
-            tested_distributed_normalizer_instructions = fp.read()
+        # Compare volumes summary files
+        self.assertDictEqual(
+            expected_volumes_summary,
+            tested_volumes_summary
+        )
 
-        with open(
-            os_path.join(
-                    output_folder,
-                    'echo_instructions',
-                    'distributed',
-                    'distributed_autofluorescence_instructions.csv'
-            )
-        ) as fp:
-            tested_distributed_autofluorescence_instructions = fp.read()
-
-        # Compare distributed echo instructions files
-        assert expected_distributed_initial_instructions == \
-            tested_distributed_initial_instructions
-        assert expected_distributed_normalizer_instructions == \
-            tested_distributed_normalizer_instructions
-        assert expected_distributed_autofluorescence_instructions == \
-            tested_distributed_autofluorescence_instructions
+        # Compare warning volumes reports
+        assert expected_warning_volumes_report == \
+            tested_warning_volumes_report
 
     def test_convert_index_well_vertical_384(self):
         rows = ascii_uppercase[:16]

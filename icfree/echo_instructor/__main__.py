@@ -26,14 +26,13 @@ def main():
     # CREATE LOGGER
     logger = create_logger(parser.prog, args.log)
 
-    args = parser.parse_args()
-
     (cfps_parameters_df,
      concentrations_df) = input_importer(
         args.cfps,
         args.init_set,
         args.norm_set,
-        args.autofluo_set)
+        args.autofluo_set,
+        logger=logger)
 
     try:
         (volumes,
@@ -103,12 +102,12 @@ def main():
     }
 
     save_volumes(
-        cfps_parameters_df,
         volumes,
         volumes_summary,
         warning_volumes_report,
         source_plate,
-        args.output_folder
+        args.output_folder,
+        logger=logger
     )
 
 
