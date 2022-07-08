@@ -9,24 +9,31 @@ from os import (
 from pickle import (
     load as pickle_load
 )
+
 from numpy.testing import (
     assert_array_equal
 )
+
 from pandas.testing import (
     assert_frame_equal
 )
+
 from pandas import (
-    DataFrame
+    DataFrame,
+    read_json as pd_read_json
 )
+
 from numpy import (
     append as np_append,
     arange as np_arange,
     genfromtxt as np_genfromtxt,
     asarray as np_asarray
 )
+
 from json import (
     load as json_load
 )
+
 from tempfile import (
     TemporaryDirectory,
     NamedTemporaryFile
@@ -40,6 +47,7 @@ from icfree.plates_generator.plates_generator import (
     plates_generator,
     save_plates
 )
+
 from icfree.plates_generator.__main__ import (
     change_status
 )
@@ -479,10 +487,99 @@ class Test(TestCase):
             tested_columns_autofluorescence_set)
 
     def test_plates_generator_AllStatusConst(self):
-        pass
+        input_df = input_importer(os_path.join(
+                self.INPUT_FOLDER,
+                'proCFPS_parameters_woDoE.tsv'
+                ))
+        parameters = input_processor(input_df)
 
-    def test_plates_generator_AllStatusDoE(self):
-        pass
+        n_variable_parameters = 0
+        seed = 123
+        doe_levels = doe_levels_generator(
+            n_variable_parameters=n_variable_parameters,
+            seed=seed
+        )
+        max_conc = [
+            v['Maximum concentration']
+            for v in parameters['doe'].values()
+        ]
+
+        doe_concentrations = levels_to_concentrations(
+            doe_levels,
+            max_conc,
+        )
+
+        dna_concentrations = {
+            v: dna_param[v]['Maximum concentration']
+            for status, dna_param in parameters.items()
+            for v in dna_param
+            if status.startswith('dna')
+        }
+
+        const_concentrations = {
+                k: v['Maximum concentration']
+                for k, v in parameters['const'].items()
+            }
+
+        plates = plates_generator(
+            doe_concentrations,
+            dna_concentrations,
+            const_concentrations,
+            parameters={k: list(v.keys()) for k, v in parameters.items()}
+        )
+        initial_set_df = plates['initial']
+        autofluorescence_set_df = plates['background']
+        normalizer_set_df = plates['normalizer']
+
+        # Load Reference Files
+        expected_initial_sampling_array_woDoE_df = pd_read_json(
+            os_path.join(
+                self.REF_FOLDER,
+                'expected_initial_sampling_array_woDoE_arr.json'
+            ),
+            orient='split'
+        )
+        expected_initial_sampling_array_woDoE_arr = \
+            expected_initial_sampling_array_woDoE_df.to_numpy()
+        expected_initial_sampling_array_woDoE_arr = \
+            expected_initial_sampling_array_woDoE_arr.reshape(1, 18)
+
+        expected_normalizer_sampling_array_woDoE_df = pd_read_json(
+            os_path.join(
+                self.REF_FOLDER,
+                'expected_normalizer_sampling_array_woDoE_arr.json'
+            ),
+            orient='split'
+        )
+        expected_normalizer_sampling_array_woDoE_arr = \
+            expected_normalizer_sampling_array_woDoE_df.to_numpy()
+        expected_normalizer_sampling_array_woDoE_arr = \
+            expected_normalizer_sampling_array_woDoE_arr.reshape(1, 18)
+
+        expected_autofluorescence_sampling_array_woDoE_df = pd_read_json(
+            os_path.join(
+                self.REF_FOLDER,
+                'expected_autofluorescence_sampling_array_woDoE_arr.json'
+            ),
+            orient='split'
+        )
+        expected_autofluorescence_sampling_array_woDoE_arr = \
+            expected_autofluorescence_sampling_array_woDoE_df.to_numpy()
+        expected_autofluorescence_sampling_array_woDoE_arr = \
+            expected_autofluorescence_sampling_array_woDoE_arr.reshape(1, 18)
+
+        assert_array_equal(
+            initial_set_df,
+            expected_initial_sampling_array_woDoE_arr
+        )
+        assert_array_equal(
+            normalizer_set_df,
+            expected_normalizer_sampling_array_woDoE_arr
+        )
+        assert_array_equal(
+            autofluorescence_set_df,
+            expected_autofluorescence_sampling_array_woDoE_arr
+        )
 
     def test_save_plates_wExistingOutFolder(self):
         with TemporaryDirectory() as tmpFolder:
