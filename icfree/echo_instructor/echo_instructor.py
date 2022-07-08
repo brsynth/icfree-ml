@@ -11,7 +11,6 @@ from csv import (
 )
 
 from numpy import (
-    fromiter,
     multiply,
     array_split
 )
@@ -88,17 +87,24 @@ def input_importer(
     concentrations_df['initial'] = read_csv(
         initial_concentrations,
         sep='\t')
-    logger.debug(f'concentrations_df["initial"]: {concentrations_df["initial"]}')
+    logger.debug(
+        f'concentrations_df["initial"]: {concentrations_df["initial"]}'
+    )
 
     concentrations_df['normalizer'] = read_csv(
         normalizer_concentrations,
         sep='\t')
-    logger.debug(f'concentrations_df["normalizer"]: {concentrations_df["normalizer"]}')
+    logger.debug(
+        f'concentrations_df["normalizer"]: {concentrations_df["normalizer"]}'
+    )
 
     concentrations_df['autofluorescence'] = read_csv(
         autofluorescence_concentrations,
         sep='\t')
-    logger.debug(f'concentrations_df["autofluorescence"]: {concentrations_df["autofluorescence"]}')
+    logger.debug(
+        'concentrations_df["autofluorescence"]: '
+        f'{concentrations_df["autofluorescence"]}'
+    )
 
     return (cfps_parameters_df,
             concentrations_df)
@@ -181,10 +187,13 @@ def concentrations_to_volumes(
     sample_volume_stock_ratio_df = Series(
         sample_volume_stock_ratio
     )
-    logger.debug(f'sample_volume_stock_ratio_df: {sample_volume_stock_ratio_df}')
+    logger.debug(
+        f'sample_volume_stock_ratio_df: {sample_volume_stock_ratio_df}'
+    )
     # Fit columns order to concentrations
     first_key = list(concentrations_df.keys())[0]
-    if sample_volume_stock_ratio_df.size != concentrations_df[first_key].columns.size:
+    if sample_volume_stock_ratio_df.size != \
+       concentrations_df[first_key].columns.size:
         logger.error(
             'It seems that the number of parameters is different '
             'from the number of stock concentrations.'
@@ -193,7 +202,9 @@ def concentrations_to_volumes(
     sample_volume_stock_ratio_df = sample_volume_stock_ratio_df[
         concentrations_df[first_key].columns
     ]
-    logger.debug(f'sample_volume_stock_ratio_df: {sample_volume_stock_ratio_df}')
+    logger.debug(
+        f'sample_volume_stock_ratio_df: {sample_volume_stock_ratio_df}'
+    )
 
     volumes_df = {}
     # volumes_summary = {}
@@ -215,10 +226,13 @@ def concentrations_to_volumes(
                 sample_volume_stock_ratio_df
             ) / 2.5, 0
         ) * 2.5
-        logger.debug(f'concentrations_df[{volumes_name}]:\n{concentrations_df[volumes_name]}')
+        logger.debug(
+            f'concentrations_df[{volumes_name}]:\n'
+            f'{concentrations_df[volumes_name]}'
+        )
         logger.debug(f'sample_volume_stock_ratio: {sample_volume_stock_ratio}')
         logger.debug(f'{volumes_name} volumes:\n'
-                        f'{volumes_df[volumes_name]}')
+                     f'{volumes_df[volumes_name]}')
 
         # Add Water column
         volumes_df[volumes_name]['Water'] = \

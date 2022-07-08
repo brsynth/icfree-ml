@@ -366,8 +366,8 @@ class Test(TestCase):
             self.tested_normalizer_concentrations,
             self.tested_autofluorescence_concentrations)
 
-        value_error = \
-            "Unable to coerce to Series, length must be 18: given 17"
+        # value_error = \
+        #     "Unable to coerce to Series, length must be 18: given 17"
         with pytest_raises(
             ValueError,
             # match=value_error
@@ -800,15 +800,10 @@ class Test(TestCase):
             expected_distributed,
             output_folder: str
             ):
-        # print(tested_cfps_parameters)
-        # print(concentrations)
-        # print(expected_merged)
-        # print(expected_distributed)
-        # print(output_folder)
-        # exit()
         tested_initial_concentrations = concentrations['initial']
         tested_normalizer_concentrations = concentrations['normalizer']
-        tested_autofluorescence_concentrations = concentrations['autofluorescence']
+        tested_autofluorescence_concentrations = \
+            concentrations['autofluorescence']
         (tested_cfps_parameters_df,
          tested_concentrations_df) = input_importer(
             tested_cfps_parameters,
@@ -996,7 +991,8 @@ class Test(TestCase):
             ):
         tested_initial_concentrations = concentrations['initial']
         tested_normalizer_concentrations = concentrations['normalizer']
-        tested_autofluorescence_concentrations = concentrations['autofluorescence']
+        tested_autofluorescence_concentrations = \
+            concentrations['autofluorescence']
         (tested_cfps_parameters_df,
          tested_concentrations_df) = input_importer(
             tested_cfps_parameters,
