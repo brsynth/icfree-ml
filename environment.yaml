@@ -1,4 +1,4 @@
-name: icfree-ml
+name: icfree
 channels:
   - conda-forge
 dependencies:
