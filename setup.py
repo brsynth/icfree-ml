@@ -11,7 +11,7 @@ package     = 'icfree'
 descr       = 'Generate plates for cell-free buffer optimization'
 url         = 'https://github.com/brsynth/icfree-ml/'
 authors     = 'Yorgo El Moubayed, Joan Hérisson'
-corr_author = 'yorgo.el-moubayed@inrae.fr'
+corr_author = 'joan.herisson@univ-evry.fr'
 
 
 ## LONG DESCRIPTION
@@ -62,6 +62,6 @@ setup(
         'License :: OSI Approved :: MIT License',
         'Operating System :: OS Independent',
     ],
-    python_requires               = '>=3.7',
+    python_requires               = '>=3.9',
 )
 
