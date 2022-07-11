@@ -42,7 +42,8 @@ def main():
             concentrations_df,
             args.sample_volume,
             logger=logger)
-    except ValueError:
+    except ValueError as e:
+        logger.error(f'{e}\nExiting...')
         return -1
 
     # print(param_dead_volumes)

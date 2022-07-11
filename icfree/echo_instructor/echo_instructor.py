@@ -226,6 +226,15 @@ def concentrations_to_volumes(
                 sample_volume_stock_ratio_df
             ) / 2.5, 0
         ) * 2.5
+        # for factor in volumes_df[volumes_name]:
+            # if volumes_df[volumes_name][factor].sum() == 0:
+            #     msg = (
+            #         f'{factor} rounded volume = 0. This is due to a '
+            #         f'sample volume too low ({sample_volume}) '
+            #         f'or a stock concentration of {factor} too high '
+            #         f'{stock_concentrations[factor]}.'
+            #     )
+            #     raise ValueError(msg)
         logger.debug(
             f'concentrations_df[{volumes_name}]:\n'
             f'{concentrations_df[volumes_name]}'
@@ -725,6 +734,15 @@ def spread_parameters(
     # Set number of wells needed
     plate = {}
     for factor in param_dead_volumes:
+        # If volume = 0, then nothing to do
+        if vol_sums[factor] == 0:
+            logger.warning(
+                f'{factor} has a volume = 0. '
+                'Please check if is expected or because '
+                f'sample volume is too low '
+                f'or the stock concentration is too high.'
+            )
+            continue
         if factor not in plate:
             plate[factor] = {}
         # Take account of dead volumes
@@ -757,26 +775,6 @@ def spread_parameters(
             )
         else:
             plate[factor]['volume_per_well'] = plate_well_capacity
-        # if plate[factor]['nb_wells'] > 1:
-        #     # Optimize well volume
-        #     if (
-        #         factor in optimize_well_volumes
-        #         or optimize_well_volumes == ['all']
-        #     ):
-        #         # Multiple of 2.5 (ECHO)
-        #         round_vol = ceil(
-        #             plate[factor]['volume_per_well'] / 2.5
-        #         ) * 2.5
-        #         # If the ceil vol > max well volume,
-        #         # then take the floor.
-        #         if round_vol > plate_well_capacity:
-        #             plate[factor]['volume_per_well'] = floor(
-        #                 plate[factor]['volume_per_well'] / 2.5
-        #             ) * 2.5
-        #         else:
-        #             plate[factor]['volume_per_well'] = round_vol
-        #     else:
-        #         plate[factor]['volume_per_well'] = plate_well_capacity
 
     logger.debug(f'parameters distribution:\n{plate}')
     return plate
@@ -825,7 +823,7 @@ def echo_instructions_generator(
 
     for key, destination_plate in dest_plates.items():
 
-        for parameter_name in destination_plate.drop(columns=['well_name']):
+        for parameter_name in source_plate.keys():
             worklist = {
                 'Source Plate Name': [],
                 'Source Plate Type': [],
