@@ -14,7 +14,11 @@ cd icfree-ml
 ~~~
 
 ~~~bash
-conda env create -f environment.yml
+conda env create -f environment.yaml
+~~~
+
+~~~bash
+conda activate icfree
 ~~~
 
 # Usage
@@ -22,7 +26,7 @@ conda env create -f environment.yml
 Running plates_generator from the CLI
 
 ~~~bash
-python -m icfree.plates_generator <cfps-parameters tsv file>
+python -m icfree.plates_generator <cfps-parameters tsv file> -of <output_folder>
 ~~~
 
 Running echo_instructor from the CLI
@@ -37,9 +41,20 @@ python -m icfree.echo_instructor
 -of <output_folder>
 ~~~
 
+# Help
+
+Display help by running:
+~~~bash
+python -m icfree.plates_generator --help
+~~~
+
+~~~bash
+python -m icfree.echo_instructor --help
+~~~
+
 # Authors
 
-Yorgo EL MOUBAYED
+Yorgo EL MOUBAYED, Joan Hérisson
 
 # License
 
