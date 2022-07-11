@@ -121,7 +121,7 @@ def input_processor(
 def doe_levels_generator(
     n_variable_parameters,
     doe_nb_concentrations: int = DEFAULT_DOE_NB_CONCENTRATIONS,
-    doe_concentrations: np_ndarray = None,
+    doe_concentration_ratios: np_ndarray = None,
     doe_nb_samples: int = DEFAULT_DOE_NB_SAMPLES,
     seed: int = DEFAULT_SEED,
     logger: Logger = getLogger(__name__)
@@ -138,7 +138,7 @@ def doe_levels_generator(
     doe_nb_concentrations : int
         Number of concentration ratios for all factor
 
-    doe_concentrations: np_ndarray
+    doe_concentration_ratios: np_ndarray
         Possible concentration values (between 0.0 and 1.0) for all factors.
         If no list is passed, a default list will be built,
         e.g. if doe_nb_concentrations = 5 the list of considered
@@ -173,13 +173,13 @@ def doe_levels_generator(
             idx = np_argmin(np_abs(values - x))
             return values[idx]
         return np_frompyfunc(f, 1, 1)
-    if doe_concentrations is None:
-        doe_concentrations = np_append(
+    if doe_concentration_ratios is None:
+        doe_concentration_ratios = np_append(
             np_arange(0.0, 1.0, 1/(doe_nb_concentrations-1)),
             1.0
         )
-    logger.debug(f'ROUNDED VALUES:\n{doe_concentrations}')
-    rounded_sampling = rounder(np_asarray(doe_concentrations))(sampling)
+    logger.debug(f'ROUNDED VALUES:\n{doe_concentration_ratios}')
+    rounded_sampling = rounder(np_asarray(doe_concentration_ratios))(sampling)
     logger.debug(f'ROUNDED LHS:\n{rounded_sampling}')
 
     return np_asarray(rounded_sampling)

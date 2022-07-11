@@ -50,7 +50,7 @@ def main():
     doe_levels = doe_levels_generator(
         n_variable_parameters=len(parameters['doe']),
         doe_nb_concentrations=args.doe_nb_concentrations,
-        doe_concentrations=args.doe_concentrations,
+        doe_concentration_ratios=args.doe_concentration_ratios,
         doe_nb_samples=args.doe_nb_samples,
         seed=args.seed,
         logger=logger
