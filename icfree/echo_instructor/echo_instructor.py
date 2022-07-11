@@ -226,15 +226,6 @@ def concentrations_to_volumes(
                 sample_volume_stock_ratio_df
             ) / 2.5, 0
         ) * 2.5
-        # for factor in volumes_df[volumes_name]:
-            # if volumes_df[volumes_name][factor].sum() == 0:
-            #     msg = (
-            #         f'{factor} rounded volume = 0. This is due to a '
-            #         f'sample volume too low ({sample_volume}) '
-            #         f'or a stock concentration of {factor} too high '
-            #         f'{stock_concentrations[factor]}.'
-            #     )
-            #     raise ValueError(msg)
         logger.debug(
             f'concentrations_df[{volumes_name}]:\n'
             f'{concentrations_df[volumes_name]}'
