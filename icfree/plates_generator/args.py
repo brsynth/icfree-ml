@@ -55,10 +55,10 @@ def add_arguments(parser):
     )
 
     parser.add_argument(
-        '--doe-concentrations',
+        '--doe-concentration-ratios',
         nargs='+',
         type=float,
-        help=('Concentration values (between 0.0 and 1.0)'
+        help=('Concentration rations (between 0.0 and 1.0)'
               ' for all factors when performing the DoE')
     )
 
