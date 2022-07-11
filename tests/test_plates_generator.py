@@ -196,7 +196,7 @@ class Test(TestCase):
     def test_doe_levels_generator_doe_concentrations(self):
         n_variable_parameters = 12
         doe_nb_concentrations = 5
-        doe_concentrations = np_append(
+        doe_concentration_ratios = np_append(
             np_arange(0.0, 1.0, 1/(doe_nb_concentrations-1)),
             1.0
         )
@@ -205,7 +205,7 @@ class Test(TestCase):
         sampling_array = doe_levels_generator(
             n_variable_parameters=n_variable_parameters,
             doe_nb_concentrations=doe_nb_concentrations,
-            doe_concentrations=doe_concentrations,
+            doe_concentration_ratios=doe_concentration_ratios,
             doe_nb_samples=doe_nb_samples,
             seed=seed
         )
@@ -334,7 +334,7 @@ class Test(TestCase):
 
         n_variable_parameters = len(parameters['doe'])
         doe_nb_concentrations = 5
-        doe_concentrations = np_append(
+        doe_concentration_ratios = np_append(
             np_arange(0.0, 1.0, 1/(doe_nb_concentrations-1)),
             1.0
         )
@@ -343,7 +343,7 @@ class Test(TestCase):
         doe_levels = doe_levels_generator(
             n_variable_parameters=n_variable_parameters,
             doe_nb_concentrations=doe_nb_concentrations,
-            doe_concentrations=doe_concentrations,
+            doe_concentration_ratios=doe_concentration_ratios,
             doe_nb_samples=doe_nb_samples,
             seed=seed
         )
@@ -419,7 +419,7 @@ class Test(TestCase):
 
         n_variable_parameters = len(parameters['doe'])
         doe_nb_concentrations = 5
-        doe_concentrations = np_append(
+        doe_concentration_ratios = np_append(
             np_arange(0.0, 1.0, 1/(doe_nb_concentrations-1)),
             1.0
         )
@@ -428,7 +428,7 @@ class Test(TestCase):
         doe_levels = doe_levels_generator(
             n_variable_parameters=n_variable_parameters,
             doe_nb_concentrations=doe_nb_concentrations,
-            doe_concentrations=doe_concentrations,
+            doe_concentration_ratios=doe_concentration_ratios,
             doe_nb_samples=doe_nb_samples,
             seed=seed
         )
@@ -621,7 +621,7 @@ class Test(TestCase):
 
         n_variable_parameters = len(parameters['doe'])
         doe_nb_concentrations = 5
-        doe_concentrations = np_append(
+        doe_concentration_ratios = np_append(
             np_arange(0.0, 1.0, 1/(doe_nb_concentrations-1)),
             1.0
         )
@@ -630,7 +630,7 @@ class Test(TestCase):
         doe_levels = doe_levels_generator(
             n_variable_parameters=n_variable_parameters,
             doe_nb_concentrations=doe_nb_concentrations,
-            doe_concentrations=doe_concentrations,
+            doe_concentration_ratios=doe_concentration_ratios,
             doe_nb_samples=doe_nb_samples,
             seed=seed
         )
