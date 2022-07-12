@@ -1,6 +1,6 @@
 from argparse import (
     ArgumentParser,
-    BooleanOptionalAction
+    # BooleanOptionalAction
 )
 from os import getcwd as os_getcwd
 
@@ -113,7 +113,8 @@ def add_arguments(parser):
 
     parser.add_argument(
         '--keep-nil-vol',
-        action=BooleanOptionalAction,
+        type=bool,
+        # action=BooleanOptionalAction,
         default=DEFAULT_ARGS['KEEP_NIL_VOL'],
         help='Keep nil volumes in instructions or not (default: yes)'
     )
