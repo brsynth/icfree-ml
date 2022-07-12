@@ -6,10 +6,6 @@ from os import (
     path as os_path
 )
 
-from pickle import (
-    load as pickle_load
-)
-
 from numpy.testing import (
     assert_array_equal
 )
@@ -26,8 +22,8 @@ from pandas import (
 from numpy import (
     append as np_append,
     arange as np_arange,
-    genfromtxt as np_genfromtxt,
-    asarray as np_asarray
+    asarray as np_asarray,
+    array as np_array
 )
 
 from json import (
@@ -184,13 +180,16 @@ class Test(TestCase):
         with open(
             os_path.join(
                 self.REF_FOLDER,
-                'sampling_array.pickle'
-                ), 'rb') as f:
-            ref_sampling_array = pickle_load(f)
+                'sampling_array.json'
+                ), 'r') as f:
+            _ref_sampling_array = json_load(f)
+        ref_sampling_array = []
+        for sample in _ref_sampling_array.values():
+            ref_sampling_array.append(sample)
 
         assert_array_equal(
             sampling_array,
-            ref_sampling_array
+            np_array(ref_sampling_array)
         )
 
     def test_doe_levels_generator_doe_concentrations(self):
@@ -213,13 +212,16 @@ class Test(TestCase):
         with open(
             os_path.join(
                 self.REF_FOLDER,
-                'sampling_array.pickle'
-                ), 'rb') as f:
-            ref_sampling_array = pickle_load(f)
+                'sampling_array.json'
+                ), 'r') as f:
+            _ref_sampling_array = json_load(f)
+        ref_sampling_array = []
+        for sample in _ref_sampling_array.values():
+            ref_sampling_array.append(sample)
 
         assert_array_equal(
             sampling_array,
-            ref_sampling_array
+            np_array(ref_sampling_array)
         )
 
     def test_doe_levels_generator_EmptyDoELevelsArray(self):
@@ -277,13 +279,16 @@ class Test(TestCase):
         with open(
             os_path.join(
                 self.REF_FOLDER,
-                'ref_concentrations_array.csv'
-                ), 'r') as f1:
-            ref_concentrations_array = np_genfromtxt(f1, delimiter=',')
+                'ref_concentrations_array.json'
+                ), 'r') as f:
+            _ref_concentrations_array = json_load(f)
+        ref_concentrations_array = []
+        for sample in _ref_concentrations_array.values():
+            ref_concentrations_array.append(sample)
 
         assert_array_equal(
             tested_concentrations_array,
-            ref_concentrations_array
+            np_array(ref_concentrations_array)
         )
 
     def test_levels_to_concentrations_EmptyConcentrationsArray(self):
@@ -665,7 +670,7 @@ class Test(TestCase):
         )
 
         # LOAD REF FILES
-        ref_filename = 'ref_initial'
+        ref_filename = 'ref_initial_LHS-None'
         if woGOI:
             ref_filename += '_woGOI'
         with open(
@@ -676,7 +681,7 @@ class Test(TestCase):
         ) as fp1:
             ref_initial_set = fp1.read()
 
-        ref_filename = 'ref_autofluorescence'
+        ref_filename = 'ref_autofluorescence_LHS-None'
         if woGOI:
             ref_filename += '_woGOI'
         with open(
@@ -687,7 +692,7 @@ class Test(TestCase):
         ) as fp2:
             ref_autofluorescence_set = fp2.read()
 
-        ref_filename = 'ref_normalizer'
+        ref_filename = 'ref_normalizer_LHS-None'
         if woGOI:
             ref_filename += '_woGOI'
         with open(

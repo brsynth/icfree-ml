@@ -163,8 +163,7 @@ def doe_levels_generator(
         n_variable_parameters,
         samples=doe_nb_samples,
         criterion=None,
-        random_state=seed
-    )
+        random_state=seed)
 
     logger.debug(f'LHS: {sampling}')
 
