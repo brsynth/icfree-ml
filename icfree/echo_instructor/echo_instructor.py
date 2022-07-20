@@ -22,13 +22,6 @@ from math import (
     ceil,
     floor
 )
-from json import dumps as json_dumps
-from pandas import (
-    DataFrame
-)
-from string import (
-    ascii_uppercase as str_ascii_uppercase
-)
 from typing import (
     Dict,
     List
@@ -42,7 +35,7 @@ from copy import deepcopy
 from .args import (
     DEFAULT_ARGS
 )
-from .Plate import Plate
+from .plate import Plate
 
 
 def input_importer(
@@ -476,9 +469,55 @@ def samples_merger(
     return merged_plates_final
 
 
+def init_plate(
+    starting_well: str = DEFAULT_ARGS['SRC_STARTING_WELL'],
+    vertical: str = True,
+    dimensions: str = DEFAULT_ARGS['PLATE_DIMENSIONS'],
+    dead_volume: int = DEFAULT_ARGS['SOURCE_PLATE_DEAD_VOLUME'],
+    well_capacity: float = DEFAULT_ARGS['SOURCE_PLATE_WELL_CAPACITY'],
+    logger: Logger = getLogger(__name__)
+) -> Plate:
+    """Initialize a Plate object
+
+    Parameters
+    ----------
+    starting_well : str, optional
+        Well to fill first, by default 'A1'
+    vertical : str, optional
+        Reading/writing direction, by default True
+    dimensions : str, optional
+        Dimensions, by default '16x24'
+    dead_volume : int, optional
+        Plate dead volume per well, by default 15000
+    well_capacity : float, optional
+        Capacity of each well, by default 60000
+    logger : Logger, optional
+        Logger, by default getLogger(__name__)
+
+    Returns
+    -------
+    Plate
+        _description_
+    """
+    nb_rows, nb_cols = map(int, dimensions.split('x'))
+    plate = Plate(
+        nb_cols=nb_cols,
+        nb_rows=nb_rows,
+        dead_volume=dead_volume,
+        well_capacity=well_capacity,
+        vertical=vertical,
+        logger=logger
+    )
+    plate.set_current_well(starting_well)
+    return plate
+
+
 def dst_plate_generator(
     volumes: Dict,
+    plate_dimensions: str = DEFAULT_ARGS['PLATE_DIMENSIONS'],
     starting_well: str = DEFAULT_ARGS['DEST_STARTING_WELL'],
+    plate_dead_volume: int = DEFAULT_ARGS['SOURCE_PLATE_DEAD_VOLUME'],
+    plate_well_capacity: float = DEFAULT_ARGS['SOURCE_PLATE_WELL_CAPACITY'],
     vertical: str = True,
     logger: Logger = getLogger(__name__)
 ) -> Dict:
@@ -502,28 +541,39 @@ def dst_plate_generator(
     plates: Dict
         Dict with destination plates dataframes
     """
-    plate_rows = str_ascii_uppercase
-    plate_rows = list(plate_rows[0:16])
-
     plates = {}
+    plate = init_plate(
+        starting_well=starting_well,
+        dead_volume=plate_dead_volume,
+        dimensions=plate_dimensions,
+        well_capacity=plate_well_capacity,
+        vertical=vertical,
+        logger=logger
+    )
 
-    for well, volumes_df in volumes.items():
-        # Fill destination plates column by column
-        if vertical:
-            from_well = plate_rows.index(starting_well[0]) + \
-                (int(starting_well[1:]) - 1) * 16
-            names = ['{}{}'.format(
-                plate_rows[(index + from_well) % 16],
-                (index + from_well) // 16 + 1)
-                    for index in volumes_df.index]
-        # Fill destination plates row by row
-        else:
-            names = ['{}{}'.format(
-                plate_rows[index // 24],
-                index % 24 + 1) for index in volumes_df.index]
+    for set, volumes_df in volumes.items():
+        plate.set_current_well(starting_well)
+        names = []
+        for i, row in volumes_df.iterrows():
+            names.append(plate.get_current_well())
+            try:
+                plate.next_well()
+            except ValueError:  # Out of plate
+                # Store current plate
+                plates[set] = deepcopy(plate)
+                # Create new plate
+                logger.warning('A new destination plate is created')
+                plate = Plate(
+                    nb_cols=plate.get_nb_cols(),
+                    nb_rows=plate.get_nb_rows(),
+                    dead_volume=plate_dead_volume,
+                    well_capacity=plate_well_capacity,
+                    vertical=vertical,
+                    logger=logger
+                )
 
-        plates[well] = volumes_df.copy()
-        plates[well]['well_name'] = names
+        plates[set] = volumes_df.copy()
+        plates[set]['well_name'] = names
 
     return plates
 
@@ -572,16 +622,14 @@ def src_plate_generator(
 
     plates = {}
     nb_plates = 1
-    nb_rows, nb_cols = map(int, plate_dimensions.split('x'))
-    plate = Plate(
-        nb_cols=nb_cols,
-        nb_rows=nb_rows,
+    plate = init_plate(
+        starting_well=starting_well,
         dead_volume=plate_dead_volume,
+        dimensions=plate_dimensions,
         well_capacity=plate_well_capacity,
         vertical=vertical,
         logger=logger
     )
-    plate.set_current_well(starting_well)
 
     vol_sums = {}
 
@@ -606,9 +654,11 @@ def src_plate_generator(
         # Take account of dead volumes
         # Multiple of 2.5 (ECHO)
         well_net_capacity = floor(
-            (plate.get_well_capacity()
-            - plate.get_dead_volume()
-            - param_dead_volumes[factor]) / 2.5
+            (
+                plate.get_well_capacity()
+                - plate.get_dead_volume()
+                - param_dead_volumes[factor]
+            ) / 2.5
         ) * 2.5
         logger.debug(f'well_net_capacity: {well_net_capacity}')
         # Volume w/o dead volumes
@@ -620,7 +670,7 @@ def src_plate_generator(
             vol_sums[factor] / nb_wells / 2.5
         ) * 2.5
         logger.debug(f'raw_volume_per_well: {raw_volume_per_well}')
-            # Optimize well volume
+        # Optimize well volume
         if (
             factor in optimize_well_volumes
             or optimize_well_volumes == ['all']
@@ -643,10 +693,10 @@ def src_plate_generator(
                 plates[f'{nb_plates}'] = deepcopy(plate)
                 nb_plates += 1
                 # Create new plate
-                logger.warning('A new plate is created')
+                logger.warning('A new source plate is created')
                 plate = Plate(
-                    nb_cols=nb_cols,
-                    nb_rows=nb_rows,
+                    nb_cols=plate.get_nb_cols(),
+                    nb_rows=plate.get_nb_rows(),
                     dead_volume=plate_dead_volume,
                     well_capacity=plate_well_capacity,
                     vertical=vertical,
@@ -665,6 +715,8 @@ def echo_instructions_generator(
     volumes: Dict,
     echo_wells: Dict,
     starting_well: str = DEFAULT_ARGS['DEST_STARTING_WELL'],
+    plate_dead_volume: int = DEFAULT_ARGS['SOURCE_PLATE_DEAD_VOLUME'],
+    plate_well_capacity: float = DEFAULT_ARGS['SOURCE_PLATE_WELL_CAPACITY'],
     keep_nil_vol: bool = DEFAULT_ARGS['KEEP_NIL_VOL'],
     logger: Logger = getLogger(__name__)
 ) -> Dict:
@@ -695,6 +747,8 @@ def echo_instructions_generator(
     dest_plates = dst_plate_generator(
         volumes=volumes,
         starting_well=starting_well,
+        plate_dead_volume=plate_dead_volume,
+        plate_well_capacity=plate_well_capacity,
         vertical=True,
         logger=logger
     )
@@ -717,7 +771,9 @@ def echo_instructions_generator(
                     'Sample ID': []}
 
                 for index in range(len(destination_plate)):
-                    worklist['Source Plate Name'].append(f'Source[{source_plate_id}]')
+                    worklist['Source Plate Name'].append(
+                        f'Source[{source_plate_id}]'
+                    )
                     worklist['Source Plate Type'].append('384PP_AQ_GP3')
                     worklist['Source Well'].append(
                         wells[parameter]['wells']
@@ -738,7 +794,9 @@ def echo_instructions_generator(
 
             if not keep_nil_vol:
                 # Remove instructions where transfer volume = 0
-                instructions = instructions[instructions['Transfer Volume'] != 0]
+                instructions = instructions[
+                    instructions['Transfer Volume'] != 0
+                ]
                 # Re-index
                 instructions.reset_index(drop=True, inplace=True)
             echo_instructions[key] = instructions
@@ -751,8 +809,7 @@ def echo_wells(
     plate: Plate,
     logger: Logger = getLogger(__name__)
 ) -> Dict:
-    """_summary_
-    Generate Echo® plate sorted by parameter
+    """Generate Echo® plate sorted by parameter
 
     Parameters
     ----------
@@ -767,30 +824,29 @@ def echo_wells(
         Dict sorted by parameter
     """
     echo_wells = {}
-    parameter = ''
+    parameter = old_parameter = None
 
     for well_name, well in plate.get_wells().items():
-        if parameter == '':
-            parameter = well['parameter']
-            echo_wells[parameter] = {
-                'first': well_name,
-                'last': well_name,
-                'volume': well['volume'],
-                'nb_wells': 1
-            }
-        else:
-            new_parameter = well['parameter']
-            if new_parameter != parameter:
-                echo_wells[new_parameter] = {
+        for parameter, volume in well.items():
+            if parameter not in echo_wells:
+                echo_wells[parameter] = {
                     'first': well_name,
                     'last': well_name,
-                    'volume': well['volume'],
+                    'volume': volume,
                     'nb_wells': 1
                 }
-                parameter = new_parameter
             else:
-                echo_wells[parameter]['last'] = well_name
-                echo_wells[parameter]['nb_wells'] += 1
+                if old_parameter != parameter:
+                    echo_wells[parameter] = {
+                        'first': well_name,
+                        'last': well_name,
+                        'volume': volume,
+                        'nb_wells': 1
+                    }
+                else:
+                    echo_wells[parameter]['last'] = well_name
+                    echo_wells[parameter]['nb_wells'] += 1
+            old_parameter = parameter
 
     # Write with Echo format
     for parameter in echo_wells:
@@ -802,8 +858,8 @@ def echo_wells(
             }
         else:
             echo_wells[parameter] = {
-                'wells': \
-                    f'{{{echo_wells[parameter]["first"]}:' \
+                'wells':
+                    f'{{{echo_wells[parameter]["first"]}:'
                     f'{echo_wells[parameter]["last"]}}}',
                 'volume_per_well': echo_wells[parameter]['volume'],
                 'nb_wells': echo_wells[parameter]['nb_wells']

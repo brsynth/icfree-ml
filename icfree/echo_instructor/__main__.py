@@ -74,6 +74,8 @@ def main():
         echo_instructions_generator(
             volumes=volumes,
             echo_wells=_echo_wells,
+            plate_dead_volume=args.dest_plate_dead_volume,
+            plate_well_capacity=args.dest_plate_well_capacity,
             starting_well=args.dest_starting_well,
             keep_nil_vol=args.keep_nil_vol,
             logger=logger
@@ -85,6 +87,8 @@ def main():
         echo_instructions_generator(
             volumes=merged_plates,
             echo_wells=_echo_wells,
+            plate_dead_volume=args.dest_plate_dead_volume,
+            plate_well_capacity=args.dest_plate_well_capacity,
             starting_well=args.dest_starting_well,
             keep_nil_vol=args.keep_nil_vol,
             logger=logger

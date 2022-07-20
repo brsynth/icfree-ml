@@ -1,39 +1,29 @@
 from pytest import (
     raises as pytest_raises
 )
-
 from unittest import (
     TestCase,
 )
-
 from os import (
     path as os_path
 )
-
 from numpy.testing import (
     assert_array_equal
 )
-
 from pandas.testing import (
     assert_frame_equal
 )
-
 from pandas import (
     read_json,
     DataFrame
 )
-
-from string import ascii_uppercase
-
 from json import (
     load as json_load
 )
-
 from tempfile import (
     TemporaryDirectory,
     NamedTemporaryFile
 )
-
 
 from icfree.echo_instructor.echo_instructor import (
     input_importer,
@@ -46,7 +36,7 @@ from icfree.echo_instructor.echo_instructor import (
     src_plate_generator,
     echo_wells
 )
-from icfree.echo_instructor.Plate import Plate
+from icfree.echo_instructor.plate import Plate
 
 
 class Test(TestCase):
@@ -467,6 +457,8 @@ class Test(TestCase):
             dst_plate_generator(
                 tested_volumes_df,
                 starting_well='A1',
+                plate_dead_volume=15000,
+                plate_well_capacity=60000,
                 vertical=True)
 
         # Load reference dictionary
@@ -830,15 +822,19 @@ class Test(TestCase):
 
         tested_merge_destination_plates_dict =  \
             dst_plate_generator(
-                    samples_merger_dfs,
-                    starting_well='A1',
-                    vertical=True)
+                samples_merger_dfs,
+                starting_well='A1',
+                plate_dead_volume=15000,
+                plate_well_capacity=60000,
+                vertical=True)
 
         tested_distribute_destination_plates_dict = \
             dst_plate_generator(
-                    tested_volumes_df,
-                    starting_well='A1',
-                    vertical=True)
+                tested_volumes_df,
+                starting_well='A1',
+                plate_dead_volume=15000,
+                plate_well_capacity=60000,
+                vertical=True)
 
         source_plates = src_plate_generator(
             volumes=tested_volumes_df,
@@ -1136,7 +1132,11 @@ class Test(TestCase):
                 vertical=True,
                 plate_dimensions='16x24'
             )
-            self.assertEqual('Mg-glutamate', source_plates['1'].get_well(starting_well)['parameter'])
+            keys = source_plates['1'].get_well(starting_well).keys()
+            self.assertEqual(
+                'Mg-glutamate',
+                list(keys)[0]
+            )
 
         with pytest_raises(ValueError):
             src_plate_generator(
@@ -1280,6 +1280,7 @@ class Test_Plate(TestCase):
         )
         self.assertEqual(plate.get_well_volume('A1'), 0)
         plate.fill_well(well='A1', parameter='param1', volume=15000)
+        print(plate.get_well_volume('A1'))
         self.assertEqual(plate.get_well_volume('A1'), 15000)
         self.assertEqual(plate.get_well_volume('A17'), 0)
 
@@ -1291,7 +1292,10 @@ class Test_Plate(TestCase):
             well_capacity=60000,
         )
         plate.fill_well('param1', 10000)
-        self.assertEqual(plate.get_well_volume(plate.get_current_well()), 10000)
+        self.assertEqual(
+            10000,
+            plate.get_well_volume(plate.get_current_well())
+        )
         plate.fill_well('param1', 10000, well='A12')
         self.assertEqual(plate.get_well_volume('A12'), 10000)
         with pytest_raises(IndexError):
@@ -1405,6 +1409,7 @@ class Test_Plate(TestCase):
             'Parameters: []\n'
             'Wells: {}'
         )
+        print(plate)
         self.assertEqual(plate.__str__(), _print)
 
     def test_next_well(self):

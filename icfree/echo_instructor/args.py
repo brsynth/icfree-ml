@@ -11,11 +11,13 @@ DEFAULT_ARGS = {
     'OUTPUT_FOLDER': os_getcwd(),
     'SAMPLE_VOLUME': 10000,
     'SOURCE_PLATE_DEAD_VOLUME': 15000,
+    'DEST_PLATE_DEAD_VOLUME': 15000,
     'DEST_STARTING_WELL': 'A1',
     'SRC_STARTING_WELL': 'A1',
     'NPLICATE': 3,
     'KEEP_NIL_VOL': False,
     'SOURCE_PLATE_WELL_CAPACITY': 60000,
+    'DEST_PLATE_WELL_CAPACITY': 60000,
     'PLATE_DIMENSIONS': '16x24',
     'OPTIMIZE_VOLUMES': []
 }
@@ -78,6 +80,14 @@ def add_arguments(parser):
     )
 
     parser.add_argument(
+        '-ddv', '--dest_plate_dead_volume',
+        type=int,
+        default=DEFAULT_ARGS['DEST_PLATE_DEAD_VOLUME'],
+        help=('Dead volume to add in the dest plate in nL'
+              f' (default: {DEFAULT_ARGS["DEST_PLATE_DEAD_VOLUME"]})')
+    )
+
+    parser.add_argument(
         '-dsw', '--dest-starting_well',
         type=str,
         default=DEFAULT_ARGS['DEST_STARTING_WELL'],
@@ -125,6 +135,14 @@ def add_arguments(parser):
         default=DEFAULT_ARGS['SOURCE_PLATE_WELL_CAPACITY'],
         help=('Maximum volume capacity of the source plate in nL'
               f' (default: {DEFAULT_ARGS["SOURCE_PLATE_WELL_CAPACITY"]})')
+    )
+
+    parser.add_argument(
+        '-dpwc', '--dest_plate_well_capacity',
+        type=int,
+        default=DEFAULT_ARGS['DEST_PLATE_WELL_CAPACITY'],
+        help=('Maximum volume capacity of the dest plate in nL'
+              f' (default: {DEFAULT_ARGS["DEST_PLATE_WELL_CAPACITY"]})')
     )
 
     parser.add_argument(

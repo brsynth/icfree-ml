@@ -12,6 +12,7 @@ from logging import (
 )
 from json import dumps as json_dumps
 from re import split as re_split
+from functools import reduce
 
 from .args import (
     DEFAULT_ARGS
@@ -38,9 +39,9 @@ class Plate:
         nb_rows : int
             Number of plate rows
         dead_volume : int, optional
-            Source plate dead volume, by default DEFAULT_ARGS['SOURCE_PLATE_DEAD_VOLUME']
+            Source plate dead volume, by default 15000
         well_capacity : float, optional
-            Capacity of each well, by default DEFAULT_ARGS['SOURCE_PLATE_WELL_CAPACITY']
+            Capacity of each well, by default 60000
         logger : Logger, optional
             logger, by default getLogger(__name__)
         """
@@ -70,10 +71,13 @@ class Plate:
 
     def get_columns(self) -> List:
         return self.__columns
+
     def get_cols(self) -> List:
         return self.get_columns()
+
     def get_rows(self) -> List:
         return self.__rows
+
     def __get_row_by_index(self, index: int) -> str:
         """Get the row name of the well at the specified index.
 
@@ -96,6 +100,7 @@ class Plate:
             return self.get_rows()[index % self.get_nb_rows()]
         else:
             return self.get_rows()[index // self.get_nb_cols()]
+
     def __get_col_by_index(self, index: int) -> str:
         """Get the col name of the well at the specified index.
 
@@ -118,28 +123,44 @@ class Plate:
             return self.get_cols()[index // self.get_nb_rows()]
         else:
             return self.get_cols()[index % self.get_nb_cols()]
+
     def get_nb_rows(self) -> int:
         return len(self.__rows)
+
     def get_nb_cols(self) -> int:
         return self.get_nb_columns()
+
     def get_nb_columns(self) -> int:
         return len(self.__columns)
+
     def get_nb_wells(self) -> int:
         return self.get_nb_rows() * self.get_nb_columns()
+
     def get_nb_empty_wells(self) -> int:
         return self.__nb_empty_wells
+
     def get_dimensions(self) -> Tuple:
         return self.get_nb_rows(), self.get_nb_columns()
+
     def get_dimensions_str(self) -> str:
         return f'{self.get_nb_rows()}x{self.get_nb_columns()}'
+
     def get_wells(self) -> Dict:
         return self.__wells
+
     def get_list_of_wells(self) -> Dict:
         return list(self.__wells.keys())
-    def get_list_of_parameters(self) -> Dict:
-        return [well['parameter'] for well in self.get_wells().values()]
+
+    def get_list_of_parameters(self) -> List:
+        null = []
+        parameters = [list(well.keys()) for well in self.get_wells().values()]
+        if parameters == null:
+            return null
+        return set(reduce(lambda x, y: x+y, parameters))
+
     def get_well(self, well: str) -> Dict:
         return self.__wells.get(well, {})
+
     def __get_well_index(self, well: str) -> int:
         res = re_split(r'(\d+)', well)
         row = str(res[0])
@@ -151,29 +172,36 @@ class Plate:
         except ValueError:
             msg = f'The well {well} is out of the current plate.'
             raise(ValueError(msg))
+
     def get_well_volume(self, well: str) -> int:
-        return self.get_well(well).get('volume', 0)
+        return sum(self.get_well(well).values())
+
     def get_dead_volume(self) -> int:
         return self.__dead_volume
+
     def get_well_capacity(self) -> float:
         return self.__well_capacity
+
     def __get_current_well_index(self) -> str:
         return self.__cur_well_index
+
     def get_current_well(
         self,
         logger: Logger = getLogger(__name__)
     ) -> str:
         """Get the current well."""
         return self.__get_well_name(
-            self.__get_current_well_index(), 
+            self.__get_current_well_index(),
             logger
         )
+
     def well_out_of_range(self, well: str) -> bool:
         try:
             self.__get_well_index(well)
             return False
         except ValueError:
             return True
+
     def __get_well_name(
         self,
         well_index: int,
@@ -194,7 +222,9 @@ class Plate:
         well: str
             Well coordinates
         """
-        return f'{self.__get_row_by_index(well_index)}{self.__get_col_by_index(well_index)}'
+        return \
+            f'{self.__get_row_by_index(well_index)}' \
+            f'{self.__get_col_by_index(well_index)}'
 
     def next_well(self) -> str:
         """Change the current well to the next one.
@@ -271,5 +301,7 @@ class Plate:
         if self.well_out_of_range(well):
             msg = f'The well {well} is out of the current plate.'
             raise(IndexError(msg))
-        self.__wells[well] = {'volume': volume, 'parameter': parameter}
+        if well not in self.get_list_of_wells():
+            self.__wells[well] = {}
+        self.__wells[well][parameter] = volume
         self.set_nb_empty_wells(self.get_nb_empty_wells() - 1)
