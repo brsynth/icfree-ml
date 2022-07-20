@@ -11,7 +11,8 @@ from .echo_instructor import (
     samples_merger,
     echo_instructions_generator,
     save_echo_instructions,
-    src_plate_generator
+    src_plate_generator,
+    echo_wells
 )
 from .args import build_args_parser
 
@@ -46,16 +47,8 @@ def main():
         logger.error(f'{e}\nExiting...')
         return -1
 
-    # print(param_dead_volumes)
-    # print(dict(
-    #   zip(
-    #       cfps_parameters_df['Parameter'],
-    #       cfps_parameters_df['Parameter dead volume']
-    #   )
-    # ))
-    # exit()
     try:
-        source_plate = src_plate_generator(
+        source_plates = src_plate_generator(
             volumes=volumes,
             plate_dead_volume=args.source_plate_dead_volume,
             plate_well_capacity=args.source_plate_well_capacity,
@@ -66,16 +59,21 @@ def main():
             plate_dimensions=args.plate_dimensions,
             logger=logger
         )
-    except IndexError:
+    except IndexError as e:
+        logger.error(e)
         logger.error(
             'Exiting...'
         )
         return -1
 
+    _echo_wells = {}
+    for plate_id, plate in source_plates.items():
+        _echo_wells[plate_id] = echo_wells(plate)
+
     distribute_echo_instructions = \
         echo_instructions_generator(
             volumes=volumes,
-            source_plate=source_plate,
+            echo_wells=_echo_wells,
             starting_well=args.dest_starting_well,
             keep_nil_vol=args.keep_nil_vol,
             logger=logger
@@ -86,7 +84,7 @@ def main():
     merge_echo_instructions = \
         echo_instructions_generator(
             volumes=merged_plates,
-            source_plate=source_plate,
+            echo_wells=_echo_wells,
             starting_well=args.dest_starting_well,
             keep_nil_vol=args.keep_nil_vol,
             logger=logger
@@ -98,15 +96,16 @@ def main():
         args.output_folder)
 
     volumes_summary = {
-        param: volume['nb_wells'] * volume['volume_per_well']
-        for param, volume in source_plate.items()
+        param: well['nb_wells'] * well['volume_per_well']
+        for wells in _echo_wells.values()
+        for param, well in wells.items()
     }
 
     save_volumes(
         volumes,
         volumes_summary,
         warning_volumes_report,
-        source_plate,
+        _echo_wells,
         args.output_folder,
         logger=logger
     )

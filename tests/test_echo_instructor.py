@@ -44,8 +44,9 @@ from icfree.echo_instructor.echo_instructor import (
     echo_instructions_generator,
     save_echo_instructions,
     src_plate_generator,
-    convert_index_well
+    echo_wells
 )
+from icfree.echo_instructor.Plate import Plate
 
 
 class Test(TestCase):
@@ -257,7 +258,7 @@ class Test(TestCase):
                 fp,
                 orient='split')
 
-        source_plate = src_plate_generator(
+        source_plates = src_plate_generator(
             volumes=tested_volumes_df,
             plate_dead_volume=15000,
             plate_well_capacity=60000,
@@ -267,9 +268,12 @@ class Test(TestCase):
             vertical=True,
             plate_dimensions='16x24'
         )
+        wells = {}
+        for plate_id, plate in source_plates.items():
+            wells[plate_id] = echo_wells(plate)
         tested_volumes_summary = {
-            param: volume['nb_wells'] * volume['volume_per_well']
-            for param, volume in source_plate.items()
+            param: well['nb_wells'] * well['volume_per_well']
+            for param, well in wells['1'].items()
         }
         self.assertDictEqual(
             expected_volumes_summary,
@@ -575,7 +579,7 @@ class Test(TestCase):
                 starting_well='A1',
                 vertical=True)
 
-        source_plate = src_plate_generator(
+        source_plates = src_plate_generator(
             volumes=tested_volumes_df,
             plate_dead_volume=15000,
             plate_well_capacity=60000,
@@ -586,10 +590,14 @@ class Test(TestCase):
             plate_dimensions='16x24'
         )
 
+        wells = {}
+        for plate_id, plate in source_plates.items():
+            wells[plate_id] = echo_wells(plate)
+
         tested_distribute_echo_instructions_dict = \
             echo_instructions_generator(
                 volumes=tested_distribute_destination_plates_dict,
-                source_plate=source_plate
+                echo_wells=wells
             )
 
         # Load reference dictionary
@@ -832,7 +840,7 @@ class Test(TestCase):
                     starting_well='A1',
                     vertical=True)
 
-        source_plate = src_plate_generator(
+        source_plates = src_plate_generator(
             volumes=tested_volumes_df,
             plate_dead_volume=15000,
             plate_well_capacity=60000,
@@ -843,16 +851,20 @@ class Test(TestCase):
             plate_dimensions='16x24'
         )
 
+        wells = {}
+        for plate_id, plate in source_plates.items():
+            wells[plate_id] = echo_wells(plate)
+
         tested_distribute_echo_instructions_dict = \
             echo_instructions_generator(
                 volumes=tested_distribute_destination_plates_dict,
-                source_plate=source_plate
+                echo_wells=wells
             )
 
         tested_merge_echo_instructions_dict = \
             echo_instructions_generator(
                 volumes=tested_merge_destination_plates_dict,
-                source_plate=source_plate
+                echo_wells=wells
             )
 
         # Generate tested echo instructions files (distributed and merged)
@@ -1007,7 +1019,7 @@ class Test(TestCase):
             tested_concentrations_df,
             sample_volume=10000)
 
-        source_plate = src_plate_generator(
+        source_plates = src_plate_generator(
             volumes=tested_volumes_df,
             plate_dead_volume=15000,
             plate_well_capacity=60000,
@@ -1018,9 +1030,14 @@ class Test(TestCase):
             plate_dimensions='16x24'
         )
 
+        _echo_wells = {}
+        for plate_id, plate in source_plates.items():
+            _echo_wells[plate_id] = echo_wells(plate)
+
         tested_volumes_summary = {
-            param: volume['nb_wells'] * volume['volume_per_well']
-            for param, volume in source_plate.items()
+            param: well['nb_wells'] * well['volume_per_well']
+            for wells in _echo_wells.values()
+            for param, well in wells.items()
         }
 
         # Generate test volume files
@@ -1028,15 +1045,10 @@ class Test(TestCase):
             tested_volumes_df,
             tested_volumes_summary,
             tested_warning_volumes_report,
-            source_plate,
+            _echo_wells,
             output_folder=output_folder)
 
         for set, filename in expected_volumes.items():
-            print(filename, os_path.join(
-                        output_folder,
-                        'volumes_output',
-                        f'{set}_volumes.tsv'
-                ))
             # Load volumes refrence files
             with open(filename) as fp:
                 ref_volumes = fp.read()
@@ -1098,166 +1110,6 @@ class Test(TestCase):
         assert expected_warning_volumes_report == \
             tested_warning_volumes_report
 
-    def test_convert_index_well_vertical_384(self):
-        rows = ascii_uppercase[:16]
-        cols = [i+1 for i in range(24)]
-        self.assertEqual(
-            convert_index_well(
-                well_i=0,
-                rows=rows,
-                cols=cols,
-                vertical=True
-            ),
-            'A1'
-        )
-        self.assertEqual(
-            convert_index_well(
-                well_i=1,
-                rows=rows,
-                cols=cols,
-                vertical=True
-            ),
-            'B1'
-        )
-        self.assertEqual(
-            convert_index_well(
-                well_i=16,
-                rows=rows,
-                cols=cols,
-                vertical=True
-            ),
-            'A2'
-        )
-        self.assertEqual(
-            convert_index_well(
-                well_i=383,
-                rows=rows,
-                cols=cols,
-                vertical=True
-            ),
-            'P24'
-        )
-
-    def test_convert_index_well_horizontal_384(self):
-        rows = ascii_uppercase[:16]
-        cols = [i+1 for i in range(24)]
-        self.assertEqual(
-            convert_index_well(
-                well_i=0,
-                rows=rows,
-                cols=cols,
-                vertical=False
-            ),
-            'A1'
-        )
-        self.assertEqual(
-            convert_index_well(
-                well_i=1,
-                rows=rows,
-                cols=cols,
-                vertical=False
-            ),
-            'A2'
-        )
-        self.assertEqual(
-            convert_index_well(
-                well_i=24,
-                rows=rows,
-                cols=cols,
-                vertical=False
-            ),
-            'B1'
-        )
-        self.assertEqual(
-            convert_index_well(
-                well_i=383,
-                rows=rows,
-                cols=cols,
-                vertical=False
-            ),
-            'P24'
-        )
-
-    def test_convert_index_well_vertical_1536(self):
-        rows = [f"{i}{j}" for i in ["", "A"] for j in ascii_uppercase][:32]
-        cols = [i+1 for i in range(48)]
-        self.assertEqual(
-            convert_index_well(
-                well_i=0,
-                rows=rows,
-                cols=cols,
-                vertical=True
-            ),
-            'A1'
-        )
-        self.assertEqual(
-            convert_index_well(
-                well_i=1,
-                rows=rows,
-                cols=cols,
-                vertical=True
-            ),
-            'B1'
-        )
-        self.assertEqual(
-            convert_index_well(
-                well_i=32,
-                rows=rows,
-                cols=cols,
-                vertical=True
-            ),
-            'A2'
-        )
-        self.assertEqual(
-            convert_index_well(
-                well_i=1535,
-                rows=rows,
-                cols=cols,
-                vertical=True
-            ),
-            'AF48'
-        )
-
-    def test_convert_index_well_horizontal_1536(self):
-        rows = [f"{i}{j}" for i in ["", "A"] for j in ascii_uppercase][:32]
-        cols = [i+1 for i in range(48)]
-        self.assertEqual(
-            convert_index_well(
-                well_i=0,
-                rows=rows,
-                cols=cols,
-                vertical=False
-            ),
-            'A1'
-        )
-        self.assertEqual(
-            convert_index_well(
-                well_i=1,
-                rows=rows,
-                cols=cols,
-                vertical=False
-            ),
-            'A2'
-        )
-        self.assertEqual(
-            convert_index_well(
-                well_i=48,
-                rows=rows,
-                cols=cols,
-                vertical=False
-            ),
-            'B1'
-        )
-        self.assertEqual(
-            convert_index_well(
-                well_i=1535,
-                rows=rows,
-                cols=cols,
-                vertical=False
-            ),
-            'AF48'
-        )
-
     def test_src_plate_generator(self):
         (tested_cfps_parameters_df,
          tested_concentrations_df) = input_importer(
@@ -1273,28 +1125,295 @@ class Test(TestCase):
             tested_concentrations_df,
             sample_volume=10000)
 
-        source_plate = src_plate_generator(
+        for starting_well in ['A1', 'A2']:
+            source_plates = src_plate_generator(
+                volumes=tested_volumes_df,
+                plate_dead_volume=15000,
+                plate_well_capacity=60000,
+                param_dead_volumes=param_dead_volumes,
+                starting_well=starting_well,
+                optimize_well_volumes=['all'],
+                vertical=True,
+                plate_dimensions='16x24'
+            )
+            self.assertEqual('Mg-glutamate', source_plates['1'].get_well(starting_well)['parameter'])
+
+        with pytest_raises(ValueError):
+            src_plate_generator(
+                volumes=tested_volumes_df,
+                plate_dead_volume=15000,
+                plate_well_capacity=60000,
+                param_dead_volumes=param_dead_volumes,
+                starting_well='Z1',
+                optimize_well_volumes=['all'],
+                vertical=True,
+                plate_dimensions='16x24'
+            )
+
+    def test_src_plate_generator_multiple(self):
+        cfps_file = os_path.join(
+            self.INPUT_FOLDER,
+            'Paul',
+            'proCFPS_parameters.tsv'
+        )
+        concentrations = os_path.join(
+            self.INPUT_FOLDER,
+            'Paul',
+            'autofluorescence_concentrations.tsv'
+        )
+        (tested_cfps_parameters_df,
+         tested_concentrations_df) = input_importer(
+            cfps_file,
+            concentrations,
+            concentrations,
+            concentrations)
+
+        (tested_volumes_df,
+         param_dead_volumes,
+         tested_warning_volumes_report) = concentrations_to_volumes(
+            tested_cfps_parameters_df,
+            tested_concentrations_df,
+            sample_volume=565995)
+
+        source_plates = src_plate_generator(
             volumes=tested_volumes_df,
             plate_dead_volume=15000,
             plate_well_capacity=60000,
             param_dead_volumes=param_dead_volumes,
-            starting_well='Z1',
+            starting_well='A1',
             optimize_well_volumes=['all'],
             vertical=True,
             plate_dimensions='16x24'
         )
 
-        keys = list(source_plate.keys())
-        self.assertEqual('A1', source_plate[keys[0]]['wells'])
+        self.assertEqual(2, len(source_plates))
 
+        (tested_volumes_df,
+         param_dead_volumes,
+         tested_warning_volumes_report) = concentrations_to_volumes(
+            tested_cfps_parameters_df,
+            tested_concentrations_df,
+            sample_volume=1500000)
+
+        source_plates = src_plate_generator(
+            volumes=tested_volumes_df,
+            plate_dead_volume=15000,
+            plate_well_capacity=60000,
+            param_dead_volumes=param_dead_volumes,
+            starting_well='A1',
+            optimize_well_volumes=['all'],
+            vertical=True,
+            plate_dimensions='16x24'
+        )
+
+        self.assertEqual(3, len(source_plates))
+
+
+class Test_Plate(TestCase):
+    def test_plate_creation(self):
+        plate = Plate(
+            nb_rows=16,
+            nb_cols=24,
+            dead_volume=15000,
+            well_capacity=60000,
+        )
+        self.assertEqual(plate.get_nb_rows(), 16)
+        self.assertEqual(plate.get_nb_cols(), 24)
+        self.assertEqual(plate.get_dead_volume(), 15000)
+        self.assertEqual(plate.get_well_capacity(), 60000)
+        self.assertEqual(plate.get_nb_wells(), 384)
+        self.assertEqual(plate.get_nb_empty_wells(), 384)
+        self.assertDictEqual(plate.get_wells(), {})
+        self.assertEqual(plate.get_current_well(), 'A1')
+
+    def test_set_nb_empty_wells(self):
+        plate = Plate(
+            nb_rows=16,
+            nb_cols=24,
+            dead_volume=15000,
+            well_capacity=60000,
+        )
+        self.assertEqual(plate.get_nb_empty_wells(), 384)
+        plate.set_nb_empty_wells(0)
+        self.assertEqual(plate.get_nb_empty_wells(), 0)
+        plate.set_nb_empty_wells(384)
+        self.assertEqual(plate.get_nb_empty_wells(), 384)
+        plate.set_nb_empty_wells(385)
+        self.assertEqual(plate.get_nb_empty_wells(), 384)
+
+    def test_get_current_well_384(self):
+        plate = Plate(
+            nb_rows=16,
+            nb_cols=24,
+            dead_volume=15000,
+            well_capacity=60000,
+        )
+        self.assertEqual(plate.get_current_well(), 'A1')
+        plate.set_current_well('P1')
+        self.assertEqual(plate.get_current_well(), 'P1')
+        plate.set_current_well('P24')
+        self.assertEqual(plate.get_current_well(), 'P24')
+        with pytest_raises(ValueError):
+            plate.set_current_well('P25')
+
+    def test_get_current_well_1536(self):
+        plate = Plate(
+            nb_rows=32,
+            nb_cols=48,
+            dead_volume=15000,
+            well_capacity=60000,
+        )
+        self.assertEqual(plate.get_current_well(), 'A1')
+        plate.set_current_well('AF1')
+        self.assertEqual(plate.get_current_well(), 'AF1')
+        plate.set_current_well('AF48')
+        self.assertEqual(plate.get_current_well(), 'AF48')
+        with pytest_raises(ValueError):
+            plate.set_current_well('AF49')
+
+    def test_get_well_volume(self):
+        plate = Plate(
+            nb_rows=16,
+            nb_cols=24,
+            dead_volume=15000,
+            well_capacity=60000,
+        )
+        self.assertEqual(plate.get_well_volume('A1'), 0)
+        plate.fill_well(well='A1', parameter='param1', volume=15000)
+        self.assertEqual(plate.get_well_volume('A1'), 15000)
+        self.assertEqual(plate.get_well_volume('A17'), 0)
+
+    def test_fill_well(self):
+        plate = Plate(
+            nb_rows=16,
+            nb_cols=24,
+            dead_volume=15000,
+            well_capacity=60000,
+        )
+        plate.fill_well('param1', 10000)
+        self.assertEqual(plate.get_well_volume(plate.get_current_well()), 10000)
+        plate.fill_well('param1', 10000, well='A12')
+        self.assertEqual(plate.get_well_volume('A12'), 10000)
         with pytest_raises(IndexError):
-            source_plate = src_plate_generator(
-                volumes=tested_volumes_df,
-                plate_dead_volume=15000,
-                plate_well_capacity=60000,
-                param_dead_volumes=param_dead_volumes,
-                starting_well='A24',
-                optimize_well_volumes=['all'],
-                vertical=True,
-                plate_dimensions='16x24'
-            )
+            plate.fill_well('param1', 10000, well='Z12')
+        plate.fill_well('param1', 100000, well='F1')
+
+    def test_set_current_well(self):
+        plate = Plate(
+            nb_rows=16,
+            nb_cols=24,
+            dead_volume=15000,
+            well_capacity=60000,
+        )
+        plate.set_current_well('A1')
+        self.assertEqual(plate.get_current_well(), 'A1')
+        with pytest_raises(ValueError):
+            plate.set_current_well('Z12')
+
+    def test_horizontal_384(self):
+        plate = Plate(
+            nb_rows=16,
+            nb_cols=24,
+            dead_volume=15000,
+            well_capacity=60000,
+            vertical=False
+        )
+        self.assertEqual(plate.get_current_well(), 'A1')
+        plate.next_well()
+        self.assertEqual(plate.get_current_well(), 'A2')
+        for i in range(1, 24):
+            plate.next_well()
+        self.assertEqual(plate.get_current_well(), 'B1')
+
+    def test_horizontal_1536(self):
+        plate = Plate(
+            nb_rows=32,
+            nb_cols=48,
+            dead_volume=15000,
+            well_capacity=60000,
+            vertical=False
+        )
+        self.assertEqual(plate.get_current_well(), 'A1')
+        plate.next_well()
+        self.assertEqual(plate.get_current_well(), 'A2')
+        for i in range(1, 24):
+            plate.next_well()
+        self.assertEqual(plate.get_current_well(), 'A25')
+        for i in range(1, 25):
+            plate.next_well()
+        self.assertEqual(plate.get_current_well(), 'B1')
+
+    def test_get_dimensions(self):
+        plate = Plate(
+            nb_rows=16,
+            nb_cols=24,
+            dead_volume=15000,
+            well_capacity=60000,
+        )
+        self.assertTupleEqual(plate.get_dimensions(), (16, 24))
+        plate = Plate(
+            nb_rows=32,
+            nb_cols=48,
+            dead_volume=15000,
+            well_capacity=60000,
+        )
+        self.assertTupleEqual(plate.get_dimensions(), (32, 48))
+
+    def test_get_dimensions_str(self):
+        plate = Plate(
+            nb_rows=16,
+            nb_cols=24,
+            dead_volume=15000,
+            well_capacity=60000,
+        )
+        self.assertEqual(plate.get_dimensions_str(), '16x24')
+        plate = Plate(
+            nb_rows=32,
+            nb_cols=48,
+            dead_volume=15000,
+            well_capacity=60000,
+        )
+        self.assertEqual(plate.get_dimensions_str(), '32x48')
+
+    def test_get_list_of_wells(self):
+        plate = Plate(
+            nb_rows=16,
+            nb_cols=24,
+            dead_volume=15000,
+            well_capacity=60000,
+        )
+        for i in range(8):
+            plate.fill_well(f'param{i}', 10000)
+            plate.next_well()
+        list_of_wells = plate.get_list_of_wells()
+        self.assertEqual(list_of_wells[0], 'A1')
+        self.assertEqual(list_of_wells[-1], 'H1')
+
+    def test___str__(self):
+        plate = Plate(
+            nb_rows=16,
+            nb_cols=24,
+            dead_volume=15000,
+            well_capacity=60000,
+        )
+        _print = (
+            'Dimensions: 16x24\n'
+            'Dead volume: 15000\n'
+            'Well capacity: 60000\n'
+            'Empty wells: 384\n'
+            'Current well: A1\n'
+            'Parameters: []\n'
+            'Wells: {}'
+        )
+        self.assertEqual(plate.__str__(), _print)
+
+    def test_next_well(self):
+        plate = Plate(
+            nb_rows=16,
+            nb_cols=24,
+            dead_volume=15000,
+            well_capacity=60000,
+        )
+        plate.set_current_well('P24')
+        with pytest_raises(ValueError):
+            plate.next_well()
