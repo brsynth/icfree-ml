@@ -23,7 +23,8 @@ from numpy import (
     append as np_append,
     arange as np_arange,
     asarray as np_asarray,
-    array as np_array
+    array as np_array,
+    unique as np_unique
 )
 
 from json import (
@@ -843,7 +844,7 @@ class Test(TestCase):
         )
         parameters = input_processor(input_df)
         doe_nb_concentrations = 5
-        doe_nb_samples = 10
+        doe_nb_samples = 45
 
         concentration_ratios = {
             parameter: data['Concentration ratios']
@@ -856,25 +857,29 @@ class Test(TestCase):
 
         # Generate the sampling many times
         for i_run in range(100):
+            max_conc = [
+                v['Maximum concentration']
+                for v in parameters['doe'].values()
+            ]
             sampling_array = doe_levels_generator(
                 n_variable_parameters=len(parameters['doe']),
                 concentration_ratios=concentration_ratios,
                 doe_nb_samples=doe_nb_samples
             )
-            max_conc = [
-                v['Maximum concentration']
-                for v in parameters['doe'].values()
-            ]
             doe_concentrations = levels_to_concentrations(
                 sampling_array,
                 max_conc
             )
-
-            # Check that the min and max concentrations
+            # 1. Check that the min and max concentrations
             # are in the LHS result
-            # for each column, check the values
+            # For each column, check the values
             for i_param in range(len(parameters['doe'])):
                 parameter_concentrations = doe_concentrations[:, i_param]
                 # print(list(parameters['doe'].keys())[i_param], parameter_concentrations)
                 assert 0.0 in parameter_concentrations
                 assert max_conc[i_param] in parameter_concentrations
+            # 2. Check that there is no duplicate
+            self.assertEqual(
+                0,
+                len(doe_concentrations) - len(np_unique(doe_concentrations, axis=0))
+            )
