@@ -43,7 +43,6 @@ from typing import (
 )
 
 from .args import (
-    DEFAULT_SEED,
     DEFAULT_OUTPUT_FOLDER,
     DEFAULT_DOE_NB_CONCENTRATIONS,
     DEFAULT_DOE_NB_SAMPLES
@@ -182,7 +181,7 @@ def doe_levels_generator(
     n_variable_parameters,
     concentration_ratios: Dict,
     doe_nb_samples: int = DEFAULT_DOE_NB_SAMPLES,
-    seed: int = DEFAULT_SEED,
+    seed: int = None,
     logger: Logger = getLogger(__name__)
 ):
     """
@@ -212,11 +211,19 @@ def doe_levels_generator(
     if n_variable_parameters <= 0:
         return np_asarray([])
 
-    sampling = lhs(
-        n_variable_parameters,
-        samples=doe_nb_samples,
-        criterion=None,
-        random_state=seed)
+    if seed is None:
+        sampling = lhs(
+            n_variable_parameters,
+            samples=doe_nb_samples,
+            criterion=None
+        )
+    else:
+        sampling = lhs(
+            n_variable_parameters,
+            samples=doe_nb_samples,
+            criterion=None,
+            random_state=seed
+        )
 
     logger.debug(f'LHS: {sampling}')
 

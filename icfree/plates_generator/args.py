@@ -10,7 +10,6 @@ from os import getcwd as os_getcwd
 from brs_utils import add_logger_args
 from icfree._version import __version__
 
-DEFAULT_SEED = randint(0, 2**32 - 1)
 DEFAULT_OUTPUT_FOLDER = os_getcwd()
 DEFAULT_DOE_NB_CONCENTRATIONS = 5
 DEFAULT_DOE_NB_SAMPLES = 99
@@ -73,8 +72,7 @@ def add_arguments(parser):
     parser.add_argument(
         '--seed',
         type=int,
-        default=DEFAULT_SEED,
-        help=f'Seed to reproduce results (default: {DEFAULT_SEED})',
+        help=f'Seed to reproduce results',
     )
 
     parser.add_argument(
