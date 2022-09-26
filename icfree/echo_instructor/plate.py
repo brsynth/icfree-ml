@@ -171,7 +171,7 @@ class Plate:
                 self.get_rows().index(row)
         except ValueError:
             msg = f'The well {well} is out of the current plate.'
-            raise(ValueError(msg))
+            raise ValueError(msg)
 
     def get_well_volume(self, well: str) -> int:
         return sum(self.get_well(well).values())
@@ -250,7 +250,7 @@ class Plate:
                 f'The index {index} is greater than ' \
                 f'the number of wells ({self.get_nb_wells()}).'
             # self.__logger.warning(msg)
-            raise(ValueError(msg))
+            raise ValueError(msg)
         self.__cur_well_index = index
         self.__logger.debug(
             f'The current well index is {self.__get_current_well_index()} '
@@ -300,7 +300,7 @@ class Plate:
             well = self.get_current_well()
         if self.well_out_of_range(well):
             msg = f'The well {well} is out of the current plate.'
-            raise(IndexError(msg))
+            raise IndexError(msg)
         if well not in self.get_list_of_wells():
             self.__wells[well] = {}
         self.__wells[well][parameter] = volume

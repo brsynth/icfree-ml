@@ -190,7 +190,7 @@ def concentrations_to_volumes(
             'It seems that the number of parameters is different '
             'from the number of stock concentrations.'
         )
-        raise(ValueError(msg))
+        raise ValueError(msg)
     sample_volume_stock_ratio_df = sample_volume_stock_ratio_df[
         concentrations_df[first_key].columns
     ]
