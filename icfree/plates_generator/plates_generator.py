@@ -11,7 +11,6 @@ from numpy import (
     argmin as np_argmin,
     concatenate as np_concatenate,
     asarray as np_asarray,
-    frompyfunc as np_frompyfunc,
     append as np_append,
     arange as np_arange,
     set_printoptions as np_set_printoptions,
@@ -20,7 +19,6 @@ from numpy import (
     multiply as np_multiply,
     inf as np_inf,
     ndarray as np_ndarray,
-    array as np_array,
     fromiter as np_fromiter
 )
 
@@ -247,7 +245,6 @@ def doe_levels_generator(
             idx_min = np_argmin(
                 np_abs(concentration_ratios_lst[j] - sample[j])
             )
-            # print(sample[j], concentration_ratios_lst[j], concentration_ratios_lst[j][idx_min])
             sample[j] = concentration_ratios_lst[j][idx_min]
 
     # rounded_sampling = rounder(np_asarray(concentration_ratios))(sampling)

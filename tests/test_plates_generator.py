@@ -183,7 +183,9 @@ class Test(TestCase):
         seed = 123
 
         concentration_ratios = set_concentration_ratios(
-            concentration_ratios=dict.fromkeys(range(n_variable_parameters), None),
+            concentration_ratios=dict.fromkeys(
+                range(n_variable_parameters), None
+            ),
             all_doe_nb_concentrations=doe_nb_concentrations
         )
         sampling_array = doe_levels_generator(
@@ -211,14 +213,12 @@ class Test(TestCase):
     def test_doe_levels_generator_doe_concentrations(self):
         n_variable_parameters = 12
         doe_nb_concentrations = 5
-        doe_concentration_ratios = np_append(
-            np_arange(0.0, 1.0, 1/(doe_nb_concentrations-1)),
-            1.0
-        )
         doe_nb_samples = 10
         seed = 123
         concentration_ratios = set_concentration_ratios(
-            concentration_ratios=dict.fromkeys(range(n_variable_parameters), None),
+            concentration_ratios=dict.fromkeys(
+                range(n_variable_parameters), None
+            ),
             all_doe_nb_concentrations=doe_nb_concentrations
         )
         concentration_ratios = set_concentration_ratios(
@@ -257,7 +257,9 @@ class Test(TestCase):
         n_variable_parameters = 0
         seed = 123
         concentration_ratios = set_concentration_ratios(
-            concentration_ratios=dict.fromkeys(range(n_variable_parameters), None),
+            concentration_ratios=dict.fromkeys(
+                range(n_variable_parameters), None
+            ),
             all_doe_nb_concentrations=5
         )
         doe_levels = doe_levels_generator(
@@ -875,11 +877,11 @@ class Test(TestCase):
             # For each column, check the values
             for i_param in range(len(parameters['doe'])):
                 parameter_concentrations = doe_concentrations[:, i_param]
-                # print(list(parameters['doe'].keys())[i_param], parameter_concentrations)
                 assert 0.0 in parameter_concentrations
                 assert max_conc[i_param] in parameter_concentrations
             # 2. Check that there is no duplicate
             self.assertEqual(
                 0,
-                len(doe_concentrations) - len(np_unique(doe_concentrations, axis=0))
+                len(doe_concentrations)
+                - len(np_unique(doe_concentrations, axis=0))
             )

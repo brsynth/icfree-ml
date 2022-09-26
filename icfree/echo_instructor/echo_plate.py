@@ -1,7 +1,7 @@
-from logging import (
-    Logger,
-    getLogger
-)
+# from logging import (
+#     Logger,
+#     getLogger
+# )
 from math import (
     floor,
     ceil
@@ -28,8 +28,8 @@ class EchoPlate(Plate):
         """
         return floor(
             (self.get_well_capacity()
-            - self.get_dead_volume()
-            - param_dead_volume) / 2.5
+             - self.get_dead_volume()
+             - param_dead_volume) / 2.5
         ) * 2.5
 
     @staticmethod
