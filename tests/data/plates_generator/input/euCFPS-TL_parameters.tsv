@@ -1,5 +1,5 @@
-Parameter	Status	Maximum concentration	Stock concentration
-MgCl2	variable	1.5	25
+Parameter	Status	Maximum concentration	Stock concentration	Concentration ratios
+MgCl2	variable	1.5	25	0.0,0.1,0.3,0.5,1.0
 KCl	variable	125	2.5
 Amino acids	variable	500	100
 tRNA	variable	2000	1

@@ -1,5 +1,5 @@
-Parameter	Status	Maximum concentration	Stock concenetration
-Mg-acetate	variable	20	n/a
+Parameter	Status	Maximum concentration	Stock concenetration	Concentration ratios
+Mg-acetate	variable	20	n/a	0.0,0.1,0.3,0.5,1.0
 κ-glutamate	variable	200	n/a
 HEPES	variable	150	n/a
 Phosphocreatine	variable	50	n/a

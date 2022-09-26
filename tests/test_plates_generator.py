@@ -41,7 +41,8 @@ from icfree.plates_generator.plates_generator import (
     doe_levels_generator,
     levels_to_concentrations,
     plates_generator,
-    save_plates
+    save_plates,
+    set_concentration_ratios
 )
 
 from icfree.plates_generator.__main__ import (
@@ -90,11 +91,20 @@ class Test(TestCase):
                 'proCFPS_parameters_woGOI.tsv'
                 )
             tested_df = input_importer(cfps_parameters)
+            for i, row in tested_df.iterrows():
+                if isinstance(row['Concentration ratios'], str):
+                    tested_df.at[i, 'Concentration ratios'] = list(
+                        map(
+                            float,
+                            row['Concentration ratios'].split(',')
+                        )
+                    )
+                else:
+                    tested_df.at[i, 'Concentration ratios'] = None
             assert_frame_equal(
                 expected_df,
                 tested_df
             )
-            print(tested_df)
 
     def test_input_processor(self):
         with open(
@@ -170,9 +180,14 @@ class Test(TestCase):
         doe_nb_concentrations = 5
         doe_nb_samples = 10
         seed = 123
+
+        concentration_ratios = set_concentration_ratios(
+            concentration_ratios=dict.fromkeys(range(n_variable_parameters), None),
+            all_doe_nb_concentrations=doe_nb_concentrations
+        )
         sampling_array = doe_levels_generator(
             n_variable_parameters=n_variable_parameters,
-            doe_nb_concentrations=doe_nb_concentrations,
+            concentration_ratios=concentration_ratios,
             doe_nb_samples=doe_nb_samples,
             seed=seed
         )
@@ -201,10 +216,17 @@ class Test(TestCase):
         )
         doe_nb_samples = 10
         seed = 123
+        concentration_ratios = set_concentration_ratios(
+            concentration_ratios=dict.fromkeys(range(n_variable_parameters), None),
+            all_doe_nb_concentrations=doe_nb_concentrations
+        )
+        concentration_ratios = set_concentration_ratios(
+            concentration_ratios=concentration_ratios,
+            all_doe_nb_concentrations=doe_nb_concentrations
+        )
         sampling_array = doe_levels_generator(
             n_variable_parameters=n_variable_parameters,
-            doe_nb_concentrations=doe_nb_concentrations,
-            doe_concentration_ratios=doe_concentration_ratios,
+            concentration_ratios=concentration_ratios,
             doe_nb_samples=doe_nb_samples,
             seed=seed
         )
@@ -233,8 +255,13 @@ class Test(TestCase):
 
         n_variable_parameters = 0
         seed = 123
+        concentration_ratios = set_concentration_ratios(
+            concentration_ratios=dict.fromkeys(range(n_variable_parameters), None),
+            all_doe_nb_concentrations=5
+        )
         doe_levels = doe_levels_generator(
             n_variable_parameters=n_variable_parameters,
+            concentration_ratios=concentration_ratios,
             seed=seed
         )
 
@@ -257,9 +284,17 @@ class Test(TestCase):
         doe_nb_concentrations = 5
         doe_nb_samples = 10
         seed = 123
+        concentration_ratios = {
+            parameter: data['Concentration ratios']
+            for parameter, data in parameters['doe'].items()
+        }
+        concentration_ratios = set_concentration_ratios(
+            concentration_ratios=concentration_ratios,
+            all_doe_nb_concentrations=doe_nb_concentrations
+        )
         tested_sampling_array = doe_levels_generator(
             n_variable_parameters=n_variable_parameters,
-            doe_nb_concentrations=doe_nb_concentrations,
+            concentration_ratios=concentration_ratios,
             doe_nb_samples=doe_nb_samples,
             seed=seed
         )
@@ -300,10 +335,16 @@ class Test(TestCase):
 
         n_variable_parameters = 0
         seed = 123
+        concentration_ratios = {
+            parameter: data['Concentration ratios']
+            for parameter, data in parameters['doe'].items()
+        }
         doe_levels = doe_levels_generator(
             n_variable_parameters=n_variable_parameters,
+            concentration_ratios=concentration_ratios,
             seed=seed
         )
+
         max_conc = [
             v['Maximum concentration']
             for v in parameters['doe'].values()
@@ -345,10 +386,18 @@ class Test(TestCase):
         )
         doe_nb_samples = 10
         seed = 123
+        concentration_ratios = {
+            parameter: data['Concentration ratios']
+            for parameter, data in parameters['doe'].items()
+        }
+        concentration_ratios = set_concentration_ratios(
+            concentration_ratios=concentration_ratios,
+            all_doe_nb_concentrations=doe_nb_concentrations,
+            all_doe_concentration_ratios=doe_concentration_ratios,
+        )
         doe_levels = doe_levels_generator(
             n_variable_parameters=n_variable_parameters,
-            doe_nb_concentrations=doe_nb_concentrations,
-            doe_concentration_ratios=doe_concentration_ratios,
+            concentration_ratios=concentration_ratios,
             doe_nb_samples=doe_nb_samples,
             seed=seed
         )
@@ -430,10 +479,18 @@ class Test(TestCase):
         )
         doe_nb_samples = 10
         seed = 123
+        concentration_ratios = {
+            parameter: data['Concentration ratios']
+            for parameter, data in parameters['doe'].items()
+        }
+        concentration_ratios = set_concentration_ratios(
+            concentration_ratios=concentration_ratios,
+            all_doe_nb_concentrations=doe_nb_concentrations,
+            all_doe_concentration_ratios=doe_concentration_ratios,
+        )
         doe_levels = doe_levels_generator(
             n_variable_parameters=n_variable_parameters,
-            doe_nb_concentrations=doe_nb_concentrations,
-            doe_concentration_ratios=doe_concentration_ratios,
+            concentration_ratios=concentration_ratios,
             doe_nb_samples=doe_nb_samples,
             seed=seed
         )
@@ -500,10 +557,16 @@ class Test(TestCase):
 
         n_variable_parameters = 0
         seed = 123
+        concentration_ratios = {
+            parameter: data['Concentration ratios']
+            for parameter, data in parameters['doe'].items()
+        }
         doe_levels = doe_levels_generator(
             n_variable_parameters=n_variable_parameters,
+            concentration_ratios=concentration_ratios,
             seed=seed
         )
+
         max_conc = [
             v['Maximum concentration']
             for v in parameters['doe'].values()
@@ -632,10 +695,18 @@ class Test(TestCase):
         )
         doe_nb_samples = 10
         seed = 123
+        concentration_ratios = {
+            parameter: data['Concentration ratios']
+            for parameter, data in parameters['doe'].items()
+        }
+        concentration_ratios = set_concentration_ratios(
+            concentration_ratios=concentration_ratios,
+            all_doe_nb_concentrations=doe_nb_concentrations,
+            all_doe_concentration_ratios=doe_concentration_ratios,
+        )
         doe_levels = doe_levels_generator(
             n_variable_parameters=n_variable_parameters,
-            doe_nb_concentrations=doe_nb_concentrations,
-            doe_concentration_ratios=doe_concentration_ratios,
+            concentration_ratios=concentration_ratios,
             doe_nb_samples=doe_nb_samples,
             seed=seed
         )
@@ -757,7 +828,53 @@ class Test(TestCase):
             ), 'r'
         ) as fp:
             expected_parameters = json_load(fp)
+
         self.assertDictEqual(
             parameters,
             expected_parameters
         )
+
+    def test_LHS_results(self):
+        input_df = input_importer(
+            os_path.join(
+                self.INPUT_FOLDER,
+                'proCFPS_parameters.tsv'
+            )
+        )
+        parameters = input_processor(input_df)
+        doe_nb_concentrations = 5
+        doe_nb_samples = 10
+
+        concentration_ratios = {
+            parameter: data['Concentration ratios']
+            for parameter, data in parameters['doe'].items()
+        }
+        concentration_ratios = set_concentration_ratios(
+            concentration_ratios=concentration_ratios,
+            all_doe_nb_concentrations=doe_nb_concentrations
+        )
+
+        # Generate the sampling many times
+        for i_run in range(100):
+            sampling_array = doe_levels_generator(
+                n_variable_parameters=len(parameters['doe']),
+                concentration_ratios=concentration_ratios,
+                doe_nb_samples=doe_nb_samples
+            )
+            max_conc = [
+                v['Maximum concentration']
+                for v in parameters['doe'].values()
+            ]
+            doe_concentrations = levels_to_concentrations(
+                sampling_array,
+                max_conc
+            )
+
+            # Check that the min and max concentrations
+            # are in the LHS result
+            # for each column, check the values
+            for i_param in range(len(parameters['doe'])):
+                parameter_concentrations = doe_concentrations[:, i_param]
+                # print(list(parameters['doe'].keys())[i_param], parameter_concentrations)
+                assert 0.0 in parameter_concentrations
+                assert max_conc[i_param] in parameter_concentrations

@@ -18,6 +18,7 @@ from .plates_generator import (
     levels_to_concentrations,
     plates_generator,
     save_plates,
+    set_concentration_ratios
 )
 from .args import build_args_parser
 
@@ -38,6 +39,18 @@ def main():
     input_df = input_importer(args.cfps, logger=logger)
     parameters = input_processor(input_df, logger=logger)
 
+    # Set the concentration ratios for each parameter
+    doe_concentration_ratios = {
+        parameter: data['Concentration ratios']
+        for parameter, data in parameters['doe'].items()
+    }
+    concentration_ratios = set_concentration_ratios(
+        concentration_ratios=doe_concentration_ratios,
+        all_doe_nb_concentrations=args.doe_nb_concentrations,
+        all_doe_concentration_ratios=args.doe_concentration_ratios,
+        logger=logger
+    )
+
     # If status of parameters has to be changed
     if args.all_status is not None:
         parameters = change_status(
@@ -49,8 +62,7 @@ def main():
     # PROCESS TO THE SAMPLING
     doe_levels = doe_levels_generator(
         n_variable_parameters=len(parameters['doe']),
-        doe_nb_concentrations=args.doe_nb_concentrations,
-        doe_concentration_ratios=args.doe_concentration_ratios,
+        concentration_ratios=concentration_ratios,
         doe_nb_samples=args.doe_nb_samples,
         seed=args.seed,
         logger=logger

@@ -20,6 +20,7 @@ from numpy import (
     multiply as np_multiply,
     inf as np_inf,
     ndarray as np_ndarray,
+    array as np_array,
     fromiter as np_fromiter
 )
 
@@ -112,16 +113,74 @@ def input_processor(
         if key not in parameters:
             parameters[key] = {}
 
+    # Split concentration strings into lists
+    for comb in parameters:
+        for parameter in parameters[comb].values():
+            if isinstance(parameter['Concentration ratios'], str):
+                parameter['Concentration ratios'] = list(
+                    map(
+                        float,
+                        parameter['Concentration ratios'].split(',')
+                    )
+                )
+            else:
+                parameter['Concentration ratios'] = None
+
     logger.debug(f'cfps_parameters_df: {cfps_parameters_df}')
     logger.debug(f'PARAMETERS: {parameters}')
 
     return parameters
 
 
+def set_concentration_ratios(
+    concentration_ratios: Dict,
+    all_doe_nb_concentrations: int = DEFAULT_DOE_NB_CONCENTRATIONS,
+    all_doe_concentration_ratios: np_ndarray = None,
+    logger: Logger = getLogger(__name__)
+) -> Dict:
+    """
+    Set the concentration ratios for each parameter.
+
+    Parameters
+    ----------
+    concentation_ratios : Dict
+        Parameter concentration ratios.
+
+    all_doe_nb_concentrations : int
+        Number of concentration ratios for all factor
+
+    all_doe_concentration_ratios: np_ndarray
+        Possible concentration values (between 0.0 and 1.0) for all factors.
+        If no list is passed, a default list will be built,
+        e.g. if doe_nb_concentrations = 5 the list of considered
+        discrete conentrations will be: 0.0 0.25 0.5 0.75 1.0
+
+    Returns
+    -------
+    doe_concentration_ratios : Dict
+        Concentration ratios for each parameter.
+    """
+
+    # If concentration ratios are not defined for all parameters
+    if all_doe_concentration_ratios is None:
+        all_doe_concentration_ratios = np_append(
+            np_arange(0.0, 1.0, 1/(all_doe_nb_concentrations-1)),
+            1.0
+        )
+
+    doe_concentration_ratios = dict(concentration_ratios)
+
+    for param in concentration_ratios:
+        if concentration_ratios[param] is None:
+            # Set concentration ratios to default value
+            doe_concentration_ratios[param] = all_doe_concentration_ratios
+
+    return doe_concentration_ratios
+
+
 def doe_levels_generator(
     n_variable_parameters,
-    doe_nb_concentrations: int = DEFAULT_DOE_NB_CONCENTRATIONS,
-    doe_concentration_ratios: np_ndarray = None,
+    concentration_ratios: Dict,
     doe_nb_samples: int = DEFAULT_DOE_NB_SAMPLES,
     seed: int = DEFAULT_SEED,
     logger: Logger = getLogger(__name__)
@@ -135,14 +194,8 @@ def doe_levels_generator(
     n_variable_parameters : int
         Number of variable parameters.
 
-    doe_nb_concentrations : int
-        Number of concentration ratios for all factor
-
-    doe_concentration_ratios: np_ndarray
-        Possible concentration values (between 0.0 and 1.0) for all factors.
-        If no list is passed, a default list will be built,
-        e.g. if doe_nb_concentrations = 5 the list of considered
-        discrete conentrations will be: 0.0 0.25 0.5 0.75 1.0
+    concentration_ratios: Dict
+        Concentration ratios for each parameter.
 
     doe_nb_samples: int
         Number of samples to generate for all factors
@@ -167,19 +220,30 @@ def doe_levels_generator(
 
     logger.debug(f'LHS: {sampling}')
 
-    # Discretize LHS values
-    def rounder(values):
-        def f(x):
-            idx = np_argmin(np_abs(values - x))
-            return values[idx]
-        return np_frompyfunc(f, 1, 1)
-    if doe_concentration_ratios is None:
-        doe_concentration_ratios = np_append(
-            np_arange(0.0, 1.0, 1/(doe_nb_concentrations-1)),
-            1.0
-        )
-    logger.debug(f'ROUNDED VALUES:\n{doe_concentration_ratios}')
-    rounded_sampling = rounder(np_asarray(doe_concentration_ratios))(sampling)
+    # # Discretize LHS values
+    # def rounder(values):
+    #     def f(x):
+    #         idx = np_argmin(np_abs(values - x))
+    #         return values[idx]
+    #     return np_frompyfunc(f, 1, 1)
+
+    logger.debug(f'ROUNDED VALUES:\n{concentration_ratios}')
+    concentration_ratios_lst = list(concentration_ratios.values())
+
+    # Round LHS values
+    rounded_sampling = list(sampling)
+    for i in range(len(rounded_sampling)):
+        sample = sampling[i]
+        # Round each value of the sample
+        for j in range(len(sample)):
+            # Search the index of the bin value
+            idx_min = np_argmin(
+                np_abs(concentration_ratios_lst[j] - sample[j])
+            )
+            # print(sample[j], concentration_ratios_lst[j], concentration_ratios_lst[j][idx_min])
+            sample[j] = concentration_ratios_lst[j][idx_min]
+
+    # rounded_sampling = rounder(np_asarray(concentration_ratios))(sampling)
     logger.debug(f'ROUNDED LHS:\n{rounded_sampling}')
 
     return np_asarray(rounded_sampling)

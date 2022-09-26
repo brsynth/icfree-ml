@@ -1,5 +1,5 @@
-Parameter	Status	Maximum concentration	Stock concentration
-rATP	variable	4	n/a
+Parameter	Status	Maximum concentration	Stock concentration	Concentration ratios
+rATP	variable	4	n/a	0.0,0.1,0.3,0.5,1.0
 rCTP	variable	4	n/a
 rGTP	variable	4	n/a
 rUTP	variable	4	n/a

@@ -74,5 +74,24 @@
         200.0,
         300.0,
         200.0
+    ],
+    "Concentration ratios": [
+        [0.0, 0.1, 0.3, 0.5, 1.0],
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
     ]
 }
