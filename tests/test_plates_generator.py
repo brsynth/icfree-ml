@@ -846,7 +846,6 @@ class Test(TestCase):
         )
         parameters = input_processor(input_df)
         doe_nb_concentrations = 5
-        doe_nb_samples = 45
 
         concentration_ratios = {
             parameter: data['Concentration ratios']
@@ -857,29 +856,49 @@ class Test(TestCase):
             all_doe_nb_concentrations=doe_nb_concentrations
         )
 
-        # Generate the sampling many times
+        max_conc = [
+            v['Maximum concentration']
+            for v in parameters['doe'].values()
+        ]
+        # Generate the sampling for testing
+        # presence of min and max concentrations
+        # The less samples, the more likely to not have min or max
+        nb_samples = 4 * doe_nb_concentrations
         for i_run in range(100):
-            max_conc = [
-                v['Maximum concentration']
-                for v in parameters['doe'].values()
-            ]
+            # LHS sampling
             sampling_array = doe_levels_generator(
                 n_variable_parameters=len(parameters['doe']),
                 concentration_ratios=concentration_ratios,
-                doe_nb_samples=doe_nb_samples
+                doe_nb_samples=nb_samples
             )
             doe_concentrations = levels_to_concentrations(
                 sampling_array,
                 max_conc
             )
-            # 1. Check that the min and max concentrations
+            # Check that the min and max concentrations
             # are in the LHS result
             # For each column, check the values
             for i_param in range(len(parameters['doe'])):
                 parameter_concentrations = doe_concentrations[:, i_param]
                 assert 0.0 in parameter_concentrations
                 assert max_conc[i_param] in parameter_concentrations
-            # 2. Check that there is no duplicate
+
+        # Generate the sampling for testing
+        # presence of duplicates
+        # The more samples, the more likely to have duplicates
+        nb_samples = 10 * len(parameters['doe'])
+        for i_run in range(100):
+            # LHS sampling
+            sampling_array = doe_levels_generator(
+                n_variable_parameters=len(parameters['doe']),
+                concentration_ratios=concentration_ratios,
+                doe_nb_samples=nb_samples
+            )
+            doe_concentrations = levels_to_concentrations(
+                sampling_array,
+                max_conc
+            )
+            # Check that there is no duplicate
             self.assertEqual(
                 0,
                 len(doe_concentrations)
