@@ -530,26 +530,21 @@ class Test(TestCase):
         initial_set_df = plates['initial']
         autofluorescence_set_df = plates['background']
         normalizer_set_df = plates['normalizer']
-        tested_columns_initial_set = initial_set_df.columns.tolist()
-        tested_columns_normalizer_set = normalizer_set_df.columns.tolist()
-        tested_columns_autofluorescence_set = \
-            autofluorescence_set_df.columns.tolist()
 
         self.assertListEqual(
             expected_columns_woGOI,
-            tested_columns_initial_set)
-
-        self.assertListEqual(
-            expected_columns_woGOI,
-            tested_columns_normalizer_set)
-
-        self.assertListEqual(
-            expected_columns_woGOI,
-            tested_columns_autofluorescence_set)
-
-        self.assertListEqual(
-            tested_columns_normalizer_set,
-            tested_columns_autofluorescence_set)
+            initial_set_df.columns.tolist()
+        )
+        if normalizer_set_df is not None:
+            self.assertListEqual(
+                expected_columns_woGOI,
+                normalizer_set_df.columns.tolist()
+            )
+        if autofluorescence_set_df is not None:
+            self.assertListEqual(
+                expected_columns_woGOI,
+                autofluorescence_set_df.columns.tolist()
+            )
 
     def test_plates_generator_AllStatusConst(self):
         input_df = input_importer(os_path.join(
@@ -684,7 +679,8 @@ class Test(TestCase):
         self,
         input_file: str,
         output_folder: str,
-        woGOI: bool = False
+        woGOI: bool = False,
+        woGFP: bool = False
     ):
         input_df = input_importer(input_file)
 
@@ -743,7 +739,16 @@ class Test(TestCase):
             parameters={k: list(v.keys()) for k, v in parameters.items()}
         )
 
-        # LOAD REF FILES
+        # GENERATE PLATE FILES
+        save_plates(
+            plates['initial'],
+            plates['normalizer'],
+            plates['background'],
+            plates['parameters'],
+            output_folder=output_folder
+        )
+
+        # Load ref file
         ref_filename = 'ref_initial_LHS-None'
         if woGOI:
             ref_filename += '_woGOI'
@@ -754,66 +759,63 @@ class Test(TestCase):
             )
         ) as fp1:
             ref_initial_set = fp1.read()
-
-        ref_filename = 'ref_autofluorescence_LHS-None'
-        if woGOI:
-            ref_filename += '_woGOI'
-        with open(
-            os_path.join(
-                    self.REF_FOLDER,
-                    f'{ref_filename}.tsv'
-            )
-        ) as fp2:
-            ref_autofluorescence_set = fp2.read()
-
-        ref_filename = 'ref_normalizer_LHS-None'
-        if woGOI:
-            ref_filename += '_woGOI'
-        with open(
-            os_path.join(
-                    self.REF_FOLDER,
-                    f'{ref_filename}.tsv'
-            )
-        ) as fp3:
-            ref_normalizer_set = fp3.read()
-
-        # GENERATE PLATE FILES
-        save_plates(
-            plates['initial'],
-            plates['normalizer'],
-            plates['background'],
-            plates['parameters'],
-            output_folder=output_folder
-        )
-
+        # Load generated file
         with open(
             os_path.join(
                     output_folder,
-                    'initial_set.tsv'
+                    'concentrations.tsv'
             )
         ) as fp4:
             tested_initial_set = fp4.read()
-
-        with open(
-            os_path.join(
-                    output_folder,
-                    'autofluorescence_set.tsv'
-            )
-        ) as fp5:
-            tested_autofluorescence_set = fp5.read()
-
-        with open(
-            os_path.join(
-                    output_folder,
-                    'normalizer_set.tsv'
-            )
-        ) as fp6:
-            tested_normalizer_set = fp6.read()
-
-        # COMPARE FILES
+        # compare files
         assert ref_initial_set == tested_initial_set
-        assert ref_normalizer_set == tested_normalizer_set
-        assert ref_autofluorescence_set == tested_autofluorescence_set
+
+        if not woGOI:
+            # Load ref file
+            ref_filename = 'ref_autofluorescence_LHS-None'
+            if woGOI:
+                ref_filename += '_woGOI'
+            with open(
+                os_path.join(
+                        self.REF_FOLDER,
+                        f'{ref_filename}.tsv'
+                )
+            ) as fp2:
+                ref_autofluorescence_set = fp2.read()
+            # Load generated file
+            with open(
+                os_path.join(
+                        output_folder,
+                        'autofluorescence.tsv'
+                )
+            ) as fp5:
+                tested_autofluorescence_set = fp5.read()
+            # compare files
+            assert ref_autofluorescence_set == tested_autofluorescence_set
+
+        if not woGFP:
+            # Load ref file
+            ref_filename = 'ref_normalizer_LHS-None'
+            if woGOI:
+                ref_filename += '_woGOI'
+            with open(
+                os_path.join(
+                        self.REF_FOLDER,
+                        f'{ref_filename}.tsv'
+                )
+            ) as fp3:
+                ref_normalizer_set = fp3.read()
+            # Load generated file
+            with open(
+                os_path.join(
+                        output_folder,
+                        'normalizer.tsv'
+                )
+            ) as fp6:
+                tested_normalizer_set = fp6.read()
+            # compare files
+            assert ref_normalizer_set == tested_normalizer_set
+
 
     def test_change_status(self):
         input_df = input_importer(

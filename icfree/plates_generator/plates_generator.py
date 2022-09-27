@@ -385,16 +385,18 @@ def plates_generator(
     logger.debug(f'INITIAL SET:\n{initial_set_df}')
 
     # Create normalizer set with GOI to 0
-    normalizer_set_df = initial_set_df.copy()
-    normalizer_set_df.columns = headers
+    normalizer_set_df = None
     if 'dna_fluo' in parameters:
+        normalizer_set_df = initial_set_df.copy()
+        normalizer_set_df.columns = headers
         normalizer_set_df[parameters['dna_fluo']] *= 0
     logger.debug(f'NORMALIZER SET:\n{normalizer_set_df}')
 
     # Create normalizer set with GFP to 0
-    autofluorescence_set_df = normalizer_set_df.copy()
-    autofluorescence_set_df.columns = headers
+    autofluorescence_set_df = None
     if 'dna_goi' in parameters:
+        autofluorescence_set_df = normalizer_set_df.copy()
+        autofluorescence_set_df.columns = headers
         autofluorescence_set_df[parameters['dna_goi']] *= 0
     logger.debug(f'BACKGROUND SET:\n{autofluorescence_set_df}')
 
@@ -440,23 +442,25 @@ def save_plates(
     initial_set_df.to_csv(
         os_path.join(
             output_folder,
-            'initial_set.tsv'),
+            'concentrations.tsv'),
         sep='\t',
         header=all_parameters,
         index=False)
 
-    normalizer_set_df.to_csv(
-        os_path.join(
-            output_folder,
-            'normalizer_set.tsv'),
-        sep='\t',
-        header=all_parameters,
-        index=False)
+    if normalizer_set_df is not None:
+        normalizer_set_df.to_csv(
+            os_path.join(
+                output_folder,
+                'normalizer.tsv'),
+            sep='\t',
+            header=all_parameters,
+            index=False)
 
-    autofluorescence_set_df.to_csv(
-        os_path.join(
-            output_folder,
-            'autofluorescence_set.tsv'),
-        sep='\t',
-        header=all_parameters,
-        index=False)
+    if autofluorescence_set_df is not None:
+        autofluorescence_set_df.to_csv(
+            os_path.join(
+                output_folder,
+                'autofluorescence.tsv'),
+            sep='\t',
+            header=all_parameters,
+            index=False)
