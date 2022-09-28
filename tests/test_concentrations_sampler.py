@@ -41,8 +41,8 @@ from icfree.concentrations_sampler.concentrations_sampler import (
     input_processor,
     doe_levels_generator,
     levels_to_concentrations,
-    plates_generator,
-    save_plates,
+    assemble_concentrations,
+    save_concentrations,
     set_concentration_ratios
 )
 
@@ -55,7 +55,7 @@ class Test(TestCase):
 
     DATA_FOLDER = os_path.join(
         os_path.dirname(os_path.realpath(__file__)),
-        'data', 'plates_generator'
+        'data', 'concentrations_sampler'
     )
 
     INPUT_FOLDER = os_path.join(
@@ -365,7 +365,7 @@ class Test(TestCase):
             expected_doe_concentrations_array
         )
 
-    def test_plates_generator_all_columns(self):
+    def test_assemble_concentrations_all_columns(self):
         with open(
             os_path.join(
                     self.REF_FOLDER,
@@ -427,16 +427,16 @@ class Test(TestCase):
                 for k, v in parameters['const'].items()
             }
 
-        plates = plates_generator(
+        concentrations = assemble_concentrations(
             doe_concentrations,
             dna_concentrations,
             const_concentrations,
             parameters={k: list(v.keys()) for k, v in parameters.items()}
         )
 
-        initial_set_df = plates['initial']
-        autofluorescence_set_df = plates['background']
-        normalizer_set_df = plates['normalizer']
+        initial_set_df = concentrations['initial']
+        autofluorescence_set_df = concentrations['background']
+        normalizer_set_df = concentrations['normalizer']
         tested_columns_initial_set = initial_set_df.columns.tolist()
         tested_columns_normalizer_set = normalizer_set_df.columns.tolist()
         tested_columns_autofluorescence_set = \
@@ -458,7 +458,7 @@ class Test(TestCase):
             tested_columns_normalizer_set,
             tested_columns_autofluorescence_set)
 
-    def test_plates_generator_woGOI(self):
+    def test_assemble_concentrations_woGOI(self):
         with open(
             os_path.join(
                     self.REF_FOLDER,
@@ -520,16 +520,16 @@ class Test(TestCase):
                 for k, v in parameters['const'].items()
             }
 
-        plates = plates_generator(
+        concentrations = assemble_concentrations(
             doe_concentrations,
             dna_concentrations,
             const_concentrations,
             parameters={k: list(v.keys()) for k, v in parameters.items()}
         )
 
-        initial_set_df = plates['initial']
-        autofluorescence_set_df = plates['background']
-        normalizer_set_df = plates['normalizer']
+        initial_set_df = concentrations['initial']
+        autofluorescence_set_df = concentrations['background']
+        normalizer_set_df = concentrations['normalizer']
 
         self.assertListEqual(
             expected_columns_woGOI,
@@ -546,7 +546,7 @@ class Test(TestCase):
                 autofluorescence_set_df.columns.tolist()
             )
 
-    def test_plates_generator_AllStatusConst(self):
+    def test_assemble_concentrations_AllStatusConst(self):
         input_df = input_importer(os_path.join(
                 self.INPUT_FOLDER,
                 'proCFPS_parameters_woDoE.tsv'
@@ -587,15 +587,15 @@ class Test(TestCase):
                 for k, v in parameters['const'].items()
             }
 
-        plates = plates_generator(
+        concentrations = assemble_concentrations(
             doe_concentrations,
             dna_concentrations,
             const_concentrations,
             parameters={k: list(v.keys()) for k, v in parameters.items()}
         )
-        initial_set_df = plates['initial']
-        autofluorescence_set_df = plates['background']
-        normalizer_set_df = plates['normalizer']
+        initial_set_df = concentrations['initial']
+        autofluorescence_set_df = concentrations['background']
+        normalizer_set_df = concentrations['normalizer']
 
         # Load Reference Files
         expected_initial_sampling_array_woDoE_df = pd_read_json(
@@ -647,35 +647,35 @@ class Test(TestCase):
             expected_autofluorescence_sampling_array_woDoE_arr
         )
 
-    def test_save_plates_wExistingOutFolder(self):
+    def test_save_concentrations_wExistingOutFolder(self):
         with TemporaryDirectory() as tmpFolder:
-            self._test_save_plates(
+            self._test_save_concentrations(
                 input_file=self.proCFPS_parameters,
                 output_folder=tmpFolder
             )
 
-    def test_save_plates_woExistingOutFolder(self):
-        self._test_save_plates(
+    def test_save_concentrations_woExistingOutFolder(self):
+        self._test_save_concentrations(
             input_file=self.proCFPS_parameters,
             output_folder=NamedTemporaryFile().name
         )
 
-    def test_save_plates_wExistingOutFolder_woGOI(self):
+    def test_save_concentrations_wExistingOutFolder_woGOI(self):
         with TemporaryDirectory() as tmpFolder:
-            self._test_save_plates(
+            self._test_save_concentrations(
                 input_file=self.proCFPS_parameters_woGOI,
                 output_folder=tmpFolder,
                 woGOI=True
             )
 
-    def test_save_plates_woExistingOutFolder_woGOI(self):
-        self._test_save_plates(
+    def test_save_concentrations_woExistingOutFolder_woGOI(self):
+        self._test_save_concentrations(
             input_file=self.proCFPS_parameters_woGOI,
             output_folder=NamedTemporaryFile().name,
             woGOI=True
         )
 
-    def _test_save_plates(
+    def _test_save_concentrations(
         self,
         input_file: str,
         output_folder: str,
@@ -732,7 +732,7 @@ class Test(TestCase):
                 for k, v in parameters['const'].items()
             }
 
-        plates = plates_generator(
+        concentrations = assemble_concentrations(
             doe_concentrations,
             dna_concentrations,
             const_concentrations,
@@ -740,11 +740,11 @@ class Test(TestCase):
         )
 
         # GENERATE PLATE FILES
-        save_plates(
-            plates['initial'],
-            plates['normalizer'],
-            plates['background'],
-            plates['parameters'],
+        save_concentrations(
+            concentrations['initial'],
+            concentrations['normalizer'],
+            concentrations['background'],
+            concentrations['parameters'],
             output_folder=output_folder
         )
 
