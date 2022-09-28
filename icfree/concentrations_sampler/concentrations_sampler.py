@@ -330,7 +330,7 @@ def levels_to_concentrations(
     return concentrations
 
 
-def plates_generator(
+def assemble_concentrations(
     doe_concentrations,
     dna_concentrations,
     const_concentrations,
@@ -447,7 +447,7 @@ def plates_generator(
     }
 
 
-def save_plates(
+def save_concentrations(
         initial_set_df,
         normalizer_set_df,
         autofluorescence_set_df,

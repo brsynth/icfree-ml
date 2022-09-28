@@ -39,7 +39,7 @@ from sklearn.neural_network import (
     MLPRegressor
 )
 
-from icfree.plates_generator.plates_generator import (
+from icfree.concentrations_sampler.concentrations_sampler import (
     input_importer,
     input_processor,
     doe_levels_generator,

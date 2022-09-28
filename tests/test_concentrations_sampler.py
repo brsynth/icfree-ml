@@ -36,7 +36,7 @@ from tempfile import (
     NamedTemporaryFile
 )
 
-from icfree.plates_generator.plates_generator import (
+from icfree.concentrations_sampler.concentrations_sampler import (
     input_importer,
     input_processor,
     doe_levels_generator,
@@ -46,7 +46,7 @@ from icfree.plates_generator.plates_generator import (
     set_concentration_ratios
 )
 
-from icfree.plates_generator.__main__ import (
+from icfree.concentrations_sampler.__main__ import (
     change_status
 )
 
@@ -763,7 +763,7 @@ class Test(TestCase):
         with open(
             os_path.join(
                     output_folder,
-                    'concentrations.tsv'
+                    'initial.tsv'
             )
         ) as fp4:
             tested_initial_set = fp4.read()

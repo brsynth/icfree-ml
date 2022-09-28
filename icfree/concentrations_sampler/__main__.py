@@ -11,13 +11,13 @@ from brs_utils import (
     create_logger
 )
 
-from .plates_generator import (
+from .concentrations_sampler import (
     input_importer,
     input_processor,
     doe_levels_generator,
     levels_to_concentrations,
-    plates_generator,
-    save_plates,
+    assemble_concentrations,
+    save_concentrations,
     set_concentration_ratios,
     check_sampling
 )
@@ -27,8 +27,8 @@ from .args import build_args_parser
 def main():
 
     parser = build_args_parser(
-        program='initial_set_generator',
-        description='Generate the initial plates for active learning'
+        program='concenrations_sampler',
+        description='Sample concentrations for DNA and protein'
     )
 
     args = parser.parse_args()
@@ -101,8 +101,8 @@ def main():
         }
     except KeyError:
         const_concentrations = {}
-    # Generate the plates
-    plates = plates_generator(
+    # Generate the concentrations
+    concentrations = assemble_concentrations(
         doe_concentrations=doe_concentrations,
         const_concentrations=const_concentrations,
         dna_concentrations=dna_concentrations,
@@ -111,11 +111,11 @@ def main():
     )
 
     # WRITE TO DISK
-    save_plates(
-        plates['initial'],
-        plates['normalizer'],
-        plates['background'],
-        plates['parameters'],
+    save_concentrations(
+        concentrations['initial'],
+        concentrations['normalizer'],
+        concentrations['background'],
+        concentrations['parameters'],
         args.output_folder
     )
 
