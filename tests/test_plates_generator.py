@@ -816,7 +816,6 @@ class Test(TestCase):
             # compare files
             assert ref_normalizer_set == tested_normalizer_set
 
-
     def test_change_status(self):
         input_df = input_importer(
             os_path.join(
