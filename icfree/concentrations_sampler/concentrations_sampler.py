@@ -476,8 +476,8 @@ def save_concentrations(
     if not os_path.exists(output_folder):
         os_mkdir(output_folder)
 
-    if normalizer_set_df is None \
-        and autofluorescence_set_df is None:
+    if (normalizer_set_df is None
+            and autofluorescence_set_df is None):
         initial_set_df.to_csv(
             os_path.join(
                 output_folder,
