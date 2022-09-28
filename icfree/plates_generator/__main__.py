@@ -18,7 +18,8 @@ from .plates_generator import (
     levels_to_concentrations,
     plates_generator,
     save_plates,
-    set_concentration_ratios
+    set_concentration_ratios,
+    check_sampling
 )
 from .args import build_args_parser
 
@@ -67,6 +68,9 @@ def main():
         seed=args.seed,
         logger=logger
     )
+
+    # Check sampling
+    check_sampling(doe_levels, logger)
 
     # CONVERT INTO CONCENTRATIONS
     # Read the maximum concentration for each parameter involved in DoE

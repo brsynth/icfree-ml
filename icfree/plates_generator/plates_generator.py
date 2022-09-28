@@ -253,6 +253,43 @@ def doe_levels_generator(
     return np_asarray(rounded_sampling)
 
 
+def check_sampling(
+    levels: np_ndarray,
+    logger: Logger = getLogger(__name__)
+):
+
+    logger.debug('Checking sampling...')
+
+    nb_parameters = levels.shape[1]
+
+    # Check that the min and max concentrations
+    # are in the LHS result
+    # For each column, check the values
+    for i_param in range(nb_parameters):
+        param_levels = levels[:, i_param]
+        try:
+            assert 0. in param_levels
+        except AssertionError:
+            logger.warning(
+                'Min concentration not found in LHS sampling'
+            )
+        try:
+            assert 1. in param_levels
+        except AssertionError:
+            logger.warning(
+                'Max concentration not found in LHS sampling'
+            )
+
+    # Check that there is no duplicate,
+    # i.e. that each row is unique
+    try:
+        assert len(levels) == len(set(map(tuple, levels)))
+    except AssertionError:
+        logger.warning('Duplicate found in LHS sampling')
+
+    logger.debug('Sampling checked')
+
+
 def levels_to_concentrations(
     levels_array,
     maximum_concentrations,
@@ -439,28 +476,37 @@ def save_plates(
     if not os_path.exists(output_folder):
         os_mkdir(output_folder)
 
-    initial_set_df.to_csv(
-        os_path.join(
-            output_folder,
-            'concentrations.tsv'),
-        sep='\t',
-        header=all_parameters,
-        index=False)
-
-    if normalizer_set_df is not None:
-        normalizer_set_df.to_csv(
+    if normalizer_set_df is None \
+        and autofluorescence_set_df is None:
+        initial_set_df.to_csv(
             os_path.join(
                 output_folder,
-                'normalizer.tsv'),
+                'concentrations.tsv'),
             sep='\t',
             header=all_parameters,
             index=False)
-
-    if autofluorescence_set_df is not None:
-        autofluorescence_set_df.to_csv(
+    else:
+        initial_set_df.to_csv(
             os_path.join(
                 output_folder,
-                'autofluorescence.tsv'),
+                'initial.tsv'),
             sep='\t',
             header=all_parameters,
             index=False)
+        if normalizer_set_df is not None:
+            normalizer_set_df.to_csv(
+                os_path.join(
+                    output_folder,
+                    'normalizer.tsv'),
+                sep='\t',
+                header=all_parameters,
+                index=False)
+
+        if autofluorescence_set_df is not None:
+            autofluorescence_set_df.to_csv(
+                os_path.join(
+                    output_folder,
+                    'autofluorescence.tsv'),
+                sep='\t',
+                header=all_parameters,
+                index=False)
