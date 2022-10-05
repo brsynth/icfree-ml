@@ -36,17 +36,17 @@ from tempfile import (
     NamedTemporaryFile
 )
 
-from icfree.concentrations_sampler.concentrations_sampler import (
+from icfree.sampler.sampler import (
     input_importer,
     input_processor,
-    doe_levels_generator,
-    levels_to_concentrations,
-    assemble_concentrations,
-    save_concentrations,
-    set_concentration_ratios
+    sampling,
+    levels_to_absvalues,
+    assemble_values,
+    save_values,
+    set_sampling_ratios
 )
 
-from icfree.concentrations_sampler.__main__ import (
+from icfree.sampler.__main__ import (
     change_status
 )
 
@@ -93,15 +93,15 @@ class Test(TestCase):
                 )
             tested_df = input_importer(cfps_parameters)
             for i, row in tested_df.iterrows():
-                if isinstance(row['Concentration ratios'], str):
-                    tested_df.at[i, 'Concentration ratios'] = list(
+                if isinstance(row['Ratios'], str):
+                    tested_df.at[i, 'Ratios'] = list(
                         map(
                             float,
-                            row['Concentration ratios'].split(',')
+                            row['Ratios'].split(',')
                         )
                     )
                 else:
-                    tested_df.at[i, 'Concentration ratios'] = None
+                    tested_df.at[i, 'Ratios'] = None
             assert_frame_equal(
                 expected_df,
                 tested_df
@@ -176,22 +176,22 @@ class Test(TestCase):
                 tested_dictionary
             )
 
-    def test_doe_levels_generator(self):
+    def test_sampling(self):
         n_variable_parameters = 12
         doe_nb_concentrations = 5
-        doe_nb_samples = 10
+        nb_samples = 10
         seed = 123
 
-        concentration_ratios = set_concentration_ratios(
-            concentration_ratios=dict.fromkeys(
+        ratios = set_sampling_ratios(
+            ratios=dict.fromkeys(
                 range(n_variable_parameters), None
             ),
-            all_doe_nb_concentrations=doe_nb_concentrations
+            all_nb_steps=doe_nb_concentrations
         )
-        sampling_array = doe_levels_generator(
+        sampling_array = sampling(
             n_variable_parameters=n_variable_parameters,
-            concentration_ratios=concentration_ratios,
-            doe_nb_samples=doe_nb_samples,
+            ratios=ratios,
+            nb_samples=nb_samples,
             seed=seed
         )
 
@@ -210,25 +210,25 @@ class Test(TestCase):
             np_array(ref_sampling_array)
         )
 
-    def test_doe_levels_generator_doe_concentrations(self):
+    def test_sampling_doe_concentrations(self):
         n_variable_parameters = 12
         doe_nb_concentrations = 5
-        doe_nb_samples = 10
+        nb_samples = 10
         seed = 123
-        concentration_ratios = set_concentration_ratios(
-            concentration_ratios=dict.fromkeys(
+        ratios = set_sampling_ratios(
+            ratios=dict.fromkeys(
                 range(n_variable_parameters), None
             ),
-            all_doe_nb_concentrations=doe_nb_concentrations
+            all_nb_steps=doe_nb_concentrations
         )
-        concentration_ratios = set_concentration_ratios(
-            concentration_ratios=concentration_ratios,
-            all_doe_nb_concentrations=doe_nb_concentrations
+        ratios = set_sampling_ratios(
+            ratios=ratios,
+            all_nb_steps=doe_nb_concentrations
         )
-        sampling_array = doe_levels_generator(
+        sampling_array = sampling(
             n_variable_parameters=n_variable_parameters,
-            concentration_ratios=concentration_ratios,
-            doe_nb_samples=doe_nb_samples,
+            ratios=ratios,
+            nb_samples=nb_samples,
             seed=seed
         )
 
@@ -247,7 +247,7 @@ class Test(TestCase):
             np_array(ref_sampling_array)
         )
 
-    def test_doe_levels_generator_EmptyDoELevelsArray(self):
+    def test_sampling_EmptyDoELevelsArray(self):
         input_df = input_importer(os_path.join(
                 self.INPUT_FOLDER,
                 'proCFPS_parameters_woDoE.tsv'
@@ -256,15 +256,15 @@ class Test(TestCase):
 
         n_variable_parameters = 0
         seed = 123
-        concentration_ratios = set_concentration_ratios(
-            concentration_ratios=dict.fromkeys(
+        ratios = set_sampling_ratios(
+            ratios=dict.fromkeys(
                 range(n_variable_parameters), None
             ),
-            all_doe_nb_concentrations=5
+            all_nb_steps=5
         )
-        doe_levels = doe_levels_generator(
+        doe_levels = sampling(
             n_variable_parameters=n_variable_parameters,
-            concentration_ratios=concentration_ratios,
+            ratios=ratios,
             seed=seed
         )
 
@@ -275,7 +275,7 @@ class Test(TestCase):
             expected_doe_levels
         )
 
-    def test_levels_to_concentrations(self):
+    def test_levels_to_absvalues(self):
         input_df = input_importer(os_path.join(
                 self.INPUT_FOLDER,
                 'tested_concentrations.tsv'
@@ -285,29 +285,29 @@ class Test(TestCase):
 
         n_variable_parameters = len(parameters['doe'])
         doe_nb_concentrations = 5
-        doe_nb_samples = 10
+        nb_samples = 10
         seed = 123
-        concentration_ratios = {
-            parameter: data['Concentration ratios']
+        ratios = {
+            parameter: data['Ratios']
             for parameter, data in parameters['doe'].items()
         }
-        concentration_ratios = set_concentration_ratios(
-            concentration_ratios=concentration_ratios,
-            all_doe_nb_concentrations=doe_nb_concentrations
+        ratios = set_sampling_ratios(
+            ratios=ratios,
+            all_nb_steps=doe_nb_concentrations
         )
-        tested_sampling_array = doe_levels_generator(
+        tested_sampling_array = sampling(
             n_variable_parameters=n_variable_parameters,
-            concentration_ratios=concentration_ratios,
-            doe_nb_samples=doe_nb_samples,
+            ratios=ratios,
+            nb_samples=nb_samples,
             seed=seed
         )
 
         max_conc = [
-            v['Maximum concentration']
+            v['Maximum']
             for v in parameters['doe'].values()
         ]
 
-        tested_concentrations_array = levels_to_concentrations(
+        tested_concentrations_array = levels_to_absvalues(
             tested_sampling_array,
             max_conc,
         )
@@ -329,7 +329,7 @@ class Test(TestCase):
             np_array(ref_concentrations_array)
         )
 
-    def test_levels_to_concentrations_EmptyConcentrationsArray(self):
+    def test_levels_to_absvalues_EmptyConcentrationsArray(self):
         input_df = input_importer(os_path.join(
                 self.INPUT_FOLDER,
                 'proCFPS_parameters_woDoE.tsv'
@@ -338,23 +338,23 @@ class Test(TestCase):
 
         n_variable_parameters = 0
         seed = 123
-        concentration_ratios = {
-            parameter: data['Concentration ratios']
+        ratios = {
+            parameter: data['Ratios']
             for parameter, data in parameters['doe'].items()
         }
-        doe_levels = doe_levels_generator(
+        doe_levels = sampling(
             n_variable_parameters=n_variable_parameters,
-            concentration_ratios=concentration_ratios,
+            ratios=ratios,
             seed=seed
         )
 
         max_conc = [
-            v['Maximum concentration']
+            v['Maximum']
             for v in parameters['doe'].values()
         ]
 
         # Convert
-        doe_concentrations = levels_to_concentrations(
+        doe_concentrations = levels_to_absvalues(
             doe_levels,
             max_conc,
         )
@@ -365,7 +365,7 @@ class Test(TestCase):
             expected_doe_concentrations_array
         )
 
-    def test_assemble_concentrations_all_columns(self):
+    def test_assemble_values_all_columns(self):
         with open(
             os_path.join(
                     self.REF_FOLDER,
@@ -383,51 +383,51 @@ class Test(TestCase):
 
         n_variable_parameters = len(parameters['doe'])
         doe_nb_concentrations = 5
-        doe_concentration_ratios = np_append(
+        doe_ratios = np_append(
             np_arange(0.0, 1.0, 1/(doe_nb_concentrations-1)),
             1.0
         )
-        doe_nb_samples = 10
+        nb_samples = 10
         seed = 123
-        concentration_ratios = {
-            parameter: data['Concentration ratios']
+        ratios = {
+            parameter: data['Ratios']
             for parameter, data in parameters['doe'].items()
         }
-        concentration_ratios = set_concentration_ratios(
-            concentration_ratios=concentration_ratios,
-            all_doe_nb_concentrations=doe_nb_concentrations,
-            all_doe_concentration_ratios=doe_concentration_ratios,
+        ratios = set_sampling_ratios(
+            ratios=ratios,
+            all_nb_steps=doe_nb_concentrations,
+            all_ratios=doe_ratios,
         )
-        doe_levels = doe_levels_generator(
+        doe_levels = sampling(
             n_variable_parameters=n_variable_parameters,
-            concentration_ratios=concentration_ratios,
-            doe_nb_samples=doe_nb_samples,
+            ratios=ratios,
+            nb_samples=nb_samples,
             seed=seed
         )
 
         max_conc = [
-            v['Maximum concentration']
+            v['Maximum']
             for v in parameters['doe'].values()
         ]
         # Convert
-        doe_concentrations = levels_to_concentrations(
+        doe_concentrations = levels_to_absvalues(
             doe_levels,
             max_conc,
         )
 
         dna_concentrations = {
-            v: dna_param[v]['Maximum concentration']
+            v: dna_param[v]['Maximum']
             for status, dna_param in parameters.items()
             for v in dna_param
             if status.startswith('dna')
         }
 
         const_concentrations = {
-                k: v['Maximum concentration']
+                k: v['Maximum']
                 for k, v in parameters['const'].items()
             }
 
-        concentrations = assemble_concentrations(
+        concentrations = assemble_values(
             doe_concentrations,
             dna_concentrations,
             const_concentrations,
@@ -458,7 +458,7 @@ class Test(TestCase):
             tested_columns_normalizer_set,
             tested_columns_autofluorescence_set)
 
-    def test_assemble_concentrations_woGOI(self):
+    def test_assemble_values_woGOI(self):
         with open(
             os_path.join(
                     self.REF_FOLDER,
@@ -476,51 +476,51 @@ class Test(TestCase):
 
         n_variable_parameters = len(parameters['doe'])
         doe_nb_concentrations = 5
-        doe_concentration_ratios = np_append(
+        doe_ratios = np_append(
             np_arange(0.0, 1.0, 1/(doe_nb_concentrations-1)),
             1.0
         )
-        doe_nb_samples = 10
+        nb_samples = 10
         seed = 123
-        concentration_ratios = {
-            parameter: data['Concentration ratios']
+        ratios = {
+            parameter: data['Ratios']
             for parameter, data in parameters['doe'].items()
         }
-        concentration_ratios = set_concentration_ratios(
-            concentration_ratios=concentration_ratios,
-            all_doe_nb_concentrations=doe_nb_concentrations,
-            all_doe_concentration_ratios=doe_concentration_ratios,
+        ratios = set_sampling_ratios(
+            ratios=ratios,
+            all_nb_steps=doe_nb_concentrations,
+            all_ratios=doe_ratios,
         )
-        doe_levels = doe_levels_generator(
+        doe_levels = sampling(
             n_variable_parameters=n_variable_parameters,
-            concentration_ratios=concentration_ratios,
-            doe_nb_samples=doe_nb_samples,
+            ratios=ratios,
+            nb_samples=nb_samples,
             seed=seed
         )
 
         max_conc = [
-            v['Maximum concentration']
+            v['Maximum']
             for v in parameters['doe'].values()
         ]
 
-        doe_concentrations = levels_to_concentrations(
+        doe_concentrations = levels_to_absvalues(
             doe_levels,
             max_conc,
         )
 
         dna_concentrations = {
-            v: dna_param[v]['Maximum concentration']
+            v: dna_param[v]['Maximum']
             for status, dna_param in parameters.items()
             for v in dna_param
             if status.startswith('dna')
         }
 
         const_concentrations = {
-                k: v['Maximum concentration']
+                k: v['Maximum']
                 for k, v in parameters['const'].items()
             }
 
-        concentrations = assemble_concentrations(
+        concentrations = assemble_values(
             doe_concentrations,
             dna_concentrations,
             const_concentrations,
@@ -546,7 +546,7 @@ class Test(TestCase):
                 autofluorescence_set_df.columns.tolist()
             )
 
-    def test_assemble_concentrations_AllStatusConst(self):
+    def test_assemble_values_AllStatusConst(self):
         input_df = input_importer(os_path.join(
                 self.INPUT_FOLDER,
                 'proCFPS_parameters_woDoE.tsv'
@@ -555,39 +555,39 @@ class Test(TestCase):
 
         n_variable_parameters = 0
         seed = 123
-        concentration_ratios = {
-            parameter: data['Concentration ratios']
+        ratios = {
+            parameter: data['Ratios']
             for parameter, data in parameters['doe'].items()
         }
-        doe_levels = doe_levels_generator(
+        doe_levels = sampling(
             n_variable_parameters=n_variable_parameters,
-            concentration_ratios=concentration_ratios,
+            ratios=ratios,
             seed=seed
         )
 
         max_conc = [
-            v['Maximum concentration']
+            v['Maximum']
             for v in parameters['doe'].values()
         ]
 
-        doe_concentrations = levels_to_concentrations(
+        doe_concentrations = levels_to_absvalues(
             doe_levels,
             max_conc,
         )
 
         dna_concentrations = {
-            v: dna_param[v]['Maximum concentration']
+            v: dna_param[v]['Maximum']
             for status, dna_param in parameters.items()
             for v in dna_param
             if status.startswith('dna')
         }
 
         const_concentrations = {
-                k: v['Maximum concentration']
+                k: v['Maximum']
                 for k, v in parameters['const'].items()
             }
 
-        concentrations = assemble_concentrations(
+        concentrations = assemble_values(
             doe_concentrations,
             dna_concentrations,
             const_concentrations,
@@ -647,35 +647,35 @@ class Test(TestCase):
             expected_autofluorescence_sampling_array_woDoE_arr
         )
 
-    def test_save_concentrations_wExistingOutFolder(self):
+    def test_save_values_wExistingOutFolder(self):
         with TemporaryDirectory() as tmpFolder:
-            self._test_save_concentrations(
+            self._test_save_values(
                 input_file=self.proCFPS_parameters,
                 output_folder=tmpFolder
             )
 
-    def test_save_concentrations_woExistingOutFolder(self):
-        self._test_save_concentrations(
+    def test_save_values_woExistingOutFolder(self):
+        self._test_save_values(
             input_file=self.proCFPS_parameters,
             output_folder=NamedTemporaryFile().name
         )
 
-    def test_save_concentrations_wExistingOutFolder_woGOI(self):
+    def test_save_values_wExistingOutFolder_woGOI(self):
         with TemporaryDirectory() as tmpFolder:
-            self._test_save_concentrations(
+            self._test_save_values(
                 input_file=self.proCFPS_parameters_woGOI,
                 output_folder=tmpFolder,
                 woGOI=True
             )
 
-    def test_save_concentrations_woExistingOutFolder_woGOI(self):
-        self._test_save_concentrations(
+    def test_save_values_woExistingOutFolder_woGOI(self):
+        self._test_save_values(
             input_file=self.proCFPS_parameters_woGOI,
             output_folder=NamedTemporaryFile().name,
             woGOI=True
         )
 
-    def _test_save_concentrations(
+    def _test_save_values(
         self,
         input_file: str,
         output_folder: str,
@@ -688,51 +688,51 @@ class Test(TestCase):
 
         n_variable_parameters = len(parameters['doe'])
         doe_nb_concentrations = 5
-        doe_concentration_ratios = np_append(
+        doe_ratios = np_append(
             np_arange(0.0, 1.0, 1/(doe_nb_concentrations-1)),
             1.0
         )
-        doe_nb_samples = 10
+        nb_samples = 10
         seed = 123
-        concentration_ratios = {
-            parameter: data['Concentration ratios']
+        ratios = {
+            parameter: data['Ratios']
             for parameter, data in parameters['doe'].items()
         }
-        concentration_ratios = set_concentration_ratios(
-            concentration_ratios=concentration_ratios,
-            all_doe_nb_concentrations=doe_nb_concentrations,
-            all_doe_concentration_ratios=doe_concentration_ratios,
+        ratios = set_sampling_ratios(
+            ratios=ratios,
+            all_nb_steps=doe_nb_concentrations,
+            all_ratios=doe_ratios,
         )
-        doe_levels = doe_levels_generator(
+        doe_levels = sampling(
             n_variable_parameters=n_variable_parameters,
-            concentration_ratios=concentration_ratios,
-            doe_nb_samples=doe_nb_samples,
+            ratios=ratios,
+            nb_samples=nb_samples,
             seed=seed
         )
 
         max_conc = [
-            v['Maximum concentration']
+            v['Maximum']
             for v in parameters['doe'].values()
         ]
 
-        doe_concentrations = levels_to_concentrations(
+        doe_concentrations = levels_to_absvalues(
             doe_levels,
             max_conc,
         )
 
         dna_concentrations = {
-            v: dna_param[v]['Maximum concentration']
+            v: dna_param[v]['Maximum']
             for status, dna_param in parameters.items()
             for v in dna_param
             if status.startswith('dna')
         }
 
         const_concentrations = {
-                k: v['Maximum concentration']
+                k: v['Maximum']
                 for k, v in parameters['const'].items()
             }
 
-        concentrations = assemble_concentrations(
+        concentrations = assemble_values(
             doe_concentrations,
             dna_concentrations,
             const_concentrations,
@@ -740,7 +740,7 @@ class Test(TestCase):
         )
 
         # GENERATE PLATE FILES
-        save_concentrations(
+        save_values(
             concentrations['initial'],
             concentrations['normalizer'],
             concentrations['background'],
@@ -848,17 +848,17 @@ class Test(TestCase):
         parameters = input_processor(input_df)
         doe_nb_concentrations = 5
 
-        concentration_ratios = {
-            parameter: data['Concentration ratios']
+        ratios = {
+            parameter: data['Ratios']
             for parameter, data in parameters['doe'].items()
         }
-        concentration_ratios = set_concentration_ratios(
-            concentration_ratios=concentration_ratios,
-            all_doe_nb_concentrations=doe_nb_concentrations
+        ratios = set_sampling_ratios(
+            ratios=ratios,
+            all_nb_steps=doe_nb_concentrations
         )
 
         max_conc = [
-            v['Maximum concentration']
+            v['Maximum']
             for v in parameters['doe'].values()
         ]
         # Generate the sampling for testing
@@ -867,12 +867,12 @@ class Test(TestCase):
         nb_samples = 4 * doe_nb_concentrations
         for i_run in range(100):
             # LHS sampling
-            sampling_array = doe_levels_generator(
+            sampling_array = sampling(
                 n_variable_parameters=len(parameters['doe']),
-                concentration_ratios=concentration_ratios,
-                doe_nb_samples=nb_samples
+                ratios=ratios,
+                nb_samples=nb_samples
             )
-            doe_concentrations = levels_to_concentrations(
+            doe_concentrations = levels_to_absvalues(
                 sampling_array,
                 max_conc
             )
@@ -890,12 +890,12 @@ class Test(TestCase):
         nb_samples = 10 * len(parameters['doe'])
         for i_run in range(100):
             # LHS sampling
-            sampling_array = doe_levels_generator(
+            sampling_array = sampling(
                 n_variable_parameters=len(parameters['doe']),
-                concentration_ratios=concentration_ratios,
-                doe_nb_samples=nb_samples
+                ratios=ratios,
+                nb_samples=nb_samples
             )
-            doe_concentrations = levels_to_concentrations(
+            doe_concentrations = levels_to_absvalues(
                 sampling_array,
                 max_conc
             )

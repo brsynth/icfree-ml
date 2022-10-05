@@ -11,14 +11,14 @@ from brs_utils import (
     create_logger
 )
 
-from .concentrations_sampler import (
+from .sampler import (
     input_importer,
     input_processor,
-    doe_levels_generator,
-    levels_to_concentrations,
-    assemble_concentrations,
-    save_concentrations,
-    set_concentration_ratios,
+    sampling,
+    levels_to_absvalues,
+    assemble_values,
+    save_values,
+    set_sampling_ratios,
     check_sampling
 )
 from .args import build_args_parser
@@ -27,8 +27,8 @@ from .args import build_args_parser
 def main():
 
     parser = build_args_parser(
-        program='concenrations_sampler',
-        description='Sample concentrations for DNA and protein'
+        program='sampler',
+        description='Sample values'
     )
 
     args = parser.parse_args()
@@ -40,15 +40,15 @@ def main():
     input_df = input_importer(args.cfps, logger=logger)
     parameters = input_processor(input_df, logger=logger)
 
-    # Set the concentration ratios for each parameter
-    doe_concentration_ratios = {
-        parameter: data['Concentration ratios']
+    # Set the ratios for each parameter
+    ratios = {
+        parameter: data['Ratios']
         for parameter, data in parameters['doe'].items()
     }
-    concentration_ratios = set_concentration_ratios(
-        concentration_ratios=doe_concentration_ratios,
-        all_doe_nb_concentrations=args.doe_nb_concentrations,
-        all_doe_concentration_ratios=args.doe_concentration_ratios,
+    sampling_ratios = set_sampling_ratios(
+        ratios=ratios,
+        all_nb_steps=args.nb_sampling_steps,
+        all_ratios=args.sampling_ratios,
         logger=logger
     )
 
@@ -61,61 +61,60 @@ def main():
         )
 
     # PROCESS TO THE SAMPLING
-    doe_levels = doe_levels_generator(
+    levels = sampling(
         n_variable_parameters=len(parameters['doe']),
-        concentration_ratios=concentration_ratios,
-        doe_nb_samples=args.doe_nb_samples,
+        ratios=sampling_ratios,
+        nb_samples=args.nb_samples,
         seed=args.seed,
         logger=logger
     )
-
     # Check sampling
-    check_sampling(doe_levels, logger)
+    check_sampling(levels, logger)
 
-    # CONVERT INTO CONCENTRATIONS
-    # Read the maximum concentration for each parameter involved in DoE
-    max_conc = [
-        v['Maximum concentration']
+    # CONVERT INTO ABSOLUTE VALUES
+    # Read the maximum value for each parameter involved in DoE
+    max_values = [
+        v['Maximum']
         for v in parameters['doe'].values()
     ]
     # Convert
-    doe_concentrations = levels_to_concentrations(
-        doe_levels,
-        max_conc,
+    sampling_values = levels_to_absvalues(
+        levels,
+        max_values,
         logger=logger
     )
 
     # GENERATE PLATE
-    # Read the maximum concentration for each dna parameter
-    dna_concentrations = {
-        v: dna_param[v]['Maximum concentration']
+    # Read the maximum value for each dna parameter
+    dna_values = {
+        v: dna_param[v]['Maximum']
         for status, dna_param in parameters.items()
         for v in dna_param
         if status.startswith('dna')
     }
-    # Read the maximum concentration for each constant parameter
+    # Read the maximum for each constant parameter
     try:
-        const_concentrations = {
-            k: v['Maximum concentration']
+        const_values = {
+            k: v['Maximum']
             for k, v in parameters['const'].items()
         }
     except KeyError:
-        const_concentrations = {}
-    # Generate the concentrations
-    concentrations = assemble_concentrations(
-        doe_concentrations=doe_concentrations,
-        const_concentrations=const_concentrations,
-        dna_concentrations=dna_concentrations,
+        const_values = {}
+    # Generate the absolute values
+    abs_values = assemble_values(
+        sampling_values=sampling_values,
+        const_values=const_values,
+        dna_values=dna_values,
         parameters={k: list(v.keys()) for k, v in parameters.items()},
         logger=logger
     )
 
     # WRITE TO DISK
-    save_concentrations(
-        concentrations['initial'],
-        concentrations['normalizer'],
-        concentrations['background'],
-        concentrations['parameters'],
+    save_values(
+        abs_values['initial'],
+        abs_values['normalizer'],
+        abs_values['background'],
+        abs_values['parameters'],
         args.output_folder
     )
 

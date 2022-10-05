@@ -42,8 +42,8 @@ from typing import (
 
 from .args import (
     DEFAULT_OUTPUT_FOLDER,
-    DEFAULT_DOE_NB_CONCENTRATIONS,
-    DEFAULT_DOE_NB_SAMPLES
+    DEFAULT_NB_SAMPLING_STEPS,
+    DEFAULT_NB_SAMPLES
 )
 
 # To print numpy arrays in full
@@ -113,15 +113,15 @@ def input_processor(
     # Split concentration strings into lists
     for comb in parameters:
         for parameter in parameters[comb].values():
-            if isinstance(parameter['Concentration ratios'], str):
-                parameter['Concentration ratios'] = list(
+            if isinstance(parameter['Ratios'], str):
+                parameter['Ratios'] = list(
                     map(
                         float,
-                        parameter['Concentration ratios'].split(',')
+                        parameter['Ratios'].split(',')
                     )
                 )
             else:
-                parameter['Concentration ratios'] = None
+                parameter['Ratios'] = None
 
     logger.debug(f'cfps_parameters_df: {cfps_parameters_df}')
     logger.debug(f'PARAMETERS: {parameters}')
@@ -129,56 +129,56 @@ def input_processor(
     return parameters
 
 
-def set_concentration_ratios(
-    concentration_ratios: Dict,
-    all_doe_nb_concentrations: int = DEFAULT_DOE_NB_CONCENTRATIONS,
-    all_doe_concentration_ratios: np_ndarray = None,
+def set_sampling_ratios(
+    ratios: Dict,
+    all_nb_steps: int = DEFAULT_NB_SAMPLING_STEPS,
+    all_ratios: np_ndarray = None,
     logger: Logger = getLogger(__name__)
 ) -> Dict:
     """
-    Set the concentration ratios for each parameter.
+    Set the ratios for each parameter.
 
     Parameters
     ----------
     concentation_ratios : Dict
         Parameter concentration ratios.
 
-    all_doe_nb_concentrations : int
-        Number of concentration ratios for all factor
+    all_nb_steps : int
+        Number of ratios for all factor
 
-    all_doe_concentration_ratios: np_ndarray
-        Possible concentration values (between 0.0 and 1.0) for all factors.
+    all_ratios: np_ndarray
+        Possible ratio values (between 0.0 and 1.0) for all factors.
         If no list is passed, a default list will be built,
-        e.g. if doe_nb_concentrations = 5 the list of considered
-        discrete conentrations will be: 0.0 0.25 0.5 0.75 1.0
+        e.g. if nb_sampling_steps = 5 the list of considered
+        discrete ratios will be: 0.0 0.25 0.5 0.75 1.0
 
     Returns
     -------
-    doe_concentration_ratios : Dict
-        Concentration ratios for each parameter.
+    sampling_ratios : Dict
+        Ratio valuess for each parameter.
     """
 
     # If concentration ratios are not defined for all parameters
-    if all_doe_concentration_ratios is None:
-        all_doe_concentration_ratios = np_append(
-            np_arange(0.0, 1.0, 1/(all_doe_nb_concentrations-1)),
+    if all_ratios is None:
+        all_ratios = np_append(
+            np_arange(0.0, 1.0, 1/(all_nb_steps-1)),
             1.0
-        )
+        ).tolist()
 
-    doe_concentration_ratios = dict(concentration_ratios)
+    _ratios = dict(ratios)
 
-    for param in concentration_ratios:
-        if concentration_ratios[param] is None:
+    for param in ratios:
+        if ratios[param] is None:
             # Set concentration ratios to default value
-            doe_concentration_ratios[param] = all_doe_concentration_ratios
+            _ratios[param] = all_ratios
 
-    return doe_concentration_ratios
+    return _ratios
 
 
-def doe_levels_generator(
+def sampling(
     n_variable_parameters,
-    concentration_ratios: Dict,
-    doe_nb_samples: int = DEFAULT_DOE_NB_SAMPLES,
+    ratios: Dict,
+    nb_samples: int = DEFAULT_NB_SAMPLES,
     seed: int = None,
     logger: Logger = getLogger(__name__)
 ):
@@ -191,10 +191,10 @@ def doe_levels_generator(
     n_variable_parameters : int
         Number of variable parameters.
 
-    concentration_ratios: Dict
-        Concentration ratios for each parameter.
+    ratios: Dict
+        Ratios for each parameter.
 
-    doe_nb_samples: int
+    nb_samples: int
         Number of samples to generate for all factors
 
     seed: int
@@ -212,13 +212,13 @@ def doe_levels_generator(
     if seed is None:
         sampling = lhs(
             n_variable_parameters,
-            samples=doe_nb_samples,
+            samples=nb_samples,
             criterion=None
         )
     else:
         sampling = lhs(
             n_variable_parameters,
-            samples=doe_nb_samples,
+            samples=nb_samples,
             criterion=None,
             random_state=seed
         )
@@ -232,20 +232,23 @@ def doe_levels_generator(
     #         return values[idx]
     #     return np_frompyfunc(f, 1, 1)
 
-    logger.debug(f'ROUNDED VALUES:\n{concentration_ratios}')
-    concentration_ratios_lst = list(concentration_ratios.values())
+    logger.debug(f'ROUNDED VALUES:\n{ratios}')
+    ratios_lst = list(ratios.values())
 
     # Round LHS values
     rounded_sampling = list(sampling)
+    # Normalize values, in case of input ratio > 1
+    for i in range(len(ratios_lst)):
+        sampling[:, i] = sampling[:, i] * max(ratios_lst[i])
     for i in range(len(rounded_sampling)):
         sample = sampling[i]
         # Round each value of the sample
         for j in range(len(sample)):
             # Search the index of the bin value
             idx_min = np_argmin(
-                np_abs(concentration_ratios_lst[j] - sample[j])
+                np_abs(ratios_lst[j] - sample[j])
             )
-            sample[j] = concentration_ratios_lst[j][idx_min]
+            sample[j] = ratios_lst[j][idx_min]
 
     # rounded_sampling = rounder(np_asarray(concentration_ratios))(sampling)
     logger.debug(f'ROUNDED LHS:\n{rounded_sampling}')
@@ -290,9 +293,9 @@ def check_sampling(
     logger.debug('Sampling checked')
 
 
-def levels_to_concentrations(
+def levels_to_absvalues(
     levels_array,
-    maximum_concentrations,
+    maximum_values,
     decimals: int = 3,
     logger: Logger = getLogger(__name__)
 ):
@@ -304,36 +307,36 @@ def levels_to_concentrations(
     levels_array : 2d-array
         N-by-samples array with uniformly spaced values between 0 and 1.
 
-    maximum_concentrations : 1d-array
-        N-maximum-concentrations array with values for each variable factor.
+    maximum_values : 1d-array
+        N-maximum-values array with values for each variable factor.
 
     Returns
     -------
-    concentrations : 2d-array
-        N-by-samples array with concentrations values for each factor.
+    values : 2d-array
+        N-by-samples array with values for each factor.
     """
     logger.debug(f'LEVELS ARRAY:\n{levels_array}')
-    logger.debug(f'MAXIMUM CONCENTRATIONS:\n{maximum_concentrations}')
+    logger.debug(f'MAXIMUM VALUES:\n{maximum_values}')
     if levels_array is None or levels_array.size <= 0:
         return np_asarray([])
 
-    concentrations = np_multiply(
+    values = np_multiply(
         levels_array,
-        maximum_concentrations
+        maximum_values
     )
-    concentrations = np_round(
-        concentrations.astype(np_double),
+    values = np_round(
+        values.astype(np_double),
         decimals
     )
-    logger.debug(f'CONCENTRATIONS:\n{concentrations}')
+    logger.debug(f'VALUES:\n{values}')
 
-    return concentrations
+    return values
 
 
-def assemble_concentrations(
-    doe_concentrations,
-    dna_concentrations,
-    const_concentrations,
+def assemble_values(
+    sampling_values: np_ndarray,
+    dna_values: np_ndarray,
+    const_values: np_ndarray,
     parameters,
     logger: Logger = getLogger(__name__)
 ):
@@ -342,18 +345,15 @@ def assemble_concentrations(
 
     Parameters
     ----------
-    doe_concentrations : 1d-array
+    sampling_values : 1d-array
         Array with variable concentrations values for each factor.
 
-    dna_concentrations : 1d-array
+    dna_values : 1d-array
         Array with values for each factor which are related to DNA
         with bin values (0 or max. conc.).
 
-    const_concentrations : 1d-array
+    const_values : 1d-array
         Array with constant values for each factor.
-
-    maximum_concentrations_sample : 1d-array
-        N-maximum-concentrations array with values for all factor.
 
     parameters: dict
         Dictionnary of cfps parameters.
@@ -372,32 +372,26 @@ def assemble_concentrations(
     parameters: List
         List of the name of cfps parameters
     """
-    # initial_set_array = concatenate(
-    #     (all_concentrations_array,
-    #         maximum_concentrations_sample),
-    #     axis=0)
-
-    logger.debug(f'DOE_CONCENTRATIONS:\n{doe_concentrations}')
-    logger.debug(f'CONST_CONCENTRATIONS: {const_concentrations}')
-    logger.debug(f'DNA_CONCENTRATIONS: {dna_concentrations}')
-    logger.debug(f'PARAMETERS:\n{parameters}')
+    logger.debug(f'SAMPLING VALUES:\n{sampling_values}')
+    logger.debug(f'DNA VALUES:\n{dna_values}')
+    logger.debug(f'CONST VALUES:\n{const_values}')
 
     # Add DoE combinatorial parameters
     headers = parameters['doe']
-    initial_set_array = doe_concentrations.copy()
+    initial_set_array = sampling_values.copy()
 
     # Add constant parameters
     # If the is no DoE concentrations
     if len(initial_set_array) == 0:
         # Then fill with const concentrations
         initial_set_array = [
-            np_fromiter(const_concentrations.values(), dtype=float)
+            np_fromiter(const_values.values(), dtype=float)
         ]
     else:  # Else, add const concentrations to DoE ones
         initial_set_array = [
             np_concatenate(
                 (concentrations,
-                 list(const_concentrations.values()))
+                 list(const_values.values()))
             )
             for concentrations in initial_set_array
         ]
@@ -405,7 +399,7 @@ def assemble_concentrations(
 
     # Add combinatorial parameters
     initial_set_array = [
-        np_concatenate((concentrations, list(dna_concentrations.values())))
+        np_concatenate((concentrations, list(dna_values.values())))
         for concentrations in initial_set_array
     ]
     headers += sum(
@@ -447,12 +441,13 @@ def assemble_concentrations(
     }
 
 
-def save_concentrations(
-        initial_set_df,
-        normalizer_set_df,
-        autofluorescence_set_df,
-        all_parameters,
-        output_folder: str = DEFAULT_OUTPUT_FOLDER):
+def save_values(
+    initial_set_df,
+    normalizer_set_df,
+    autofluorescence_set_df,
+    all_parameters,
+    output_folder: str = DEFAULT_OUTPUT_FOLDER
+):
     """
     Save Pandas dataframes in tsv files
 
@@ -481,7 +476,7 @@ def save_concentrations(
         initial_set_df.to_csv(
             os_path.join(
                 output_folder,
-                'concentrations.tsv'),
+                'sampling.tsv'),
             sep='\t',
             header=all_parameters,
             index=False)

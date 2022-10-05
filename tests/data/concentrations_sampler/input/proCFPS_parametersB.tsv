@@ -1,0 +1,4 @@
+Parameter	Status	Maximum	Stock concentration	Parameter dead volume	Ratios
+Mg-glutamate	doe	125	168	0	0.0,0.2,0.4,0.52,0.6,0.68,0.8,1.0
+k-glutamate	doe	125	3360	0	
+Extract	const	1000	300	2000

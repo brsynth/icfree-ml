@@ -37,7 +37,7 @@
         "const",
         "const"
     ],
-    "Maximum concentration": [
+    "Maximum": [
         4.0,
         80.0,
         0.26,
@@ -75,7 +75,7 @@
         300.0,
         200.0
     ],
-    "Concentration ratios": [
+    "Ratios": [
         [0.0, 0.1, 0.3, 0.5, 1.0],
         null,
         null,

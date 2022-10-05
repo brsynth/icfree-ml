@@ -35,9 +35,9 @@ python -m icfree.plates_generator <cfps-parameters tsv file> -of <output_folder>
 ## Options
 <ul>
 <li><code>-of</code> or <code>--output_folder</code>: path to the output folder where the generated plates will be saved</li>
-<li><code>--doe-nb-concentrations</code>: Number of concentration values for all factors when performing the DoE (default: 5)</li>
-<li><code>--doe-concentration-ratios</code>: Concentration rations (between 0.0 and 1.0) for all factors when performing the DoE</li>
-<li><code>--doe-nb-samples</code>: Number of samples to generate for all factors when performing the DoE (default: 99)</li>
+<li><code>--nb-sampling-steps</code>: Number of values for all factors when performing the sampling (default: 5)</li>
+<li><code>--sampling-ratios</code>: Ratios for all factors when performing the sampling</li>
+<li><code>--nb-samples</code>: Number of samples to generate for all factors when performing the sampling (default: 99)</li>
 <li><code>--seed</code>: Seed to reproduce results (same seed number = same results)</li>
 <li><code>--all-status</code>: Change status of all parameters (but DNA) (choices: <code>doe</code> or <code>const</code>)</li>
 </ul>
@@ -45,7 +45,7 @@ python -m icfree.plates_generator <cfps-parameters tsv file> -of <output_folder>
 ## Input file
 
 Below is an example of an input file:
-| **Parameter** 	| **Status** 	| **Maximum concentration** 	| **Stock concentration** 	| **Parameter dead volume** 	| **Concentration ratios** 	|
+| **Parameter** 	| **Status** 	| **Maximum** 	| **Stock concentration** 	| **Parameter dead volume** 	| **Ratios** 	|
 |---------------	|------------	|---------------------------	|-------------------------	|---------------------------	|--------------------------	|
 | Mg-glutamate  	| doe        	| 4                         	| 168                     	| 0                         	| 0.0,0.1,0.3,0.5,1.0      	|
 | k-glutamate   	| doe        	| 80                        	| 3360                    	| 0                         	|                          	|
@@ -70,9 +70,9 @@ The first column is the parameter (or factor) names.
 
 The second column indicates how parameters will be combined:
 <ol>
-    <li><code>doe</code>: parameter concentrations will be combined in a Design of Experiment algorithm (currently Latin Hypercube Sampling).</li>
-    <li><code>const</code>: parameter concentrations will be kept constant.</li>
-    <li><code>dna_*</code>: parameter concentrations will combined in almost full combinatorial: all possible combinations of concentrations will be generated, except for the case where there is only the GOI (Gene Of Interest):
+    <li><code>doe</code>: parameter values will be combined in a Design of Experiment algorithm (currently Latin Hypercube Sampling).</li>
+    <li><code>const</code>: parameter values will be kept constant.</li>
+    <li><code>dna_*</code>: parameter values will combined in almost full combinatorial: all possible combinations of values will be generated, except for the case where there is only the GOI (Gene Of Interest):
 
 |  	| DNA (reporter) 	| DNA (GOI) 	|
 |---	|---	|---	|
@@ -82,13 +82,13 @@ The second column indicates how parameters will be combined:
 </li>
 </ol>
 
-The third column is the maximum concentration of the parameter that will be used in the DoE algorithm.
+The third column is the maximum value of the parameter that will be used in the DoE algorithm.
 
 The fourth column is the stock concentration of the parameter. This is used to calculate the volume of the parameter to add to the plate.
 
 The fifth column is the dead volume of the parameter. This is used to calculate the volume of the parameter that will not be pipetted by the robot (because of viscosity).
 
-The sixth column is the specific concentration ratios wa want to have for this parameter. If nothing defined, then take ratios given in program options.
+The sixth column is the specific ratios we want to have for this parameter. If nothing defined, then take ratios given in program options.
 
 ## Output files
 If <code>dna_*</code> parameters are present in the input file, then the output files will be:

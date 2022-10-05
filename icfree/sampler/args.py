@@ -7,8 +7,8 @@ from brs_utils import add_logger_args
 from icfree._version import __version__
 
 DEFAULT_OUTPUT_FOLDER = os_getcwd()
-DEFAULT_DOE_NB_CONCENTRATIONS = 5
-DEFAULT_DOE_NB_SAMPLES = 99
+DEFAULT_NB_SAMPLING_STEPS = 5
+DEFAULT_NB_SAMPLES = 99
 
 
 def build_args_parser(
@@ -42,27 +42,27 @@ def add_arguments(parser):
     )
 
     parser.add_argument(
-        '--doe-nb-concentrations',
+        '--nb-sampling-steps',
         type=int,
-        default=DEFAULT_DOE_NB_CONCENTRATIONS,
-        help=('Number of concentration values for all factors when performing'
-              f' the DoE (default: {DEFAULT_DOE_NB_CONCENTRATIONS})')
+        default=DEFAULT_NB_SAMPLING_STEPS,
+        help=('Number of uniform sampling steps for all factors'
+              f' (default: {DEFAULT_NB_SAMPLING_STEPS})')
     )
 
     parser.add_argument(
-        '--doe-concentration-ratios',
+        '--sampling-ratios',
         nargs='+',
         type=float,
-        help=('Concentration rations (between 0.0 and 1.0)'
-              ' for all factors when performing the DoE')
+        help=('Sampling ratios (between 0.0 and 1.0)'
+              ' for all factors.')
     )
 
     parser.add_argument(
-        '--doe-nb-samples',
+        '--nb-samples',
         type=int,
-        default=DEFAULT_DOE_NB_SAMPLES,
+        default=DEFAULT_NB_SAMPLES,
         help=('Number of samples to generate for all factors'
-              f' when performing the DoE (default: {DEFAULT_DOE_NB_SAMPLES})')
+              f' (default: {DEFAULT_NB_SAMPLES})')
     )
 
     parser.add_argument(

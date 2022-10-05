@@ -1,4 +1,4 @@
-Parameter	Status	Maximum concentration	Stock concentration	Parameter dead volume	Concentration ratios
+Parameter	Status	Maximum	Stock concentration	Parameter dead volume	Ratios
 Mg-glutamate	doe	4	168	0	0.0,0.1,0.3,0.5,1.0
 k-glutamate	doe	80	3360	0
 CoA	doe	0.26	210	0
