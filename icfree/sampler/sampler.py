@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+from cmath import isnan
 from os import (
     path as os_path,
     mkdir as os_mkdir
@@ -19,7 +20,8 @@ from numpy import (
     multiply as np_multiply,
     inf as np_inf,
     ndarray as np_ndarray,
-    fromiter as np_fromiter
+    fromiter as np_fromiter,
+    savetxt as np_savetxt,
 )
 
 from pandas import (
@@ -97,6 +99,31 @@ def input_processor(
     """
     parameters = {}
 
+    for dic in cfps_parameters_df.to_dict('records'):
+        parameters[dic['Parameter']] = {
+            k: dic[k] for k in dic.keys() - {'Parameter'}
+        }
+        # Convert list of ratios str into list of float
+        # ratio is a list of float
+        if isinstance(parameters[dic['Parameter']]['Ratios'], str):
+            parameters[dic['Parameter']]['Ratios'] = list(
+                map(
+                    float,
+                    parameters[dic['Parameter']]['Ratios'].split(',')
+                )
+            )
+        # ratio is nan
+        elif isnan(parameters[dic['Parameter']]['Ratios']):
+            parameters[dic['Parameter']]['Ratios'] = []
+        # ratio is a float
+        else:
+            parameters[dic['Parameter']]['Ratios'] = \
+                [parameters[dic['Parameter']]['Ratios']]
+
+    return parameters
+
+    parameters = {}
+
     # For each different value of 'Status' column
     for status in cfps_parameters_df['Status'].unique():
         # Create a dict indexed on 'Parameter' value
@@ -155,10 +182,10 @@ def set_sampling_ratios(
     Returns
     -------
     sampling_ratios : Dict
-        Ratio valuess for each parameter.
+        Ratio values for each parameter.
     """
 
-    # If concentration ratios are not defined for all parameters
+    # If ratios are not defined for all parameters
     if all_ratios is None:
         all_ratios = np_append(
             np_arange(0.0, 1.0, 1/(all_nb_steps-1)),
@@ -168,9 +195,12 @@ def set_sampling_ratios(
     _ratios = dict(ratios)
 
     for param in ratios:
-        if ratios[param] is None:
-            # Set concentration ratios to default value
+        if len(ratios[param]) == 0:
+            # Set ratios to default value
             _ratios[param] = all_ratios
+        elif not isinstance(ratios[param], list):
+            # Put single concentration into a list
+            _ratios[param] = [ratios[param]]
 
     return _ratios
 
@@ -377,7 +407,7 @@ def assemble_values(
     logger.debug(f'CONST VALUES:\n{const_values}')
 
     # Add DoE combinatorial parameters
-    headers = parameters['doe']
+    headers = parameters
     initial_set_array = sampling_values.copy()
 
     # Add constant parameters
@@ -442,10 +472,11 @@ def assemble_values(
 
 
 def save_values(
-    initial_set_df,
-    normalizer_set_df,
-    autofluorescence_set_df,
-    all_parameters,
+    # initial_set_df,
+    # normalizer_set_df,
+    # autofluorescence_set_df,
+    values,
+    parameters,
     output_folder: str = DEFAULT_OUTPUT_FOLDER
 ):
     """
@@ -470,6 +501,26 @@ def save_values(
     """
     if not os_path.exists(output_folder):
         os_mkdir(output_folder)
+
+    np_savetxt(
+        fname=os_path.join(
+            output_folder,
+            'sampling.tsv'),
+        fmt='%s',
+        X=values,
+        delimiter='\t',
+        header='\t'.join(parameters)
+    )
+    # values.to_csv(
+    #     os_path.join(
+    #         output_folder,
+    #         'sampling.tsv'),
+    #     sep='\t',
+    #     header=parameters,
+    #     index=False
+    # )
+
+    return
 
     if (normalizer_set_df is None
             and autofluorescence_set_df is None):

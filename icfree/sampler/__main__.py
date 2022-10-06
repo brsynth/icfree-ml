@@ -43,7 +43,7 @@ def main():
     # Set the ratios for each parameter
     ratios = {
         parameter: data['Ratios']
-        for parameter, data in parameters['doe'].items()
+        for parameter, data in parameters.items()
     }
     sampling_ratios = set_sampling_ratios(
         ratios=ratios,
@@ -62,7 +62,7 @@ def main():
 
     # PROCESS TO THE SAMPLING
     levels = sampling(
-        n_variable_parameters=len(parameters['doe']),
+        n_variable_parameters=len(parameters),
         ratios=sampling_ratios,
         nb_samples=args.nb_samples,
         seed=args.seed,
@@ -72,11 +72,12 @@ def main():
     check_sampling(levels, logger)
 
     # CONVERT INTO ABSOLUTE VALUES
-    # Read the maximum value for each parameter involved in DoE
+    # Read the maximum value for each parameter involved in sampling
     max_values = [
-        v['Maximum']
-        for v in parameters['doe'].values()
+        v['Maximum value']
+        for v in parameters.values()
     ]
+
     # Convert
     sampling_values = levels_to_absvalues(
         levels,
@@ -84,38 +85,35 @@ def main():
         logger=logger
     )
 
-    # GENERATE PLATE
-    # Read the maximum value for each dna parameter
-    dna_values = {
-        v: dna_param[v]['Maximum']
-        for status, dna_param in parameters.items()
-        for v in dna_param
-        if status.startswith('dna')
-    }
-    # Read the maximum for each constant parameter
-    try:
-        const_values = {
-            k: v['Maximum']
-            for k, v in parameters['const'].items()
-        }
-    except KeyError:
-        const_values = {}
-    # Generate the absolute values
-    abs_values = assemble_values(
-        sampling_values=sampling_values,
-        const_values=const_values,
-        dna_values=dna_values,
-        parameters={k: list(v.keys()) for k, v in parameters.items()},
-        logger=logger
-    )
+    # # Read the maximum value for each dna parameter
+    # dna_values = {
+    #     v: dna_param[v]['Maximum value']
+    #     for status, dna_param in parameters.items()
+    #     for v in dna_param
+    #     if status.startswith('dna')
+    # }
+    # # Read the maximum for each constant parameter
+    # try:
+    #     const_values = {
+    #         k: v['Maximum value']
+    #         for k, v in parameters['const'].items()
+    #     }
+    # except KeyError:
+    #     const_values = {}
+    # # Generate the absolute values
+    # abs_values = assemble_values(
+    #     sampling_values=sampling_values,
+    #     const_values=const_values,
+    #     dna_values=dna_values,
+    #     parameters={k: list(v.keys()) for k, v in parameters.items()},
+    #     logger=logger
+    # )
 
     # WRITE TO DISK
     save_values(
-        abs_values['initial'],
-        abs_values['normalizer'],
-        abs_values['background'],
-        abs_values['parameters'],
-        args.output_folder
+        values=sampling_values,
+        parameters=list(parameters.keys()),
+        output_folder=args.output_folder
     )
 
 

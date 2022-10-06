@@ -10,10 +10,8 @@ Spermidine	doe	1	420	0
 tRNA	doe	0.2	84	0
 Amino acids	doe	1.5	6	0
 CAMP	doe	0.75	200	0
-Extract	doe	30	300	2000
-HEPES	doe	50	2100	0
-PEG	doe	2	200	4000
-Promoter	doe	10	300	0
-RBS	doe	10	200	0
-GFP-DNA	dna_fluo	50	300	0
-GOI-DNA	dna_goi	50	300	0
+Extract	const	30	300	2000	1
+HEPES	const	50	2100	0	1
+PEG	const	2	200	4000	1
+Promoter	const	10	300	0	1
+RBS	const	10	200	0	1

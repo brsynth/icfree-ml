@@ -10,10 +10,9 @@
         "Spermidine",
         "tRNA",
         "Amino acids",
-        "Extract",
         "CAMP",
+        "Extract",
         "HEPES",
-        "GFP-DNA",
         "PEG",
         "Promoter",
         "RBS"
@@ -29,15 +28,14 @@
         "doe",
         "doe",
         "doe",
-        "const",
         "doe",
         "const",
-        "dna_fluo",
+        "const",
         "const",
         "const",
         "const"
     ],
-    "Maximum": [
+    "Maximum value": [
         4.0,
         80.0,
         0.26,
@@ -48,9 +46,8 @@
         1.0,
         0.2,
         1.5,
-        30.0,
         0.75,
-        50.0,
+        30.0,
         50.0,
         2.0,
         10.0,
@@ -67,10 +64,9 @@
         420.0,
         84.0,
         6.0,
-        30.0,
         200.0,
+        30.0,
         2100.0,
-        300.0,
         200.0,
         300.0,
         200.0
@@ -87,11 +83,10 @@
         null,
         null,
         null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null
+        [1.0],
+        [1.0],
+        [1.0],
+        [1.0],
+        [1.0]
     ]
 }
