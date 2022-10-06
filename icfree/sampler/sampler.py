@@ -42,11 +42,7 @@ from typing import (
     Dict
 )
 
-from .args import (
-    DEFAULT_OUTPUT_FOLDER,
-    DEFAULT_NB_SAMPLING_STEPS,
-    DEFAULT_NB_SAMPLES
-)
+from .args import DEFAULTS
 
 # To print numpy arrays in full
 np_set_printoptions(threshold=np_inf)
@@ -158,7 +154,7 @@ def input_processor(
 
 def set_sampling_ratios(
     ratios: Dict,
-    all_nb_steps: int = DEFAULT_NB_SAMPLING_STEPS,
+    all_nb_steps: int = DEFAULTS['NB_SAMPLING_STEPS'],
     all_ratios: np_ndarray = None,
     logger: Logger = getLogger(__name__)
 ) -> Dict:
@@ -208,7 +204,7 @@ def set_sampling_ratios(
 def sampling(
     n_variable_parameters,
     ratios: Dict,
-    nb_samples: int = DEFAULT_NB_SAMPLES,
+    nb_samples: int = DEFAULTS['NB_SAMPLES'],
     seed: int = None,
     logger: Logger = getLogger(__name__)
 ):
@@ -363,112 +359,112 @@ def levels_to_absvalues(
     return values
 
 
-def assemble_values(
-    sampling_values: np_ndarray,
-    dna_values: np_ndarray,
-    const_values: np_ndarray,
-    parameters,
-    logger: Logger = getLogger(__name__)
-):
-    """
-    Concatenate variable and fixed concentrations array with control array.
+# def assemble_values(
+#     sampling_values: np_ndarray,
+#     dna_values: np_ndarray,
+#     const_values: np_ndarray,
+#     parameters,
+#     logger: Logger = getLogger(__name__)
+# ):
+#     """
+#     Concatenate variable and fixed concentrations array with control array.
 
-    Parameters
-    ----------
-    sampling_values : 1d-array
-        Array with variable concentrations values for each factor.
+#     Parameters
+#     ----------
+#     sampling_values : 1d-array
+#         Array with variable concentrations values for each factor.
 
-    dna_values : 1d-array
-        Array with values for each factor which are related to DNA
-        with bin values (0 or max. conc.).
+#     dna_values : 1d-array
+#         Array with values for each factor which are related to DNA
+#         with bin values (0 or max. conc.).
 
-    const_values : 1d-array
-        Array with constant values for each factor.
+#     const_values : 1d-array
+#         Array with constant values for each factor.
 
-    parameters: dict
-        Dictionnary of cfps parameters.
+#     parameters: dict
+#         Dictionnary of cfps parameters.
 
-    Returns
-    -------
-    initial_set_df : dataframe
-        Matrix generated from the concatenation of all samples.
+#     Returns
+#     -------
+#     initial_set_df : dataframe
+#         Matrix generated from the concatenation of all samples.
 
-    normalizer_set_df : dataframe
-        Duplicate of initial_set. 0 is assigned to the GOI-DNA column.
+#     normalizer_set_df : dataframe
+#         Duplicate of initial_set. 0 is assigned to the GOI-DNA column.
 
-    autofluorescence_set_df : dataframe
-        Duplicate of normalizer_set. 0 is assigned to the GFP-DNA column.
+#     autofluorescence_set_df : dataframe
+#         Duplicate of normalizer_set. 0 is assigned to the GFP-DNA column.
 
-    parameters: List
-        List of the name of cfps parameters
-    """
-    logger.debug(f'SAMPLING VALUES:\n{sampling_values}')
-    logger.debug(f'DNA VALUES:\n{dna_values}')
-    logger.debug(f'CONST VALUES:\n{const_values}')
+#     parameters: List
+#         List of the name of cfps parameters
+#     """
+#     logger.debug(f'SAMPLING VALUES:\n{sampling_values}')
+#     logger.debug(f'DNA VALUES:\n{dna_values}')
+#     logger.debug(f'CONST VALUES:\n{const_values}')
 
-    # Add DoE combinatorial parameters
-    headers = parameters
-    initial_set_array = sampling_values.copy()
+#     # Add DoE combinatorial parameters
+#     headers = parameters
+#     initial_set_array = sampling_values.copy()
 
-    # Add constant parameters
-    # If the is no DoE concentrations
-    if len(initial_set_array) == 0:
-        # Then fill with const concentrations
-        initial_set_array = [
-            np_fromiter(const_values.values(), dtype=float)
-        ]
-    else:  # Else, add const concentrations to DoE ones
-        initial_set_array = [
-            np_concatenate(
-                (concentrations,
-                 list(const_values.values()))
-            )
-            for concentrations in initial_set_array
-        ]
-    headers += parameters['const']
+#     # Add constant parameters
+#     # If the is no DoE concentrations
+#     if len(initial_set_array) == 0:
+#         # Then fill with const concentrations
+#         initial_set_array = [
+#             np_fromiter(const_values.values(), dtype=float)
+#         ]
+#     else:  # Else, add const concentrations to DoE ones
+#         initial_set_array = [
+#             np_concatenate(
+#                 (concentrations,
+#                  list(const_values.values()))
+#             )
+#             for concentrations in initial_set_array
+#         ]
+#     headers += parameters['const']
 
-    # Add combinatorial parameters
-    initial_set_array = [
-        np_concatenate((concentrations, list(dna_values.values())))
-        for concentrations in initial_set_array
-    ]
-    headers += sum(
-        [
-            v for k, v
-            in parameters.items()
-            if k.startswith('dna')],
-        []
-    )
+#     # Add combinatorial parameters
+#     initial_set_array = [
+#         np_concatenate((concentrations, list(dna_values.values())))
+#         for concentrations in initial_set_array
+#     ]
+#     headers += sum(
+#         [
+#             v for k, v
+#             in parameters.items()
+#             if k.startswith('dna')],
+#         []
+#     )
 
-    # Create initial set with partial concentrations
-    initial_set_df = DataFrame(initial_set_array)
-    initial_set_df.columns = headers
-    logger.debug(f'INITIAL SET:\n{initial_set_df}')
+#     # Create initial set with partial concentrations
+#     initial_set_df = DataFrame(initial_set_array)
+#     initial_set_df.columns = headers
+#     logger.debug(f'INITIAL SET:\n{initial_set_df}')
 
-    # Create normalizer set with GOI to 0
-    normalizer_set_df = None
-    if 'dna_fluo' in parameters:
-        normalizer_set_df = initial_set_df.copy()
-        normalizer_set_df.columns = headers
-        normalizer_set_df[parameters['dna_fluo']] *= 0
-    logger.debug(f'NORMALIZER SET:\n{normalizer_set_df}')
+#     # Create normalizer set with GOI to 0
+#     normalizer_set_df = None
+#     if 'dna_fluo' in parameters:
+#         normalizer_set_df = initial_set_df.copy()
+#         normalizer_set_df.columns = headers
+#         normalizer_set_df[parameters['dna_fluo']] *= 0
+#     logger.debug(f'NORMALIZER SET:\n{normalizer_set_df}')
 
-    # Create normalizer set with GFP to 0
-    autofluorescence_set_df = None
-    if 'dna_goi' in parameters:
-        autofluorescence_set_df = normalizer_set_df.copy()
-        autofluorescence_set_df.columns = headers
-        autofluorescence_set_df[parameters['dna_goi']] *= 0
-    logger.debug(f'BACKGROUND SET:\n{autofluorescence_set_df}')
+#     # Create normalizer set with GFP to 0
+#     autofluorescence_set_df = None
+#     if 'dna_goi' in parameters:
+#         autofluorescence_set_df = normalizer_set_df.copy()
+#         autofluorescence_set_df.columns = headers
+#         autofluorescence_set_df[parameters['dna_goi']] *= 0
+#     logger.debug(f'BACKGROUND SET:\n{autofluorescence_set_df}')
 
-    logger.debug(f'HEADERS: {headers}')
+#     logger.debug(f'HEADERS: {headers}')
 
-    return {
-        'parameters': headers,
-        'initial': initial_set_df,
-        'normalizer': normalizer_set_df,
-        'background': autofluorescence_set_df
-    }
+#     return {
+#         'parameters': headers,
+#         'initial': initial_set_df,
+#         'normalizer': normalizer_set_df,
+#         'background': autofluorescence_set_df
+#     }
 
 
 def save_values(
@@ -477,7 +473,9 @@ def save_values(
     # autofluorescence_set_df,
     values,
     parameters,
-    output_folder: str = DEFAULT_OUTPUT_FOLDER
+    output_folder: str = DEFAULTS['OUTPUT_FOLDER'],
+    output_format: str = DEFAULTS['OUTPUT_FORMAT'],
+    logger: Logger = getLogger(__name__)
 ):
     """
     Save Pandas dataframes in tsv files
@@ -502,14 +500,19 @@ def save_values(
     if not os_path.exists(output_folder):
         os_mkdir(output_folder)
 
+    if output_format == 'tsv':
+        delimiter = '\t'
+    elif output_format == 'csv':
+        delimiter = ','
+
     np_savetxt(
         fname=os_path.join(
             output_folder,
-            'sampling.tsv'),
+            f'sampling.{output_format}'),
         fmt='%s',
         X=values,
-        delimiter='\t',
-        header='\t'.join(parameters)
+        delimiter=delimiter,
+        header=delimiter.join(parameters)
     )
     # values.to_csv(
     #     os_path.join(

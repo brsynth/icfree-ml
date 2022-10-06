@@ -6,10 +6,12 @@ from os import getcwd as os_getcwd
 from brs_utils import add_logger_args
 from icfree._version import __version__
 
-DEFAULT_OUTPUT_FOLDER = os_getcwd()
-DEFAULT_NB_SAMPLING_STEPS = 5
-DEFAULT_NB_SAMPLES = 99
-
+DEFAULTS = {
+    'OUTPUT_FOLDER': os_getcwd(),
+    'NB_SAMPLING_STEPS': 5,
+    'NB_SAMPLES': 99,
+    'OUTPUT_FORMAT': 'tsv'
+}
 
 def build_args_parser(
         program,
@@ -36,17 +38,26 @@ def add_arguments(parser):
     parser.add_argument(
         '-of', '--output-folder',
         type=str,
-        default=DEFAULT_OUTPUT_FOLDER,
+        default=DEFAULTS['OUTPUT_FOLDER'],
         help=('Output folder to write output files'
-              f' (default: {DEFAULT_OUTPUT_FOLDER})')
+              f' (default: {DEFAULTS["OUTPUT_FOLDER"]})')
+    )
+
+    parser.add_argument(
+        '-ofmt', '--output-format',
+        type=str,
+        choices=['csv', 'tsv'],
+        default=DEFAULTS['OUTPUT_FORMAT'],
+        help=('Output file format'
+              f' (default: {DEFAULTS["OUTPUT_FORMAT"]})')
     )
 
     parser.add_argument(
         '--nb-sampling-steps',
         type=int,
-        default=DEFAULT_NB_SAMPLING_STEPS,
+        default=DEFAULTS['NB_SAMPLING_STEPS'],
         help=('Number of uniform sampling steps for all factors'
-              f' (default: {DEFAULT_NB_SAMPLING_STEPS})')
+              f' (default: {DEFAULTS["NB_SAMPLING_STEPS"]})')
     )
 
     parser.add_argument(
@@ -60,9 +71,9 @@ def add_arguments(parser):
     parser.add_argument(
         '--nb-samples',
         type=int,
-        default=DEFAULT_NB_SAMPLES,
+        default=DEFAULTS['NB_SAMPLES'],
         help=('Number of samples to generate for all factors'
-              f' (default: {DEFAULT_NB_SAMPLES})')
+              f' (default: {DEFAULTS["NB_SAMPLES"]})')
     )
 
     parser.add_argument(

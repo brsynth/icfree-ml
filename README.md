@@ -45,7 +45,7 @@ python -m icfree.plates_generator <cfps-parameters tsv file> -of <output_folder>
 ## Input file
 
 Below is an example of an input file:
-| **Parameter** 	| **Status** 	| **Maximum** 	| **Stock concentration** 	| **Parameter dead volume** 	| **Ratios** 	|
+| **Parameter** 	| **Status** 	| **Maximum value** 	| **Stock concentration** 	| **Parameter dead volume** 	| **Ratios** 	|
 |---------------	|------------	|---------------------------	|-------------------------	|---------------------------	|--------------------------	|
 | Mg-glutamate  	| doe        	| 4                         	| 168                     	| 0                         	| 0.0,0.1,0.3,0.5,1.0      	|
 | k-glutamate   	| doe        	| 80                        	| 3360                    	| 0                         	|                          	|

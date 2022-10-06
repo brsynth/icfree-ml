@@ -16,7 +16,7 @@ from .sampler import (
     input_processor,
     sampling,
     levels_to_absvalues,
-    assemble_values,
+    # assemble_values,
     save_values,
     set_sampling_ratios,
     check_sampling
@@ -52,13 +52,13 @@ def main():
         logger=logger
     )
 
-    # If status of parameters has to be changed
-    if args.all_status is not None:
-        parameters = change_status(
-            parameters,
-            args.all_status,
-            logger
-        )
+    # # If status of parameters has to be changed
+    # if args.all_status is not None:
+    #     parameters = change_status(
+    #         parameters,
+    #         args.all_status,
+    #         logger
+    #     )
 
     # PROCESS TO THE SAMPLING
     levels = sampling(
@@ -113,46 +113,47 @@ def main():
     save_values(
         values=sampling_values,
         parameters=list(parameters.keys()),
-        output_folder=args.output_folder
+        output_folder=args.output_folder,
+        output_format=args.output_format
     )
 
 
-def change_status(
-    parameters: Dict,
-    status: str,
-    logger: Logger = getLogger(__name__)
-) -> Dict:
-    """
-    Change status of parameters
+# def change_status(
+#     parameters: Dict,
+#     status: str,
+#     logger: Logger = getLogger(__name__)
+# ) -> Dict:
+#     """
+#     Change status of parameters
 
-    Parameters
-    ----------
-    parameters : Dict
-        Parameters
-    status: str
-        Status to change parameters status into
-    logger: Logger
-        Logger
+#     Parameters
+#     ----------
+#     parameters : Dict
+#         Parameters
+#     status: str
+#         Status to change parameters status into
+#     logger: Logger
+#         Logger
 
-    Returns
-    -------
-    parameters: Dict
-        Parameters with new status
-    """
-    # Set all status to an empty dict
-    _parameters = {
-        status: {} for status in parameters.keys()
-    }
-    # Copy all values under args.all_status key,
-    # except for status wich contain 'dna'
-    for _status, _value in parameters.items():
-        if 'dna' not in _status:
-            _parameters[status].update(_value)
-        else:
-            if _status not in _parameters:
-                _parameters[_status] = {}
-            _parameters[_status].update(_value)
-    return _parameters
+#     Returns
+#     -------
+#     parameters: Dict
+#         Parameters with new status
+#     """
+#     # Set all status to an empty dict
+#     _parameters = {
+#         status: {} for status in parameters.keys()
+#     }
+#     # Copy all values under args.all_status key,
+#     # except for status wich contain 'dna'
+#     for _status, _value in parameters.items():
+#         if 'dna' not in _status:
+#             _parameters[status].update(_value)
+#         else:
+#             if _status not in _parameters:
+#                 _parameters[_status] = {}
+#             _parameters[_status].update(_value)
+#     return _parameters
 
 
 if __name__ == "__main__":
