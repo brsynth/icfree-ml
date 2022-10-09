@@ -512,50 +512,6 @@ def save_values(
         fmt='%s',
         X=values,
         delimiter=delimiter,
-        header=delimiter.join(parameters)
+        header=delimiter.join(parameters),
+        comments=''
     )
-    # values.to_csv(
-    #     os_path.join(
-    #         output_folder,
-    #         'sampling.tsv'),
-    #     sep='\t',
-    #     header=parameters,
-    #     index=False
-    # )
-
-    return
-
-    if (normalizer_set_df is None
-            and autofluorescence_set_df is None):
-        initial_set_df.to_csv(
-            os_path.join(
-                output_folder,
-                'sampling.tsv'),
-            sep='\t',
-            header=all_parameters,
-            index=False)
-    else:
-        initial_set_df.to_csv(
-            os_path.join(
-                output_folder,
-                'initial.tsv'),
-            sep='\t',
-            header=all_parameters,
-            index=False)
-        if normalizer_set_df is not None:
-            normalizer_set_df.to_csv(
-                os_path.join(
-                    output_folder,
-                    'normalizer.tsv'),
-                sep='\t',
-                header=all_parameters,
-                index=False)
-
-        if autofluorescence_set_df is not None:
-            autofluorescence_set_df.to_csv(
-                os_path.join(
-                    output_folder,
-                    'autofluorescence.tsv'),
-                sep='\t',
-                header=all_parameters,
-                index=False)
