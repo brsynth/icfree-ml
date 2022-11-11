@@ -1,16 +1,13 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-from cmath import isnan
 from os import (
     path as os_path,
     mkdir as os_mkdir
 )
-
 from numpy import (
     round as np_round,
     argmin as np_argmin,
-    concatenate as np_concatenate,
     asarray as np_asarray,
     append as np_append,
     arange as np_arange,
@@ -20,24 +17,15 @@ from numpy import (
     multiply as np_multiply,
     inf as np_inf,
     ndarray as np_ndarray,
-    fromiter as np_fromiter,
     savetxt as np_savetxt,
 )
-
-from pandas import (
-    read_csv as pd_read_csv,
-    DataFrame
-)
-
 from pyDOE2 import (
     lhs
 )
-
 from logging import (
     Logger,
     getLogger
 )
-
 from typing import (
     Dict
 )
@@ -46,110 +34,6 @@ from .args import DEFAULTS
 
 # To print numpy arrays in full
 np_set_printoptions(threshold=np_inf)
-
-
-def input_importer(
-    cfps_parameters,
-    logger: Logger = getLogger(__name__)
-) -> DataFrame:
-    """
-    Import tsv input into a dataframe
-
-    Parameters
-    ----------
-    input_file : tsv file
-        tsv with list of cfps parameters and relative features
-
-    Returns
-    -------
-    cfps_parameters_df : DataFrame
-        Pandas dataframe populated with cfps_parameters data
-    """
-    cfps_parameters_df = pd_read_csv(
-                        cfps_parameters,
-                        sep='\t')
-
-    logger.debug(f'CFPs parameters dataframe: {cfps_parameters_df}')
-
-    return cfps_parameters_df
-
-
-def input_processor(
-    cfps_parameters_df: DataFrame,
-    logger: Logger = getLogger(__name__)
-) -> Dict:
-    """
-    Determine variable and fixed parameters, and maximum concentrations.
-
-    Parameters
-    ----------
-    input_df: 2d-array
-        N-by-samples array where values are uniformly spaced between 0 and 1.
-
-    Returns
-    -------
-    parameters: dict
-        Dictionnary of parameters.
-        First level is indexed on 'Status' column.
-        Second level is indexed on 'Parameter' column.
-    """
-    parameters = {}
-
-    for dic in cfps_parameters_df.to_dict('records'):
-        parameters[dic['Parameter']] = {
-            k: dic[k] for k in dic.keys() - {'Parameter'}
-        }
-        # Convert list of ratios str into list of float
-        # ratio is a list of float
-        if isinstance(parameters[dic['Parameter']]['Ratios'], str):
-            parameters[dic['Parameter']]['Ratios'] = list(
-                map(
-                    float,
-                    parameters[dic['Parameter']]['Ratios'].split(',')
-                )
-            )
-        # ratio is nan
-        elif isnan(parameters[dic['Parameter']]['Ratios']):
-            parameters[dic['Parameter']]['Ratios'] = []
-        # ratio is a float
-        else:
-            parameters[dic['Parameter']]['Ratios'] = \
-                [parameters[dic['Parameter']]['Ratios']]
-
-    return parameters
-
-    parameters = {}
-
-    # For each different value of 'Status' column
-    for status in cfps_parameters_df['Status'].unique():
-        # Create a dict indexed on 'Parameter' value
-        parameters[status] = cfps_parameters_df[
-            cfps_parameters_df['Status'] == status
-        ].loc[
-            :, cfps_parameters_df.columns != 'Status'
-        ].set_index('Parameter').T.to_dict('dict')
-
-    for key in ['doe', 'const']:
-        if key not in parameters:
-            parameters[key] = {}
-
-    # Split concentration strings into lists
-    for comb in parameters:
-        for parameter in parameters[comb].values():
-            if isinstance(parameter['Ratios'], str):
-                parameter['Ratios'] = list(
-                    map(
-                        float,
-                        parameter['Ratios'].split(',')
-                    )
-                )
-            else:
-                parameter['Ratios'] = None
-
-    logger.debug(f'cfps_parameters_df: {cfps_parameters_df}')
-    logger.debug(f'PARAMETERS: {parameters}')
-
-    return parameters
 
 
 def set_sampling_ratios(
@@ -180,6 +64,9 @@ def set_sampling_ratios(
     sampling_ratios : Dict
         Ratio values for each parameter.
     """
+    logger.debug(f'ratios: {ratios}')
+    logger.debug(f'all_nb_steps: {all_nb_steps}')
+    logger.debug(f'all_ratios: {all_ratios}')
 
     # If ratios are not defined for all parameters
     if all_ratios is None:
@@ -191,12 +78,12 @@ def set_sampling_ratios(
     _ratios = dict(ratios)
 
     for param in ratios:
-        if len(ratios[param]) == 0:
-            # Set ratios to default value
-            _ratios[param] = all_ratios
-        elif not isinstance(ratios[param], list):
+        if not isinstance(ratios[param], list):
             # Put single concentration into a list
             _ratios[param] = [ratios[param]]
+        elif len(ratios[param]) == 0:
+            # Set ratios to default value
+            _ratios[param] = all_ratios
 
     return _ratios
 
@@ -286,7 +173,6 @@ def check_sampling(
     levels: np_ndarray,
     logger: Logger = getLogger(__name__)
 ):
-
     logger.debug('Checking sampling...')
 
     nb_parameters = levels.shape[1]
@@ -300,13 +186,13 @@ def check_sampling(
             assert 0. in param_levels
         except AssertionError:
             logger.warning(
-                'Min concentration not found in LHS sampling'
+                'Min value not found in LHS sampling'
             )
         try:
             assert 1. in param_levels
         except AssertionError:
             logger.warning(
-                'Max concentration not found in LHS sampling'
+                'Max value not found in LHS sampling'
             )
 
     # Check that there is no duplicate,
@@ -342,7 +228,7 @@ def levels_to_absvalues(
         N-by-samples array with values for each factor.
     """
     logger.debug(f'LEVELS ARRAY:\n{levels_array}')
-    logger.debug(f'MAXIMUM VALUES:\n{maximum_values}')
+    logger.debug(f'maxValueS:\n{maximum_values}')
     if levels_array is None or levels_array.size <= 0:
         return np_asarray([])
 

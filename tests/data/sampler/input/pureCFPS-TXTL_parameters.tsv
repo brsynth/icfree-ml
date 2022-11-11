@@ -1,0 +1,16 @@
+Parameter	Status	maxValue	Stock concenetration	Ratios
+Mg-acetate	variable	20	n/a	0.0,0.1,0.3,0.5,1.0
+κ-glutamate	variable	200	n/a
+HEPES	variable	150	n/a
+Phosphocreatine	variable	50	n/a
+ATP, GTP	variable	5	n/a
+CTP, UTP	variable	2.5	n/a
+TCEP	variable	5	n/a
+Folinic acid	variable	0.05	n/a
+Spermidine	variable	3	n/a
+Ribosomes	variable	3.6	n/a
+Amino acids	variable	1	n/a
+tRNA	variable	7.5	n/a
+Protein solution	variable	2.5	n/a
+GOI-DNA	fixed	8	n/a
+GFP-DNA	fixed	8	n/a

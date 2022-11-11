@@ -1,3 +1,4 @@
+# Test for sampler
 from unittest import (
     TestCase
 )
@@ -5,20 +6,13 @@ from unittest import (
 from os import (
     path as os_path
 )
-
 from numpy.testing import (
     assert_array_equal
 )
-
 from pandas.testing import (
     assert_frame_equal
 )
-
-from pandas import (
-    DataFrame,
-    read_json as pd_read_json
-)
-
+from pandas import DataFrame
 from numpy import (
     append as np_append,
     arange as np_arange,
@@ -26,28 +20,26 @@ from numpy import (
     array as np_array,
     unique as np_unique
 )
-
 from json import (
     load as json_load
 )
-
 from tempfile import (
     TemporaryDirectory,
     NamedTemporaryFile
 )
-
-from icfree.sampler.sampler import (
-    input_importer,
-    input_processor,
-    sampling,
-    levels_to_absvalues,
-    assemble_values,
-    save_values,
-    set_sampling_ratios
-)
+from typing import Dict
+from logging import getLogger
 
 from icfree.sampler.__main__ import (
-    change_status
+    input_importer,
+    input_processor,
+)
+from icfree.sampler.sampler import (
+    sampling,
+    levels_to_absvalues,
+    save_values,
+    set_sampling_ratios,
+    check_sampling
 )
 
 
@@ -55,7 +47,7 @@ class Test(TestCase):
 
     DATA_FOLDER = os_path.join(
         os_path.dirname(os_path.realpath(__file__)),
-        'data', 'concentrations_sampler'
+        'data', 'sampler'
     )
 
     INPUT_FOLDER = os_path.join(
@@ -125,6 +117,7 @@ class Test(TestCase):
             tested_df = input_importer(fp)
 
         tested_dictionary = input_processor(tested_df)
+        print(tested_dictionary)
         self.assertDictEqual(
                 expected_dictionary,
                 tested_dictionary
@@ -177,29 +170,54 @@ class Test(TestCase):
     #         )
 
     def test_sampling(self):
-        n_variable_parameters = 12
         doe_nb_concentrations = 5
-        nb_samples = 10
-        seed = 123
-
+        n_variable_parameters = 12
         ratios = set_sampling_ratios(
             ratios=dict.fromkeys(
                 range(n_variable_parameters), []
             ),
             all_nb_steps=doe_nb_concentrations
         )
+        self._test_sampling(
+            ratios,
+            n_variable_parameters,
+            os_path.join(
+                self.REF_FOLDER,
+                'sampling_array.json'
+            )
+        )
+
+    def test_sampling_withSingleRatio(self):
+        n_variable_parameters = 1
+        ratios=dict.fromkeys(
+            range(n_variable_parameters), [1]
+        )
+        self._test_sampling(
+            ratios,
+            n_variable_parameters,
+            os_path.join(
+                self.REF_FOLDER,
+                'sampling_array_const.json'
+            )
+        )
+
+    def _test_sampling(
+        self,
+        ratios: Dict,
+        n_var_param: int,
+        ref_file: str
+    ):
+        nb_samples = 10
+        seed = 123
+
         sampling_array = sampling(
-            n_variable_parameters=n_variable_parameters,
+            n_variable_parameters=n_var_param,
             ratios=ratios,
             nb_samples=nb_samples,
             seed=seed
         )
 
-        with open(
-            os_path.join(
-                self.REF_FOLDER,
-                'sampling_array.json'
-                ), 'r') as f:
+        with open(ref_file, 'r') as f:
             _ref_sampling_array = json_load(f)
         ref_sampling_array = []
         for sample in _ref_sampling_array.values():
@@ -210,47 +228,10 @@ class Test(TestCase):
             np_array(ref_sampling_array)
         )
 
-    def test_sampling_doe_concentrations(self):
-        n_variable_parameters = 12
-        doe_nb_concentrations = 5
-        nb_samples = 10
-        seed = 123
-        ratios = set_sampling_ratios(
-            ratios=dict.fromkeys(
-                range(n_variable_parameters), []
-            ),
-            all_nb_steps=doe_nb_concentrations
-        )
-        # ratios = set_sampling_ratios(
-        #     ratios=ratios,
-        #     all_nb_steps=doe_nb_concentrations
-        # )
-        sampling_array = sampling(
-            n_variable_parameters=n_variable_parameters,
-            ratios=ratios,
-            nb_samples=nb_samples,
-            seed=seed
-        )
-
-        with open(
-            os_path.join(
-                self.REF_FOLDER,
-                'sampling_array.json'
-                ), 'r') as f:
-            _ref_sampling_array = json_load(f)
-        ref_sampling_array = []
-        for sample in _ref_sampling_array.values():
-            ref_sampling_array.append(sample)
-
-        assert_array_equal(
-            sampling_array,
-            np_array(ref_sampling_array)
-        )
-
-    def test_sampling_EmptyDoELevelsArray(self):
+    def test_sampling_Const(self):
         input_df = input_importer(os_path.join(
                 self.INPUT_FOLDER,
-                'proCFPS_parameters_woDoE.tsv'
+                'proCFPS_parameters_const.tsv'
                 ))
         input_processor(input_df)
 
@@ -274,6 +255,48 @@ class Test(TestCase):
             doe_levels,
             expected_doe_levels
         )
+
+    def test_set_sampling_ratios(self):
+        ratios = {0: [1, 2, 3], 1: 1}
+        all_nb_steps = 5
+        ratios = set_sampling_ratios(
+            ratios=ratios,
+            all_nb_steps=all_nb_steps
+        )
+        self.assertDictEqual(
+            ratios,
+            {0: [1, 2, 3], 1: [1]}
+        )
+
+    def test_check_sampling(self):
+        sampling_with_duplicates = np_array(
+            [
+                [0.0, 0.0],
+                [1.0, 1.0],
+                [0.0, 0.0],
+            ]
+        )
+        sampling_with_no_min_value = np_array(
+            [[1.0]]
+        )
+        sampling_with_no_max_value = np_array(
+            [[0.0]]
+        )
+        for sampling in [
+            (sampling_with_duplicates, 'Duplicate found in LHS sampling'),
+            (sampling_with_no_min_value, 'Min value not found in LHS sampling'),
+            (sampling_with_no_max_value, 'Max value not found in LHS sampling')
+        ]:
+            with self.subTest("sampling", sampling=sampling):
+                sampling_array = sampling[0]
+                expected_error = sampling[1]
+                with self.assertLogs('foo', level='INFO') as cm:
+                    check_sampling(sampling_array, logger=getLogger('foo'))
+                    self.assertEqual(
+                        cm.output,
+                        [f'WARNING:foo:{expected_error}']
+                    )
+
 
     def test_levels_to_absvalues(self):
         input_df = input_importer(os_path.join(
@@ -303,7 +326,7 @@ class Test(TestCase):
         )
 
         max_conc = [
-            v['Maximum value']
+            v['maxValue']
             for v in parameters.values()
         ]
 
@@ -332,7 +355,7 @@ class Test(TestCase):
     def test_levels_to_absvalues_EmptyConcentrationsArray(self):
         input_df = input_importer(os_path.join(
                 self.INPUT_FOLDER,
-                'proCFPS_parameters_woDoE.tsv'
+                'proCFPS_parameters_const.tsv'
                 ))
         parameters = input_processor(input_df)
 
@@ -349,7 +372,7 @@ class Test(TestCase):
         )
 
         max_conc = [
-            v['Maximum value']
+            v['maxValue']
             for v in parameters.values()
         ]
 
@@ -406,7 +429,7 @@ class Test(TestCase):
     #     )
 
     #     max_conc = [
-    #         v['Maximum value']
+    #         v['maxValue']
     #         for v in parameters.values()
     #     ]
     #     # Convert
@@ -416,14 +439,14 @@ class Test(TestCase):
     #     )
 
     #     dna_concentrations = {
-    #         v: dna_param[v]['Maximum value']
+    #         v: dna_param[v]['maxValue']
     #         for status, dna_param in parameters.items()
     #         for v in dna_param
     #         if status.startswith('dna')
     #     }
 
     #     const_concentrations = {
-    #             k: v['Maximum value']
+    #             k: v['maxValue']
     #             for k, v in parameters['const'].items()
     #         }
 
@@ -499,7 +522,7 @@ class Test(TestCase):
     #     )
 
     #     max_conc = [
-    #         v['Maximum value']
+    #         v['maxValue']
     #         for v in parameters.values()
     #     ]
 
@@ -509,14 +532,14 @@ class Test(TestCase):
     #     )
 
     #     dna_concentrations = {
-    #         v: dna_param[v]['Maximum value']
+    #         v: dna_param[v]['maxValue']
     #         for status, dna_param in parameters.items()
     #         for v in dna_param
     #         if status.startswith('dna')
     #     }
 
     #     const_concentrations = {
-    #             k: v['Maximum value']
+    #             k: v['maxValue']
     #             for k, v in parameters['const'].items()
     #         }
 
@@ -566,7 +589,7 @@ class Test(TestCase):
     #     )
 
     #     max_conc = [
-    #         v['Maximum value']
+    #         v['maxValue']
     #         for v in parameters.values()
     #     ]
 
@@ -576,14 +599,14 @@ class Test(TestCase):
     #     )
 
     #     dna_concentrations = {
-    #         v: dna_param[v]['Maximum value']
+    #         v: dna_param[v]['maxValue']
     #         for status, dna_param in parameters.items()
     #         for v in dna_param
     #         if status.startswith('dna')
     #     }
 
     #     const_concentrations = {
-    #             k: v['Maximum value']
+    #             k: v['maxValue']
     #             for k, v in parameters['const'].items()
     #         }
 
@@ -647,6 +670,14 @@ class Test(TestCase):
     #         expected_autofluorescence_sampling_array_woDoE_arr
     #     )
 
+    def test_save_values_csv(self):
+        with TemporaryDirectory() as tmpFolder:
+            self._test_save_values(
+                input_file=self.proCFPS_parameters,
+                output_folder=tmpFolder,
+                output_format='csv'
+            )
+
     def test_save_values_wExistingOutFolder(self):
         with TemporaryDirectory() as tmpFolder:
             self._test_save_values(
@@ -679,8 +710,7 @@ class Test(TestCase):
         self,
         input_file: str,
         output_folder: str,
-        woGOI: bool = False,
-        woGFP: bool = False
+        output_format: str = 'tsv',
     ):
         input_df = input_importer(input_file)
 
@@ -711,7 +741,7 @@ class Test(TestCase):
         )
 
         max_conc = [
-            v['Maximum value']
+            v['maxValue']
             for v in parameters.values()
         ]
 
@@ -721,14 +751,14 @@ class Test(TestCase):
         )
 
         # dna_concentrations = {
-        #     v: dna_param[v]['Maximum value']
+        #     v: dna_param[v]['maxValue']
         #     for status, dna_param in parameters.items()
         #     for v in dna_param
         #     if status.startswith('dna')
         # }
 
         # const_concentrations = {
-        #         k: v['Maximum value']
+        #         k: v['maxValue']
         #         for k, v in parameters['const'].items()
         #     }
 
@@ -750,17 +780,16 @@ class Test(TestCase):
         save_values(
             values=sampling_values,
             parameters=list(parameters.keys()),
-            output_folder=output_folder
+            output_folder=output_folder,
+            output_format=output_format
         )
 
         # Load ref file
         ref_filename = 'ref_initial_LHS-None'
-        if woGOI:
-            ref_filename += '_woGOI'
         with open(
             os_path.join(
                     self.REF_FOLDER,
-                    f'{ref_filename}.tsv'
+                    f'{ref_filename}.{output_format}'
             )
         ) as fp1:
             ref_initial_set = fp1.read()
@@ -768,7 +797,7 @@ class Test(TestCase):
         with open(
             os_path.join(
                     output_folder,
-                    'sampling.tsv'
+                    f'sampling.{output_format}'
             )
         ) as fp4:
             tested_initial_set = fp4.read()
@@ -863,7 +892,7 @@ class Test(TestCase):
         )
 
         max_conc = [
-            v['Maximum value']
+            v['maxValue']
             for v in parameters.values()
         ]
         # Generate the sampling for testing

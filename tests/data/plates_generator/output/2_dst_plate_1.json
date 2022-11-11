@@ -1,0 +1,48 @@
+{
+    "Dimensions": "16x24",
+    "deadVolume": 0,
+    "Well capacity": 60000,
+    "Current well": "P24",
+    "Parameters": [
+        "ribosomes",
+        "K",
+        "Mg",
+        "AA",
+        "mRNA",
+        "tRNA",
+        "CP",
+        "CPK"
+    ],
+    "Wells": {
+        "N24": {
+            "CP": 12.5,
+            "CPK": 125.0,
+            "tRNA": 50.0,
+            "AA": 100.0,
+            "ribosomes": 100.0,
+            "mRNA": 25.0,
+            "Mg": 80.0,
+            "K": 25.0
+        },
+        "O24": {
+            "CP": 62.5,
+            "CPK": 125.0,
+            "tRNA": 25.0,
+            "AA": 70.0,
+            "ribosomes": 125.0,
+            "mRNA": 25.0,
+            "Mg": 0.0,
+            "K": 0.0
+        },
+        "P24": {
+            "CP": 37.5,
+            "CPK": 125.0,
+            "tRNA": 50.0,
+            "AA": 125.0,
+            "ribosomes": 25.0,
+            "mRNA": 70.0,
+            "Mg": 70.0,
+            "K": 70.0
+        }
+    }
+}

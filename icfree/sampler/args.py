@@ -13,6 +13,7 @@ DEFAULTS = {
     'OUTPUT_FORMAT': 'tsv'
 }
 
+
 def build_args_parser(
         program,
         description):

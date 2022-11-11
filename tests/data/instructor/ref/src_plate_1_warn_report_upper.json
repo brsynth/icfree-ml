@@ -1,0 +1,17 @@
+[
+    {
+        "Parameter":"CP",
+        "Min":"",
+        "Max":60000.0
+    },
+    {
+        "Parameter":"CPK",
+        "Min":"",
+        "Max":60000.0
+    },
+    {
+        "Parameter":"tRNA",
+        "Min":"",
+        "Max":60000.0
+    }
+]

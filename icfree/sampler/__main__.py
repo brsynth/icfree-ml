@@ -1,5 +1,8 @@
 import sys
-
+from pandas import (
+    read_csv as pd_read_csv,
+    DataFrame
+)
 from logging import (
     Logger,
     getLogger
@@ -7,21 +10,95 @@ from logging import (
 from typing import (
     Dict
 )
+from math import isnan
+from re import findall
+
 from brs_utils import (
     create_logger
 )
 
 from .sampler import (
-    input_importer,
-    input_processor,
     sampling,
     levels_to_absvalues,
-    # assemble_values,
     save_values,
     set_sampling_ratios,
     check_sampling
 )
 from .args import build_args_parser
+
+
+def input_importer(
+    cfps_parameters,
+    logger: Logger = getLogger(__name__)
+) -> DataFrame:
+    """
+    Import tsv input into a dataframe
+
+    Parameters
+    ----------
+    input_file : tsv file
+        tsv with list of cfps parameters and relative features
+
+    Returns
+    -------
+    cfps_parameters_df : DataFrame
+        Pandas dataframe populated with cfps_parameters data
+    """
+    cfps_parameters_df = pd_read_csv(
+                        cfps_parameters,
+                        sep='\t')
+
+    logger.debug(f'CFPs parameters dataframe: {cfps_parameters_df}')
+
+    return cfps_parameters_df
+
+
+def input_processor(
+    cfps_parameters_df: DataFrame,
+    logger: Logger = getLogger(__name__)
+) -> Dict:
+    """
+    Determine variable and fixed parameters, and maximum concentrations.
+
+    Parameters
+    ----------
+    input_df: 2d-array
+        N-by-samples array where values are uniformly spaced between 0 and 1.
+
+    Returns
+    -------
+    parameters: dict
+        Dictionnary of parameters.
+        First level is indexed on 'Status' column.
+        Second level is indexed on 'Parameter' column.
+    """
+    parameters = {}
+
+    for dic in cfps_parameters_df.to_dict('records'):
+        parameters[dic['Parameter']] = {
+            k: dic[k] for k in dic.keys() - {'Parameter'}
+        }
+        # Convert list of ratios str into list of float
+        # ratio is a list of float
+        if isinstance(parameters[dic['Parameter']]['Ratios'], str):
+            parameters[dic['Parameter']]['Ratios'] = list(
+                map(
+                    float,
+                    findall(
+                        r"(?:\d*\.\d+|\d+)",
+                        parameters[dic['Parameter']]['Ratios']
+                    )
+                )
+            )
+        # ratio is nan
+        elif isnan(parameters[dic['Parameter']]['Ratios']):
+            parameters[dic['Parameter']]['Ratios'] = []
+        # ratio is a float
+        else:
+            parameters[dic['Parameter']]['Ratios'] = \
+                [parameters[dic['Parameter']]['Ratios']]
+
+    return parameters
 
 
 def main():
@@ -72,9 +149,9 @@ def main():
     check_sampling(levels, logger)
 
     # CONVERT INTO ABSOLUTE VALUES
-    # Read the maximum value for each parameter involved in sampling
+    # Read the maxValue for each parameter involved in sampling
     max_values = [
-        v['Maximum value']
+        v['maxValue']
         for v in parameters.values()
     ]
 
@@ -85,9 +162,9 @@ def main():
         logger=logger
     )
 
-    # # Read the maximum value for each dna parameter
+    # # Read the maxValue for each dna parameter
     # dna_values = {
-    #     v: dna_param[v]['Maximum value']
+    #     v: dna_param[v]['maxValue']
     #     for status, dna_param in parameters.items()
     #     for v in dna_param
     #     if status.startswith('dna')
@@ -95,7 +172,7 @@ def main():
     # # Read the maximum for each constant parameter
     # try:
     #     const_values = {
-    #         k: v['Maximum value']
+    #         k: v['maxValue']
     #         for k, v in parameters['const'].items()
     #     }
     # except KeyError:

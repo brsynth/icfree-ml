@@ -45,7 +45,7 @@ python -m icfree.plates_generator <cfps-parameters tsv file> -of <output_folder>
 ## Input file
 
 Below is an example of an input file:
-| **Parameter** 	| **Status** 	| **Maximum value** 	| **Stock concentration** 	| **Parameter dead volume** 	| **Ratios** 	|
+| **Parameter** 	| **Status** 	| **maxValue** 	| **Stock concentration** 	| **Parameter deadVolume** 	| **Ratios** 	|
 |---------------	|------------	|---------------------------	|-------------------------	|---------------------------	|--------------------------	|
 | Mg-glutamate  	| doe        	| 4                         	| 168                     	| 0                         	| 0.0,0.1,0.3,0.5,1.0      	|
 | k-glutamate   	| doe        	| 80                        	| 3360                    	| 0                         	|                          	|
@@ -82,11 +82,11 @@ The second column indicates how parameters will be combined:
 </li>
 </ol>
 
-The third column is the maximum value of the parameter that will be used in the DoE algorithm.
+The third column is the maxValue of the parameter that will be used in the DoE algorithm.
 
 The fourth column is the stock concentration of the parameter. This is used to calculate the volume of the parameter to add to the plate.
 
-The fifth column is the dead volume of the parameter. This is used to calculate the volume of the parameter that will not be pipetted by the robot (because of viscosity).
+The fifth column is the deadVolume of the parameter. This is used to calculate the volume of the parameter that will not be pipetted by the robot (because of viscosity).
 
 The sixth column is the specific ratios we want to have for this parameter. If nothing defined, then take ratios given in program options.
 
