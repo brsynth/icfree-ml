@@ -186,13 +186,13 @@ def check_sampling(
             assert 0. in param_levels
         except AssertionError:
             logger.warning(
-                'Min value not found in LHS sampling'
+                'Min value not found in sampling'
             )
         try:
             assert 1. in param_levels
         except AssertionError:
             logger.warning(
-                'Max value not found in LHS sampling'
+                'Max value not found in sampling'
             )
 
     # Check that there is no duplicate,
@@ -200,7 +200,7 @@ def check_sampling(
     try:
         assert len(levels) == len(set(map(tuple, levels)))
     except AssertionError:
-        logger.warning('Duplicate found in LHS sampling')
+        logger.warning('Duplicate found in sampling')
 
     logger.debug('Sampling checked')
 
