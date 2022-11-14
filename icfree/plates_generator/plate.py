@@ -339,7 +339,7 @@ class Plate:
             raise IndexError(msg)
         # If well is empty,
         if well not in self.get_list_of_wells():
-            # create it, 
+            # create it,
             self.__wells[well] = {}
             self.__wells[well][parameter] = 0
             # and the total volume is the added volume

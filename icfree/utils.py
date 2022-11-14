@@ -54,5 +54,5 @@ def save_df(
         df.to_csv(outfile, index=index, sep='\t')
     elif file_format == 'xlsx':
         df.to_excel(outfile, index=index)
-    
+
     return outfile
