@@ -82,7 +82,9 @@ The output file is:
 This module generates a list of source and destination plates according to the set of samples to test.
 
 ~~~bash
-python -m icfree.plates_generator <cfps-parameters tsv file> <sampling csv|tsv file>
+python -m icfree.plates_generator \
+  <cfps-parameters tsv file> \
+  <sampling csv|tsv file>
 ~~~
 
 ## Options
@@ -104,7 +106,11 @@ python -m icfree.plates_generator <cfps-parameters tsv file> <sampling csv|tsv f
 
 ## Example
 ~~~bash
-python -m icfree.plates_generator tests/data/plates_generator/input/proCFPS_parametersB3.tsv tests/data/plates_generator/input/sampling.csv -of out -v 1000
+python -m icfree.plates_generator \
+  tests/data/plates_generator/input/proCFPS_parametersB3.tsv \
+  tests/data/plates_generator/input/sampling.csv \
+  -v 1000 \
+  -of out
 ~~~
 
 ## Output
@@ -123,8 +129,8 @@ The module generates a list of instructions to perform the experiment.
 
 ~~~bash
 python -m icfree.instructor 
---source_plates <source_plate file 1> <source_plate file 2>... \
---dest_plates <dest_plate file 1> <dest_plate file 2>... \
+  --source_plates <source_plate file 1> <source_plate file 2>... \
+  --dest_plates <dest_plate file 1> <dest_plate file 2>... \
 ~~~
 
 ## Options
@@ -137,7 +143,11 @@ python -m icfree.instructor
 
 ## Example
 ~~~bash
-python -m icfree.instructor --source_plates out/source_plate_1.json --dest_plates out/destination_plate_1.json -of out --robot echo
+python -m icfree.instructor \
+  --source_plates out/source_plate_1.json \
+  --dest_plates out/destination_plate_1.json \
+  --robot echo \
+  -of out
 ~~~
 
 ## Output
