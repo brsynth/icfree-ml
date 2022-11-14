@@ -33,11 +33,6 @@ def save_df(
     if not os_path.exists(output_folder):
         os_mkdir(output_folder)
 
-    # # Create output subfolders if they don't exist
-    # output_subfolder = os_path.join(output_folder, 'instructions')
-    # if not os_path.exists(output_subfolder):
-    #     os_mkdir(output_subfolder)
-
     if file_format is None:
         if '.' in outfile:
             outfile_split = outfile.split('.')
