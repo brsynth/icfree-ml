@@ -44,7 +44,12 @@ python -m icfree.sampler <cfps-parameters tsv file>
 
 ## Example
 ~~~bash
-python -m icfree.sampler tests/data/sampler/input/proCFPS_parametersB3.tsv -of out --nb-samples 100 --sampling-ratios 0.0 0.2 0.4 0.56 0.64 0.72 0.8 1.0 --output-format tsv
+python -m icfree.sampler \
+  tests/data/sampler/input/proCFPS_parametersB3.tsv \
+  --nb-samples 100 \
+  --sampling-ratios 0.0 0.2 0.4 0.56 0.64 0.72 0.8 1.0 \
+  --output-format tsv \
+  -of out
 ~~~
 
 ## Input file
