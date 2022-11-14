@@ -50,24 +50,17 @@ python -m icfree.sampler tests/data/sampler/input/proCFPS_parametersB3.tsv -of o
 ## Input file
 
 Below is an example of an input file:
-| **Parameter** 	| **maxValue** 	| **deadVolume** 	| **Ratios** 	|
-|---------------	|------------	|---------------------------	|-------------------------	|---------------------------	|--------------------------	|
-| Mg-glutamate  	| 4                         	| 0                         	| 0.0 0.1 0.3 0.5 1.0      	|
-| k-glutamate   	| 80                        	| 0                         	|                          	|
-| CoA           	| 0.26                      	| 0                         	|                          	|
-| 3-PGA         	| 30                        	| 0                         	|                          	|
-| NTP           	| 1.5                       	| 0                         	|                          	|
-| NAD           	| 0.33                      	| 0                         	|                          	|
-| Folinic acid  	| 0.068                     	| 0                         	|                          	|
-| Spermidine    	| 1                         	| 0                         	|                          	|
-| tRNA          	| 0.2                       	| 0                         	|                          	|
-| Amino acids   	| 1.5                       	| 0                         	|                          	|
-| CAMP          	| 0.75                      	| 0                         	|                          	|
-| Extract       	| 30                        	| 2000                      	| 1.0                      	|
-| HEPES         	| 50                        	| 0                         	| 1.0                      	|
-| PEG           	| 2                         	| 4000                      	| 1.0                      	|
-| Promoter      	| 10                        	| 0                         	| 1.0                      	|
-| RBS           	| 10                        	| 0                         	| 1.0                      	|
+
+|**Parameter**|**maxValue**|**deadVolume**|**Ratios**             |
+|---------|--------|----------|-------------------|
+|CP       |125     |0         |0.0 0.1 0.3 0.5 1.0|
+|CPK      |125     |0         |1                  |
+|tRNA     |125     |0         |                   |
+|AA       |125     |0         |                   |
+|ribosomes|125     |0         |                   |
+|mRNA     |125     |0         |                   |
+|Mg       |125     |0         |                   |
+|K        |125     |0         |                   |
 
 The first column is the parameter (or factor) names.
 
