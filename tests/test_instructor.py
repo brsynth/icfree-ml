@@ -13,8 +13,7 @@ from json import load as json_load
 
 from icfree.instructor.instructor import (
     check_volumes,
-    instructions_generator,
-    echo_instructions_generator
+    instructions_generator
 )
 from icfree.plates_generator.plate import Plate
 

@@ -66,8 +66,10 @@ class TestPlatesGenerator(TestCase):
         self.assertEqual(plate.get_current_well(), 'A1')
 
     def test_extract_dead_volumes(self):
-        (cfps_parameters_df,
-        values_df) = input_importer(
+        (
+            cfps_parameters_df,
+            values_df
+        ) = input_importer(
             self.proCFPS_parameters,
             self.sampling
         )
@@ -90,8 +92,10 @@ class TestPlatesGenerator(TestCase):
 
     def test_src_plate_generator(self):
         sample_volume = 10000
-        (cfps_parameters_df,
-        values_df) = input_importer(
+        (
+            cfps_parameters_df,
+            values_df
+        ) = input_importer(
             self.proCFPS_parameters,
             self.sampling
         )
@@ -111,14 +115,16 @@ class TestPlatesGenerator(TestCase):
             plate_dimensions='16x24',
         )
         expected_plate = Plate.from_json(
-            os_path.join(self.REF_FOLDER, 'source_plate_1.json')                            
+            os_path.join(self.REF_FOLDER, 'source_plate_1.json')
         )
         self.assertEqual(source_plates['1'], expected_plate)
 
     def test_src_plate_generator_wOptVol(self):
         sample_volume = 10000
-        (cfps_parameters_df,
-        values_df) = input_importer(
+        (
+            cfps_parameters_df,
+            values_df
+        ) = input_importer(
             self.proCFPS_parameters,
             self.sampling
         )
@@ -144,8 +150,10 @@ class TestPlatesGenerator(TestCase):
 
     def test_src_plate_generator_outOfPlate(self):
         sample_volume = 10000
-        (cfps_parameters_df,
-        values_df) = input_importer(
+        (
+            cfps_parameters_df,
+            values_df
+        ) = input_importer(
             self.proCFPS_parameters,
             self.sampling
         )
@@ -175,8 +183,10 @@ class TestPlatesGenerator(TestCase):
 
     def test_src_plate_generator_WithNullVolume(self):
         sample_volume = 10000
-        (cfps_parameters_df,
-        values_df) = input_importer(
+        (
+            cfps_parameters_df,
+            values_df
+        ) = input_importer(
             self.proCFPS_parameters,
             self.sampling
         )
@@ -202,8 +212,10 @@ class TestPlatesGenerator(TestCase):
         )
 
     def test_dst_plate_generator(self):
-        (cfps_parameters_df,
-        values_df) = input_importer(
+        (
+            cfps_parameters_df,
+            values_df
+        ) = input_importer(
             self.proCFPS_parameters,
             self.sampling
         )
@@ -220,8 +232,10 @@ class TestPlatesGenerator(TestCase):
         self.assertEqual(dest_plates['1'], expected_plate)
 
     def test_dst_plate_generator_OutOfPlate(self):
-        (cfps_parameters_df,
-        values_df) = input_importer(
+        (
+            cfps_parameters_df,
+            values_df
+        ) = input_importer(
             self.proCFPS_parameters,
             self.sampling
         )
@@ -240,6 +254,7 @@ class TestPlatesGenerator(TestCase):
         )
         self.assertEqual(dest_plates['1'], expected_plate_1)
         self.assertEqual(dest_plates['2'], expected_plate_2)
+
 
 class TestPlate(TestCase):
 
@@ -402,7 +417,10 @@ class TestPlate(TestCase):
             d_plate = json_load(f)
         _d_plate = plate.to_dict()
         self.assertEqual(_d_plate['Dimensions'], d_plate['Dimensions'])
-        self.assertEqual(sorted(_d_plate['Parameters']), sorted(d_plate['Parameters']))
+        self.assertEqual(
+            sorted(_d_plate['Parameters']),
+            sorted(d_plate['Parameters'])
+        )
         self.assertEqual(_d_plate['Wells'], d_plate['Wells'])
         self.assertEqual(_d_plate['deadVolume'], d_plate['deadVolume'])
         self.assertEqual(_d_plate['Well capacity'], d_plate['Well capacity'])
@@ -412,8 +430,7 @@ class TestPlate(TestCase):
     def test_plate___str__(self):
         file = os_path.join(self.REF_FOLDER, 'source_plate_1.json')
         plate = Plate.from_json(file)
-        with open(file, 'r') as f:
-            s_plate = json_dumps(plate.to_dict(), indent=4)
+        s_plate = json_dumps(plate.to_dict(), indent=4)
         self.assertEqual(str(plate), s_plate)
 
     def test_plate___eq__(self):

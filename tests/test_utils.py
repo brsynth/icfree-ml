@@ -1,18 +1,14 @@
 # Tests for utils.py
 from unittest import TestCase
 
-from os import path as os_path
 from shutil import rmtree as rmtree
 from pandas import (
     DataFrame,
     testing as pd_testing,
     read_csv as pd_read_csv,
-    read_excel as pd_read_excel
+    # read_excel as pd_read_excel
 )
-from tempfile import (
-    NamedTemporaryFile,
-    gettempdir
-)
+from tempfile import NamedTemporaryFile
 
 from icfree.utils import save_df
 
@@ -56,4 +52,7 @@ class TestUtils(TestCase):
         # with NamedTemporaryFile() as f:
         #     save_df(df, f.name, file_format=file_format)
         #     with open(f'{f.name}.{file_format}', 'r') as f:
-        #         pd_testing.assert_frame_equal(pd_read_excel(f, sheet_name=None), df)
+        #         pd_testing.assert_frame_equal(
+        #             pd_read_excel(f, sheet_name=None),
+        #             df
+        #         )

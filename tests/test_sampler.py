@@ -189,7 +189,7 @@ class Test(TestCase):
 
     def test_sampling_withSingleRatio(self):
         n_variable_parameters = 1
-        ratios=dict.fromkeys(
+        ratios = dict.fromkeys(
             range(n_variable_parameters), [1]
         )
         self._test_sampling(
@@ -282,21 +282,20 @@ class Test(TestCase):
         sampling_with_no_max_value = np_array(
             [[0.0]]
         )
-        for sampling in [
-            (sampling_with_duplicates, 'Duplicate found in LHS sampling'),
-            (sampling_with_no_min_value, 'Min value not found in LHS sampling'),
-            (sampling_with_no_max_value, 'Max value not found in LHS sampling')
+        for _sampling in [
+            (sampling_with_duplicates, 'Duplicate found in sampling'),
+            (sampling_with_no_min_value, 'Min value not found in sampling'),
+            (sampling_with_no_max_value, 'Max value not found in sampling')
         ]:
-            with self.subTest("sampling", sampling=sampling):
-                sampling_array = sampling[0]
-                expected_error = sampling[1]
+            with self.subTest("sampling", _sampling=_sampling):
+                sampling_array = _sampling[0]
+                expected_error = _sampling[1]
                 with self.assertLogs('foo', level='INFO') as cm:
                     check_sampling(sampling_array, logger=getLogger('foo'))
                     self.assertEqual(
                         cm.output,
                         [f'WARNING:foo:{expected_error}']
                     )
-
 
     def test_levels_to_absvalues(self):
         input_df = input_importer(os_path.join(
@@ -387,288 +386,6 @@ class Test(TestCase):
             doe_concentrations,
             expected_doe_concentrations_array
         )
-
-    # def test_assemble_values_all_columns(self):
-    #     with open(
-    #         os_path.join(
-    #                 self.REF_FOLDER,
-    #                 'all_expected_columns.json'
-    #         ), 'r'
-    #     ) as fp1:
-    #         all_expected_columns = json_load(fp1)
-
-    #     input_df = input_importer(os_path.join(
-    #             self.INPUT_FOLDER,
-    #             'proCFPS_parameters.tsv'
-    #             ))
-
-    #     parameters = input_processor(input_df)
-
-    #     n_variable_parameters = len(parameters)
-    #     doe_nb_concentrations = 5
-    #     doe_ratios = np_append(
-    #         np_arange(0.0, 1.0, 1/(doe_nb_concentrations-1)),
-    #         1.0
-    #     )
-    #     nb_samples = 10
-    #     seed = 123
-    #     ratios = {
-    #         parameter: data['Ratios']
-    #         for parameter, data in parameters.items()
-    #     }
-    #     ratios = set_sampling_ratios(
-    #         ratios=ratios,
-    #         all_nb_steps=doe_nb_concentrations,
-    #         all_ratios=doe_ratios,
-    #     )
-    #     doe_levels = sampling(
-    #         n_variable_parameters=n_variable_parameters,
-    #         ratios=ratios,
-    #         nb_samples=nb_samples,
-    #         seed=seed
-    #     )
-
-    #     max_conc = [
-    #         v['maxValue']
-    #         for v in parameters.values()
-    #     ]
-    #     # Convert
-    #     doe_concentrations = levels_to_absvalues(
-    #         doe_levels,
-    #         max_conc,
-    #     )
-
-    #     dna_concentrations = {
-    #         v: dna_param[v]['maxValue']
-    #         for status, dna_param in parameters.items()
-    #         for v in dna_param
-    #         if status.startswith('dna')
-    #     }
-
-    #     const_concentrations = {
-    #             k: v['maxValue']
-    #             for k, v in parameters['const'].items()
-    #         }
-
-    #     concentrations = assemble_values(
-    #         doe_concentrations,
-    #         dna_concentrations,
-    #         const_concentrations,
-    #         parameters={k: list(v.keys()) for k, v in parameters.items()}
-    #     )
-
-    #     initial_set_df = concentrations['initial']
-    #     autofluorescence_set_df = concentrations['background']
-    #     normalizer_set_df = concentrations['normalizer']
-    #     tested_columns_initial_set = initial_set_df.columns.tolist()
-    #     tested_columns_normalizer_set = normalizer_set_df.columns.tolist()
-    #     tested_columns_autofluorescence_set = \
-    #         autofluorescence_set_df.columns.tolist()
-
-    #     self.assertListEqual(
-    #         all_expected_columns,
-    #         tested_columns_initial_set)
-
-    #     self.assertListEqual(
-    #         all_expected_columns,
-    #         tested_columns_normalizer_set)
-
-    #     self.assertListEqual(
-    #         all_expected_columns,
-    #         tested_columns_autofluorescence_set)
-
-    #     self.assertListEqual(
-    #         tested_columns_normalizer_set,
-    #         tested_columns_autofluorescence_set)
-
-    # def test_assemble_values_woGOI(self):
-    #     with open(
-    #         os_path.join(
-    #                 self.REF_FOLDER,
-    #                 'expected_columns_woGOI.json'
-    #         ), 'r'
-    #     ) as fp2:
-    #         expected_columns_woGOI = json_load(fp2)
-
-    #     input_df = input_importer(os_path.join(
-    #             self.INPUT_FOLDER,
-    #             'proCFPS_parameters_woGOI.tsv'
-    #             ))
-
-    #     parameters = input_processor(input_df)
-
-    #     n_variable_parameters = len(parameters)
-    #     doe_nb_concentrations = 5
-    #     doe_ratios = np_append(
-    #         np_arange(0.0, 1.0, 1/(doe_nb_concentrations-1)),
-    #         1.0
-    #     )
-    #     nb_samples = 10
-    #     seed = 123
-    #     ratios = {
-    #         parameter: data['Ratios']
-    #         for parameter, data in parameters.items()
-    #     }
-    #     ratios = set_sampling_ratios(
-    #         ratios=ratios,
-    #         all_nb_steps=doe_nb_concentrations,
-    #         all_ratios=doe_ratios,
-    #     )
-    #     doe_levels = sampling(
-    #         n_variable_parameters=n_variable_parameters,
-    #         ratios=ratios,
-    #         nb_samples=nb_samples,
-    #         seed=seed
-    #     )
-
-    #     max_conc = [
-    #         v['maxValue']
-    #         for v in parameters.values()
-    #     ]
-
-    #     doe_concentrations = levels_to_absvalues(
-    #         doe_levels,
-    #         max_conc,
-    #     )
-
-    #     dna_concentrations = {
-    #         v: dna_param[v]['maxValue']
-    #         for status, dna_param in parameters.items()
-    #         for v in dna_param
-    #         if status.startswith('dna')
-    #     }
-
-    #     const_concentrations = {
-    #             k: v['maxValue']
-    #             for k, v in parameters['const'].items()
-    #         }
-
-    #     concentrations = assemble_values(
-    #         doe_concentrations,
-    #         dna_concentrations,
-    #         const_concentrations,
-    #         parameters={k: list(v.keys()) for k, v in parameters.items()}
-    #     )
-
-    #     initial_set_df = concentrations['initial']
-    #     autofluorescence_set_df = concentrations['background']
-    #     normalizer_set_df = concentrations['normalizer']
-
-    #     self.assertListEqual(
-    #         expected_columns_woGOI,
-    #         initial_set_df.columns.tolist()
-    #     )
-    #     if normalizer_set_df is not None:
-    #         self.assertListEqual(
-    #             expected_columns_woGOI,
-    #             normalizer_set_df.columns.tolist()
-    #         )
-    #     if autofluorescence_set_df is not None:
-    #         self.assertListEqual(
-    #             expected_columns_woGOI,
-    #             autofluorescence_set_df.columns.tolist()
-    #         )
-
-    # def test_assemble_values_AllStatusConst(self):
-    #     input_df = input_importer(os_path.join(
-    #             self.INPUT_FOLDER,
-    #             'proCFPS_parameters_woDoE.tsv'
-    #             ))
-    #     parameters = input_processor(input_df)
-
-    #     n_variable_parameters = 0
-    #     seed = 123
-    #     ratios = {
-    #         parameter: data['Ratios']
-    #         for parameter, data in parameters.items()
-    #     }
-    #     doe_levels = sampling(
-    #         n_variable_parameters=n_variable_parameters,
-    #         ratios=ratios,
-    #         seed=seed
-    #     )
-
-    #     max_conc = [
-    #         v['maxValue']
-    #         for v in parameters.values()
-    #     ]
-
-    #     doe_concentrations = levels_to_absvalues(
-    #         doe_levels,
-    #         max_conc,
-    #     )
-
-    #     dna_concentrations = {
-    #         v: dna_param[v]['maxValue']
-    #         for status, dna_param in parameters.items()
-    #         for v in dna_param
-    #         if status.startswith('dna')
-    #     }
-
-    #     const_concentrations = {
-    #             k: v['maxValue']
-    #             for k, v in parameters['const'].items()
-    #         }
-
-    #     concentrations = assemble_values(
-    #         doe_concentrations,
-    #         dna_concentrations,
-    #         const_concentrations,
-    #         parameters={k: list(v.keys()) for k, v in parameters.items()}
-    #     )
-    #     initial_set_df = concentrations['initial']
-    #     autofluorescence_set_df = concentrations['background']
-    #     normalizer_set_df = concentrations['normalizer']
-
-    #     # Load Reference Files
-    #     expected_initial_sampling_array_woDoE_df = pd_read_json(
-    #         os_path.join(
-    #             self.REF_FOLDER,
-    #             'expected_initial_sampling_array_woDoE_arr.json'
-    #         ),
-    #         orient='split'
-    #     )
-    #     expected_initial_sampling_array_woDoE_arr = \
-    #         expected_initial_sampling_array_woDoE_df.to_numpy()
-    #     expected_initial_sampling_array_woDoE_arr = \
-    #         expected_initial_sampling_array_woDoE_arr.reshape(1, 18)
-
-    #     expected_normalizer_sampling_array_woDoE_df = pd_read_json(
-    #         os_path.join(
-    #             self.REF_FOLDER,
-    #             'expected_normalizer_sampling_array_woDoE_arr.json'
-    #         ),
-    #         orient='split'
-    #     )
-    #     expected_normalizer_sampling_array_woDoE_arr = \
-    #         expected_normalizer_sampling_array_woDoE_df.to_numpy()
-    #     expected_normalizer_sampling_array_woDoE_arr = \
-    #         expected_normalizer_sampling_array_woDoE_arr.reshape(1, 18)
-
-    #     expected_autofluorescence_sampling_array_woDoE_df = pd_read_json(
-    #         os_path.join(
-    #             self.REF_FOLDER,
-    #             'expected_autofluorescence_sampling_array_woDoE_arr.json'
-    #         ),
-    #         orient='split'
-    #     )
-    #     expected_autofluorescence_sampling_array_woDoE_arr = \
-    #         expected_autofluorescence_sampling_array_woDoE_df.to_numpy()
-    #     expected_autofluorescence_sampling_array_woDoE_arr = \
-    #         expected_autofluorescence_sampling_array_woDoE_arr.reshape(1, 18)
-
-    #     assert_array_equal(
-    #         initial_set_df,
-    #         expected_initial_sampling_array_woDoE_arr
-    #     )
-    #     assert_array_equal(
-    #         normalizer_set_df,
-    #         expected_normalizer_sampling_array_woDoE_arr
-    #     )
-    #     assert_array_equal(
-    #         autofluorescence_set_df,
-    #         expected_autofluorescence_sampling_array_woDoE_arr
-    #     )
 
     def test_save_values_csv(self):
         with TemporaryDirectory() as tmpFolder:
