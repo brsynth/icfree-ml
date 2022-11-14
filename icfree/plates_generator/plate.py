@@ -4,7 +4,6 @@ from string import (
 from typing import (
     Dict,
     List,
-    Tuple,
     Type
 )
 from logging import (
@@ -30,8 +29,7 @@ class Plate:
 
     def __init__(
         self,
-        nb_cols,
-        nb_rows,
+        dimensions: str = DEFAULT_ARGS['PLATE_DIMENSIONS'],
         dead_volume: int = DEFAULT_ARGS['SOURCE_PLATE_DEAD_VOLUME'],
         well_capacity: float = DEFAULT_ARGS['SOURCE_PLATE_WELL_CAPACITY'],
         vertical: bool = True,
@@ -41,10 +39,8 @@ class Plate:
 
         Parameters
         ----------
-        nb_cols : int
-            Number of plate columns
-        nb_rows : int
-            Number of plate rows
+        dimensions : str
+            Plate dimensions
         dead_volume : int, optional
             Source plate deadVolume, by default 15000
         well_capacity : float, optional
@@ -53,6 +49,7 @@ class Plate:
             logger, by default getLogger(__name__)
         """
         self.__logger = logger
+        nb_rows, nb_cols = map(int, dimensions.split('x'))
         self.__columns = [str(i+1) for i in range(nb_cols)]
         self.__rows = [
             f"{i}{j}" for i in ["", "A"] for j in str_ascii_uppercase
@@ -80,7 +77,7 @@ class Plate:
 
     def to_dict(self) -> str:
         return {
-            'Dimensions': self.get_dimensions_str(),
+            'Dimensions': self.get_dimensions(),
             'deadVolume': self.get_dead_volume(),
             'Well capacity': self.get_well_capacity(),
             # 'Empty wells': self.get_nb_empty_wells(),
@@ -100,16 +97,17 @@ class Plate:
     ) -> 'Plate':
         with open(path, 'r') as f:
             d_plate = json_load(f)
-        nb_rows, nb_cols = d_plate['Dimensions'].split('x')
         plate = Plate(
-            nb_cols=int(nb_cols),
-            nb_rows=int(nb_rows),
+            dimensions=d_plate['Dimensions'],
             dead_volume=d_plate['deadVolume'],
             well_capacity=d_plate['Well capacity']
         )
         plate.__wells = d_plate['Wells']
         # plate.__nb_empty_wells = d_plate['Empty wells']
         return plate
+
+    def get_dimensions(self) -> str:
+        return f'{self.get_nb_rows()}x{self.get_nb_cols()}'
 
     def get_columns(self) -> List:
         return self.__columns
@@ -180,12 +178,6 @@ class Plate:
 
     # def get_nb_empty_wells(self) -> int:
     #     return self.__nb_empty_wells
-
-    def get_dimensions(self) -> Tuple:
-        return self.get_nb_rows(), self.get_nb_columns()
-
-    def get_dimensions_str(self) -> str:
-        return f'{self.get_nb_rows()}x{self.get_nb_columns()}'
 
     def get_wells(self) -> Dict:
         return self.__wells

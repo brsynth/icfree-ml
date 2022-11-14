@@ -87,10 +87,8 @@ def init_plate(
     Plate
         _description_
     """
-    nb_rows, nb_cols = map(int, dimensions.split('x'))
     plate = Plate(
-        nb_cols=nb_cols,
-        nb_rows=nb_rows,
+        dimensions=dimensions,
         dead_volume=dead_volume,
         well_capacity=well_capacity,
         vertical=vertical,
@@ -160,8 +158,7 @@ def dst_plate_generator(
             # Create new plate
             logger.warning('A new destination plate is created')
             plate = Plate(
-                nb_cols=plate.get_nb_cols(),
-                nb_rows=plate.get_nb_rows(),
+                dimensions=plate.get_dimensions(),
                 dead_volume=plate_dead_volume,
                 well_capacity=plate_well_capacity,
                 vertical=vertical,
@@ -296,8 +293,7 @@ def src_plate_generator(
                 # Create new plate
                 logger.warning('A new source plate is created')
                 plate = Plate(
-                    nb_cols=plate.get_nb_cols(),
-                    nb_rows=plate.get_nb_rows(),
+                    dimensions=plate.get_dimensions(),
                     dead_volume=plate_dead_volume,
                     well_capacity=plate_well_capacity,
                     vertical=vertical,
