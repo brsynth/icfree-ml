@@ -641,7 +641,8 @@ class Test(TestCase):
         # presence of duplicates
         # The more samples, the more likely to have duplicates
         nb_samples = 10 * len(parameters)
-        for i_run in range(100):
+        nb_run = 1
+        for i_run in range(nb_run):
             # LHS sampling
             sampling_array = sampling(
                 n_variable_parameters=len(parameters),
