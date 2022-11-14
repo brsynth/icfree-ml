@@ -83,13 +83,6 @@ def add_arguments(parser):
         help='Seed to reproduce results'
     )
 
-    parser.add_argument(
-        '--all-status',
-        type=str,
-        choices=['doe', 'const'],
-        help='Change status of all parameters (but DNA)',
-    )
-
     # Add arguments related to the logger
     parser = add_logger_args(parser)
 
