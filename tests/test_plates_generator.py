@@ -18,7 +18,8 @@ from pandas import (
     read_csv as pd_read_csv,
     testing as pd_testing
 )
-from tempfile import NamedTemporaryFile
+from tempfile import gettempdir
+from uuid import uuid1
 
 from icfree.plates_generator.plates_generator import (
     init_plate,
@@ -332,9 +333,12 @@ class TestPlate(TestCase):
         plate = Plate.from_json(
             os_path.join(self.REF_FOLDER, 'source_plate_1.json')
         )
-        with NamedTemporaryFile() as tmp:
-            plate.to_json(tmp.name)
-            plate_test = Plate.from_json(tmp.name)
+        tmp_outfile = os_path.join(
+            gettempdir(),
+            str(uuid1())
+        )
+        plate.to_json(tmp_outfile)
+        plate_test = Plate.from_json(tmp_outfile)
         self.assertEqual(plate, plate_test)
 
     def test_plate_get_well(self):
