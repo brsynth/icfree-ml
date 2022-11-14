@@ -18,6 +18,7 @@ from pandas import (
     read_csv as pd_read_csv,
     testing as pd_testing
 )
+from tempfile import NamedTemporaryFile
 
 from icfree.plates_generator.plates_generator import (
     init_plate,
@@ -276,8 +277,7 @@ class TestPlate(TestCase):
 
     def test_plate_vertical(self):
         plate = Plate(
-            nb_rows=16,
-            nb_cols=24,
+            dimensions='16x24',
             dead_volume=15000,
             well_capacity=60000,
             vertical=True
@@ -287,8 +287,7 @@ class TestPlate(TestCase):
 
     def test_plate_horizontal(self):
         plate = Plate(
-            nb_rows=16,
-            nb_cols=24,
+            dimensions='16x24',
             dead_volume=15000,
             well_capacity=60000,
             vertical=False
@@ -298,18 +297,16 @@ class TestPlate(TestCase):
 
     def test_plate_get_dimensions(self):
         plate = Plate(
-            nb_rows=16,
-            nb_cols=24,
+            dimensions='16x24',
             dead_volume=15000,
             well_capacity=60000,
             vertical=True
         )
-        self.assertEqual(plate.get_dimensions(), (16, 24))
+        self.assertEqual(plate.get_dimensions(), '16x24')
 
     def test_plate_get_list_of_parameters_null(self):
         plate = Plate(
-            nb_rows=16,
-            nb_cols=24,
+            dimensions='16x24',
             dead_volume=15000,
             well_capacity=60000,
             vertical=True
@@ -318,8 +315,7 @@ class TestPlate(TestCase):
 
     def test_plate_well_out_of_range(self):
         plate = Plate(
-            nb_rows=16,
-            nb_cols=24,
+            dimensions='16x24',
             dead_volume=15000,
             well_capacity=60000,
             vertical=True
@@ -336,12 +332,9 @@ class TestPlate(TestCase):
         plate = Plate.from_json(
             os_path.join(self.REF_FOLDER, 'source_plate_1.json')
         )
-        plate.to_json(
-            os_path.join(self.REF_FOLDER, 'source_plate_1.json')
-        )
-        plate_test = Plate.from_json(
-            os_path.join(self.REF_FOLDER, 'source_plate_1.json')
-        )
+        with NamedTemporaryFile() as tmp:
+            plate.to_json(tmp.name)
+            plate_test = Plate.from_json(tmp.name)
         self.assertEqual(plate, plate_test)
 
     def test_plate_get_well(self):
@@ -371,8 +364,7 @@ class TestPlate(TestCase):
 
     def test_plate_fill_well_OutOfRange(self):
         plate = Plate(
-            nb_rows=16,
-            nb_cols=24,
+            dimensions='16x24',
             dead_volume=15000,
             well_capacity=60000,
             vertical=True,
@@ -438,6 +430,7 @@ class TestPlate(TestCase):
         plate = Plate.from_json(file)
         plate_test = Plate.from_json(file)
         self.assertEqual(plate, plate_test)
+        self.assertNotEqual(plate, Plate())
 
     def test_plate_reindex_wells_by_factor(self):
         plate = Plate.from_json(

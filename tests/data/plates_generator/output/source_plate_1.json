@@ -4,15 +4,15 @@
     "Well capacity": 60000,
     "Current well": "A1",
     "Parameters": [
-        "CPK",
-        "Mg",
-        "CP",
         "Water",
         "AA",
-        "K",
+        "tRNA",
         "mRNA",
+        "Mg",
         "ribosomes",
-        "tRNA"
+        "CPK",
+        "K",
+        "CP"
     ],
     "Wells": {
         "A1": {
