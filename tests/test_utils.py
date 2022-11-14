@@ -24,7 +24,7 @@ class TestUtils(TestCase):
 
         file_format = 'csv'
         filename = 'test.csv'
-        tmp_folder = f'{gettempdir()}_test'
+        tmp_folder = NamedTemporaryFile().name
         outfile = save_df(
             df=df,
             outfile=filename,
