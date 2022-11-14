@@ -63,11 +63,11 @@ Below is an example of an input file:
 | tRNA          	| 0.2                       	| 0                         	|                          	|
 | Amino acids   	| 1.5                       	| 0                         	|                          	|
 | CAMP          	| 0.75                      	| 0                         	|                          	|
-| Extract       	| 30                        	| 2000                      	|                          	| 1.0
-| HEPES         	| 50                        	| 0                         	|                          	| 1.0
-| PEG           	| 2                         	| 4000                      	|                          	| 1.0
-| Promoter      	| 10                        	| 0                         	|                          	| 1.0
-| RBS           	| 10                        	| 0                         	|                          	| 1.0
+| Extract       	| 30                        	| 2000                      	| 1.0                      	|
+| HEPES         	| 50                        	| 0                         	| 1.0                      	|
+| PEG           	| 2                         	| 4000                      	| 1.0                      	|
+| Promoter      	| 10                        	| 0                         	| 1.0                      	|
+| RBS           	| 10                        	| 0                         	| 1.0                      	|
 
 The first column is the parameter (or factor) names.
 
