@@ -90,6 +90,22 @@ class Plate:
         with open(path, 'w') as f:
             json_dump(self.to_dict(), f, indent=4)
 
+    def to_csv(
+        self,
+        path: str,
+        sep: str = ','
+    ) -> None:
+        df = DataFrame(self.get_wells()).transpose()
+        df.to_csv(path, sep=sep)
+
+    def to_file(self, path: str, format: str) -> None:
+        if format == 'csv':
+            self.to_csv(path, sep=',')
+        elif format == 'tsv':
+            self.to_csv(path, sep='\t')
+        elif format == 'json':
+            self.to_json(path)
+
     @staticmethod
     def from_json(
         path: str,

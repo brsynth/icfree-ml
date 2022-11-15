@@ -73,6 +73,9 @@ def main():
         logger=logger
     )
 
+    values_df['Water'] = \
+        args.sample_volume - values_df.sum(axis=1)
+
     # # Check if values_f are concentrations or volumes
     # if 'Stock concentration' in values_df.columns:
     #     try:
@@ -89,9 +92,6 @@ def main():
 
     # Exract dead plate volumes from cfps_parameters_df
     dead_volumes = extract_dead_volumes(cfps_parameters_df)
-
-    values_df['Water'] = \
-        args.sample_volume - values_df.sum(axis=1)
 
     # Generate source plates
     try:
@@ -124,20 +124,22 @@ def main():
 
     # Save source plates
     for plt_name, plate in source_plates.items():
-        plate.to_json(
+        plate.to_file(
             os_path.join(
                 args.output_folder,
-                f'source_plate_{plt_name}.json'
-            )
+                f'source_plate_{plt_name}.{args.output_format}'
+            ),
+            format=args.output_format
         )
 
     # Save destination plates
     for plt_name, plate in dest_plates.items():
-        plate.to_json(
+        plate.to_file(
             os_path.join(
                 args.output_folder,
-                f'destination_plate_{plt_name}.json'
-            )
+                f'destination_plate_{plt_name}.{args.output_format}'
+            ),
+            format=args.output_format
         )
 
     # Save volumes summary

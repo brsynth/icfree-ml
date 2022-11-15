@@ -117,7 +117,7 @@ def add_arguments(parser):
     parser.add_argument(
         '-ofmt', '--output-format',
         type=str,
-        choices=['csv', 'tsv'],
+        choices=['csv', 'tsv', 'json'],
         default=DEFAULT_ARGS['OUTPUT_FORMAT'],
         help=('Output file format'
               f' (default: {DEFAULT_ARGS["OUTPUT_FORMAT"]})')
