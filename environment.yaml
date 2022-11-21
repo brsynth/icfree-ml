@@ -7,4 +7,4 @@ dependencies:
   - pandas
   - pydoe2
   - brs_utils
-  - anaconda::scikit-learn
+  - scikit-learn
