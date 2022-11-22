@@ -52,18 +52,6 @@ def add_arguments(parser):
         help='Path to a .tsv file containing volumes',
     )
 
-    # parser.add_argument(
-    #     'norm_set',
-    #     type=str,
-    #     help='Path to a .tsv file containing normalizer set',
-    # )
-
-    # parser.add_argument(
-    #     'autofluo_set',
-    #     type=str,
-    #     help='Path to a .tsv file containing autofluorescence set',
-    # )
-
     parser.add_argument(
         '-v', '--sample_volume',
         type=int,

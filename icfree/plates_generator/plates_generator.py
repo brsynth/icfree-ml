@@ -43,7 +43,8 @@ def extract_dead_volumes(
     dead_volumes : Dict
         Dict with deadVolumes data
     """
-    logger.debug(f'cfps_parameters_df: {cfps_parameters_df}')
+    logger.debug(f'cfps_parameters_df:\n{cfps_parameters_df}')
+
     dead_volumes = dict(
         cfps_parameters_df[
             [
@@ -211,7 +212,7 @@ def src_plate_generator(
     plate: Dict
         Dict with source plate dataframe
     """
-    logger.debug(f'volumes: {volumes}')
+    logger.debug(f'volumes:\n{volumes}')
     logger.debug(f'param_dead_volumes: {param_dead_volumes}')
     logger.debug(f'plate_dead_volume: {plate_dead_volume}')
     logger.debug(f'plate_well_capacity: {plate_well_capacity}')
