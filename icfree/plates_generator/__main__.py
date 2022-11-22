@@ -1,10 +1,5 @@
 import sys
 from os import path as os_path
-from logging import (
-    Logger,
-    getLogger
-)
-from pandas import read_csv
 
 from brs_utils import (
     create_logger
@@ -18,47 +13,47 @@ from .plates_generator import (
 from .args import build_args_parser
 from .plate import Plate
 from icfree.utils import save_df
+from icfree.converter.__main__ import input_importer
 
+# def input_importer(
+#     cfps_parameters,
+#     volumes,
+#     logger: Logger = getLogger(__name__)
+# ):
+#     """
+#     Create volumes dataframes from tsv files
 
-def input_importer(
-    cfps_parameters,
-    volumes,
-    logger: Logger = getLogger(__name__)
-):
-    """
-    Create volumes dataframes from tsv files
+#     Parameters
+#     ----------
+#     cfps_parameters : tsv file
+#         TSV of cfps parameters, status, maximum and stock concentrations
+#     volumes : tsv file
+#         Dataset with volumes values
 
-    Parameters
-    ----------
-    cfps_parameters : tsv file
-        TSV of cfps parameters, status, maximum and stock concentrations
-    volumes : tsv file
-        Dataset with volumes values
+#     Returns
+#     -------
+#     cfps_parameters_df : DataFrame
+#         Dataframe with cfps_parameters data
+#     volumes_df : DataFrame
+#         Dataframe with volumes data
+#     """
+#     cfps_parameters_df = read_csv(
+#         cfps_parameters,
+#         sep='[,\t]',
+#         engine='python'
+#     )
+#     logger.debug(f'cfps_parameters_df: {cfps_parameters_df}')
 
-    Returns
-    -------
-    cfps_parameters_df : DataFrame
-        Dataframe with cfps_parameters data
-    volumes_df : DataFrame
-        Dataframe with volumes data
-    """
-    cfps_parameters_df = read_csv(
-        cfps_parameters,
-        sep='[,\t]',
-        engine='python'
-    )
-    logger.debug(f'cfps_parameters_df: {cfps_parameters_df}')
+#     volumes_df = read_csv(volumes, sep='[,\t]', engine='python')
+#     logger.debug(f'volumes_df: {volumes_df}')
 
-    volumes_df = read_csv(volumes, sep='[,\t]', engine='python')
-    logger.debug(f'volumes_df: {volumes_df}')
-
-    return cfps_parameters_df, volumes_df
+#     return cfps_parameters_df, volumes_df
 
 
 def main():
     parser = build_args_parser(
-        program='echo_instructor',
-        description='Generates instructions for the Echo robot'
+        program='plates_generator',
+        description='Generates source and destination plates'
     )
 
     args = parser.parse_args()
@@ -73,25 +68,14 @@ def main():
         logger=logger
     )
 
-    # # Check if values_f are concentrations or volumes
-    # if 'Stock concentration' in values_df.columns:
-    #     try:
-    #         (values_df,
-    #         param_dead_volumes,
-    #         warning_volumes_report) = concentrations_to_volumes(
-    #             cfps_parameters_df,
-    #             values_df,
-    #             args.sample_volume,
-    #             logger=logger)
-    #     except ValueError as e:
-    #         logger.error(f'{e}\nExiting...')
-    #         return -1
-
-    # Exract dead plate volumes from cfps_parameters_df
-    dead_volumes = extract_dead_volumes(cfps_parameters_df)
-
     values_df['Water'] = \
         args.sample_volume - values_df.sum(axis=1)
+
+    # Exract dead plate volumes from cfps_parameters_df
+    dead_volumes = extract_dead_volumes(
+        cfps_parameters_df,
+        logger=logger
+    )
 
     # Generate source plates
     try:
@@ -124,20 +108,22 @@ def main():
 
     # Save source plates
     for plt_name, plate in source_plates.items():
-        plate.to_json(
+        plate.to_file(
             os_path.join(
                 args.output_folder,
-                f'source_plate_{plt_name}.json'
-            )
+                f'source_plate_{plt_name}.{args.output_format}'
+            ),
+            format=args.output_format
         )
 
     # Save destination plates
     for plt_name, plate in dest_plates.items():
-        plate.to_json(
+        plate.to_file(
             os_path.join(
                 args.output_folder,
-                f'destination_plate_{plt_name}.json'
-            )
+                f'destination_plate_{plt_name}.{args.output_format}'
+            ),
+            format=args.output_format
         )
 
     # Save volumes summary

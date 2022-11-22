@@ -21,116 +21,157 @@ conda env create -f environment.yaml
 conda activate icfree
 ~~~
 
-# Concentrations Sampler
-This module generates a list of concentrations for all parameters given in the input file. The concentrations are generated using a Latin Hypercube Sampling (LHS) method. The number of concentrations generated is given by the user and the concentrations are saved in (a) csv file(s).
+# Sampler
+This module generates a list of values for all parameters given in the input file. The values are generated using a Latin Hypercube Sampling (LHS) method. The number of values generated is given by the user and the values are saved in csv or tsv file.
 
 The LHS values are generated using the `lhs` function from the `pyDOE` package and binned into bins to reduce the combinatorial space.
 
 ## Running from the CLI
 
 ~~~bash
-python -m icfree.plates_generator <cfps-parameters tsv file> -of <output_folder>
+python -m icfree.sampler <cfps-parameters tsv file>
 ~~~
 
 ## Options
 <ul>
-<li><code>-of</code> or <code>--output_folder</code>: path to the output folder where the generated plates will be saved</li>
+<li><code>-of</code> or <code>--output_folder</code>: path to the output folder where the generated plates will be saved (default: working dir)</li>
 <li><code>--nb-sampling-steps</code>: Number of values for all factors when performing the sampling (default: 5)</li>
 <li><code>--sampling-ratios</code>: Ratios for all factors when performing the sampling</li>
 <li><code>--nb-samples</code>: Number of samples to generate for all factors when performing the sampling (default: 99)</li>
 <li><code>--seed</code>: Seed to reproduce results (same seed number = same results)</li>
-<li><code>--all-status</code>: Change status of all parameters (but DNA) (choices: <code>doe</code> or <code>const</code>)</li>
+<li><code>--output-format</code>: Format of output file (default: csv)</li>
 </ul>
+
+## Example
+~~~bash
+python -m icfree.sampler \
+  tests/data/sampler/input/proCFPS_parametersB3.tsv \
+  --nb-samples 100 \
+  --sampling-ratios 0.0 0.2 0.4 0.56 0.64 0.72 0.8 1.0 \
+  --output-format tsv \
+  -of out
+~~~
 
 ## Input file
 
 Below is an example of an input file:
-| **Parameter** 	| **Status** 	| **maxValue** 	| **Stock concentration** 	| **Parameter deadVolume** 	| **Ratios** 	|
-|---------------	|------------	|---------------------------	|-------------------------	|---------------------------	|--------------------------	|
-| Mg-glutamate  	| doe        	| 4                         	| 168                     	| 0                         	| 0.0,0.1,0.3,0.5,1.0      	|
-| k-glutamate   	| doe        	| 80                        	| 3360                    	| 0                         	|                          	|
-| CoA           	| doe        	| 0.26                      	| 210                     	| 0                         	|                          	|
-| 3-PGA         	| doe        	| 30                        	| 1400                    	| 0                         	|                          	|
-| NTP           	| doe        	| 1.5                       	| 630                     	| 0                         	|                          	|
-| NAD           	| doe        	| 0.33                      	| 138.6                   	| 0                         	|                          	|
-| Folinic acid  	| doe        	| 0.068                     	| 28.56                   	| 0                         	|                          	|
-| Spermidine    	| doe        	| 1                         	| 420                     	| 0                         	|                          	|
-| tRNA          	| doe        	| 0.2                       	| 84                      	| 0                         	|                          	|
-| Amino acids   	| doe        	| 1.5                       	| 6                       	| 0                         	|                          	|
-| CAMP          	| doe        	| 0.75                      	| 200                     	| 0                         	|                          	|
-| Extract       	| const      	| 30                        	| 300                     	| 2000                      	|                          	|
-| HEPES         	| const      	| 50                        	| 2100                    	| 0                         	|                          	|
-| PEG           	| const      	| 2                         	| 200                     	| 4000                      	|                          	|
-| Promoter      	| const      	| 10                        	| 300                     	| 0                         	|                          	|
-| RBS           	| const      	| 10                        	| 200                     	| 0                         	|                          	|
-| GFP-DNA       	| dna_fluo   	| 50                        	| 300                     	| 0                         	|                          	|
-| GOI-DNA       	| dna_goi    	| 50                        	| 300                     	| 0                         	|                          	|
+
+|**Parameter**|**maxValue**|**deadVolume**|**Ratios**             |
+|---------|--------|----------|-------------------|
+|CP       |125     |0         |0.0 0.1 0.3 0.5 1.0|
+|CPK      |125     |0         |1                  |
+|tRNA     |125     |0         |                   |
+|AA       |125     |0         |                   |
+|ribosomes|125     |0         |                   |
+|mRNA     |125     |0         |                   |
+|Mg       |125     |0         |                   |
+|K        |125     |0         |                   |
 
 The first column is the parameter (or factor) names.
 
-The second column indicates how parameters will be combined:
-<ol>
-    <li><code>doe</code>: parameter values will be combined in a Design of Experiment algorithm (currently Latin Hypercube Sampling).</li>
-    <li><code>const</code>: parameter values will be kept constant.</li>
-    <li><code>dna_*</code>: parameter values will combined in almost full combinatorial: all possible combinations of values will be generated, except for the case where there is only the GOI (Gene Of Interest):
+The second column is the maxValue of the parameter that will be used in the sampling.
 
-|  	| DNA (reporter) 	| DNA (GOI) 	|
-|---	|---	|---	|
-| autofluorescence 	| 0 	| 0 	|
-| normalizer 	| 1 	| 1 	|
-| initial 	| 1 	| 0 	|
-</li>
-</ol>
+The third column is the deadVolume of the parameter. This is used to calculate the volume of the parameter that will not be pipetted by the robot (because of viscosity).
 
-The third column is the maxValue of the parameter that will be used in the DoE algorithm.
+The fourth column is the specific ratios we want to have for this parameter. If nothing defined, then take ratios given in program options. If one single number is given, then take this number as a const value.
 
-The fourth column is the stock concentration of the parameter. This is used to calculate the volume of the parameter to add to the plate.
-
-The fifth column is the deadVolume of the parameter. This is used to calculate the volume of the parameter that will not be pipetted by the robot (because of viscosity).
-
-The sixth column is the specific ratios we want to have for this parameter. If nothing defined, then take ratios given in program options.
-
-## Output files
-If <code>dna_*</code> parameters are present in the input file, then the output files will be:
+## Output
+The output file is:
 <ul>
-<li><code>initial.csv</code>: contains the concentrations of all non-dna parameters and maximum concentration for the reporter and 0 for the GOI</li>
-<li><code>normalizer.csv</code>: contains the concentrations of all non-dna parameters and maximum concentration for the reporter and GOI</li>
-<li><code>autofluorescence.csv</code>: contains the concentrations of all non-dna parameters and 0 for the reporter and GOI</li>
-</ul>
-
-If <code>dna_*</code> parameters are not present in the input file, then the output file will be:
-<ul>
-<li><code>concentrations.csv</code>: contains the concentrations of all parameters</li>
+<li><code>sampling.csv</code>: contains the sampling values</li>
 </ul>
 
 
-# ECHO Instructor
+# Plates Generator
 ## Running from the CLI
+This module generates a list of source and destination plates according to the set of samples to test.
 
 ~~~bash
-python -m icfree.echo_instructor 
-<cfps-parameters tsv file> \ 
-<initial_training_set tsv file> \ 
-<normalizer_set tsv file> \ 
-<autofluorescence_set tsv file> \ 
--v <sample_volume> \
--of <output_folder>
+python -m icfree.plates_generator \
+  <cfps-parameters tsv file> \
+  <sampling csv|tsv file>
 ~~~
+
+## Options
+<ul>
+  <li><code>-v</code>, <code>--sample_volume</code>: Final sample volume in each well in nL (default: 10000)</li>
+  <li><code>-sdv</code>, <code>--source_plate_dead_volume</code>: deadVolume to add in the source plate in nL (default: 15000)</li>
+  <li><code>-ddv</code>, <code>--dest_plate_dead_volume</code>: deadVolume to add in the dest plate in nL (default: 15000)</li>
+  <li><code>-dsw</code>, <code>--dest-starting_well</code>: Starter well of destination plate to begin filling the 384 well-plate. (default: A1)</li>
+  <li><code>-ssw</code>, <code>--src-starting_well</code>: Starter well of source plate to begin filling the 384 well-plate. (default: A1)</li>
+  <li><code>-of</code>, --output-folder: Output folder to write output files (default: working dir)</li>
+  <li><code>-ofmt</code> {csv,tsv}, --output-format {csv,tsv}: Output file format (default: csv)</li>
+  <li><code>--nplicate</code>: Numbers of copies of volume sets (default: 3)</li>
+  <li><code>--keep-nil-vol</code>: Keep nil volumes in instructions or not (default: yes)</li>
+  <li><code>-spwc</code>, <code>--source_plate_well_capacity</code>: Maximum volume capacity of the source plate in nL (default: 60000)</li>
+  <li><code>-dpwc</code>, <code>--dest_plate_well_capacity</code>: Maximum volume capacity of the dest plate in nL (default: 60000)</li>
+  <li><code>--optimize-well-volumes</code>: Save volumes in source plate for all factors. It may trigger more volume pipetting warnings. If list of factors is given (separated by blanks), save: only for these ones (default: <code>[]</code>).</li>
+  <li><code>--plate-dimensions</code>: Dimensions of plate separated by a 'x', e.g. <code>nb_rows x nb_cols</code> (default: 16x24).
+</ul>
+
+## Example
+~~~bash
+python -m icfree.plates_generator \
+  tests/data/plates_generator/input/proCFPS_parametersB3.tsv \
+  tests/data/plates_generator/input/sampling.csv \
+  -v 1000 \
+  -of out
+~~~
+
+## Output
+The output files are:
+<ul>
+<li><code>source_plate.json</code>: describe the source plate(s)</li>
+<li><code>destination_plate.json</code>: describe the destination plate(s)</li>
+<li><code>volumes_summary.tsv</code>: contains the summary of parameters volumes</li>
+</ul>
+
+
+
+# Instructor
+## Running from the CLI
+The module generates a list of instructions to perform the experiment.
+
+~~~bash
+python -m icfree.instructor 
+  --source_plates <source_plate file 1> <source_plate file 2>... \
+  --dest_plates <dest_plate file 1> <dest_plate file 2>... \
+~~~
+
+## Options
+<ul>
+  <li><code>-of</code>, <code>--output-folder</code>: Output folder to write output files (default: working dir)</li>
+  <li><code>--robot</code>: Robot name (default: echo)</li>
+  <li><code>--source_plates</code>: Source plates files.</li>
+  <li><code>--dest_plates</code>: Destination plates files.</li>
+</ul>
+
+## Example
+~~~bash
+python -m icfree.instructor \
+  --source_plates out/source_plate_1.json \
+  --dest_plates out/destination_plate_1.json \
+  --robot echo \
+  -of out
+~~~
+
+## Output
+The output file is:
+<ul>
+<li><code>instructions.csv</code>: contains the instructions to perform the experiment</li>
+<li><code>volumes_warning.csv</code>: contains the volumes that may cause issues with the choosen robot</li>
+</ul>
 
 # Help
 
 Display help by running:
 ~~~bash
-python -m icfree.plates_generator --help
-~~~
-
-~~~bash
-python -m icfree.echo_instructor --help
+python -m icfree.<module> --help
 ~~~
 
 # Authors
 
-Yorgo EL MOUBAYED, Joan Hérisson
+Joan Hérisson, Yorgo EL MOUBAYED
 
 # License
 

@@ -129,14 +129,6 @@ def main():
         logger=logger
     )
 
-    # # If status of parameters has to be changed
-    # if args.all_status is not None:
-    #     parameters = change_status(
-    #         parameters,
-    #         args.all_status,
-    #         logger
-    #     )
-
     # PROCESS TO THE SAMPLING
     levels = sampling(
         n_variable_parameters=len(parameters),
@@ -162,30 +154,6 @@ def main():
         logger=logger
     )
 
-    # # Read the maxValue for each dna parameter
-    # dna_values = {
-    #     v: dna_param[v]['maxValue']
-    #     for status, dna_param in parameters.items()
-    #     for v in dna_param
-    #     if status.startswith('dna')
-    # }
-    # # Read the maximum for each constant parameter
-    # try:
-    #     const_values = {
-    #         k: v['maxValue']
-    #         for k, v in parameters['const'].items()
-    #     }
-    # except KeyError:
-    #     const_values = {}
-    # # Generate the absolute values
-    # abs_values = assemble_values(
-    #     sampling_values=sampling_values,
-    #     const_values=const_values,
-    #     dna_values=dna_values,
-    #     parameters={k: list(v.keys()) for k, v in parameters.items()},
-    #     logger=logger
-    # )
-
     # WRITE TO DISK
     save_values(
         values=sampling_values,
@@ -193,44 +161,6 @@ def main():
         output_folder=args.output_folder,
         output_format=args.output_format
     )
-
-
-# def change_status(
-#     parameters: Dict,
-#     status: str,
-#     logger: Logger = getLogger(__name__)
-# ) -> Dict:
-#     """
-#     Change status of parameters
-
-#     Parameters
-#     ----------
-#     parameters : Dict
-#         Parameters
-#     status: str
-#         Status to change parameters status into
-#     logger: Logger
-#         Logger
-
-#     Returns
-#     -------
-#     parameters: Dict
-#         Parameters with new status
-#     """
-#     # Set all status to an empty dict
-#     _parameters = {
-#         status: {} for status in parameters.keys()
-#     }
-#     # Copy all values under args.all_status key,
-#     # except for status wich contain 'dna'
-#     for _status, _value in parameters.items():
-#         if 'dna' not in _status:
-#             _parameters[status].update(_value)
-#         else:
-#             if _status not in _parameters:
-#                 _parameters[_status] = {}
-#             _parameters[_status].update(_value)
-#     return _parameters
 
 
 if __name__ == "__main__":

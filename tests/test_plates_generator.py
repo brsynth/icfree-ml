@@ -337,9 +337,33 @@ class TestPlate(TestCase):
             gettempdir(),
             str(uuid1())
         )
-        plate.to_json(tmp_outfile)
+        plate.to_file(tmp_outfile, 'json')
         plate_test = Plate.from_json(tmp_outfile)
         self.assertEqual(plate, plate_test)
+
+    def test_plate_to_csv(self):
+        plate = Plate.from_json(
+            os_path.join(self.REF_FOLDER, 'source_plate_2.json')
+        )
+        tmp_outfile = os_path.join(
+            gettempdir(),
+            str(uuid1())
+        )
+        plate.to_file(tmp_outfile, 'csv')
+        df = pd_read_csv(tmp_outfile, index_col=0)
+        ref_df = pd_read_csv(
+            os_path.join(self.REF_FOLDER, 'source_plate_1.csv'),
+            index_col=0
+        )
+        pd_testing.assert_frame_equal(df, ref_df)
+        plate.to_file(tmp_outfile, 'tsv')
+        df = pd_read_csv(tmp_outfile, index_col=0, sep='\t')
+        ref_df = pd_read_csv(
+            os_path.join(self.REF_FOLDER, 'source_plate_1.tsv'),
+            index_col=0,
+            sep='\t'
+        )
+        pd_testing.assert_frame_equal(df, ref_df)
 
     def test_plate_get_well(self):
         plate = Plate.from_json(
