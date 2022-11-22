@@ -65,8 +65,9 @@ def input_importer(
 
 def main():
     parser = build_args_parser(
-        program='echo_instructor',
-        description='Generates instructions for the Echo robot')
+        program='instructor',
+        description='Generates instructions for robots'
+    )
 
     args = parser.parse_args()
 
