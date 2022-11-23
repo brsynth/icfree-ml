@@ -124,7 +124,7 @@ def concentrations_to_volumes(
     volumes_df = round(
         concentrations_df
         * sample_volume_stock_ratio_df
-        / 2.5, 1
+        / 2.5, 0
     ) * 2.5
 
     # # Add Water column
