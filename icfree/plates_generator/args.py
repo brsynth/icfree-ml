@@ -9,7 +9,7 @@ from icfree._version import __version__
 
 DEFAULT_ARGS = {
     'OUTPUT_FOLDER': os_getcwd(),
-    'SAMPLE_VOLUME': 10000,
+    'SAMPLE_VOLUME': 1000,
     'SOURCE_PLATE_DEAD_VOLUME': 15000,
     'DEST_PLATE_DEAD_VOLUME': 15000,
     'DEST_STARTING_WELL': 'A1',
