@@ -43,60 +43,6 @@ class Test(TestCase):
             'sampling_volumes.tsv'
         )
 
-    # def test_input_importer(self):
-    #     with open(
-    #         os_path.join(
-    #                 self.REF_FOLDER,
-    #                 'test_input_importer.json'
-    #         ), 'r'
-    #     ) as fp:
-    #         expected_df = DataFrame(
-    #             json_load(fp)
-    #         )
-    #         cfps_parameters = os_path.join(
-    #             self.INPUT_FOLDER,
-    #             'proCFPS_parameters_woGOI.tsv'
-    #             )
-    #         tested_df = input_importer(cfps_parameters)
-    #         for i, row in tested_df.iterrows():
-    #             if isinstance(row['Ratios'], str):
-    #                 tested_df.at[i, 'Ratios'] = list(
-    #                     map(
-    #                         float,
-    #                         row['Ratios'].split(',')
-    #                     )
-    #                 )
-    #             else:
-    #                 tested_df.at[i, 'Ratios'] = None
-    #         assert_frame_equal(
-    #             expected_df,
-    #             tested_df
-    #         )
-
-    # def test_input_processor(self):
-    #     with open(
-    #         os_path.join(
-    #                 self.REF_FOLDER,
-    #                 'test_input_processor.json'
-    #         ), 'r'
-    #     ) as fp:
-    #         expected_dictionary = (json_load(fp))
-
-    #     with open(
-    #         os_path.join(
-    #                 self.INPUT_FOLDER,
-    #                 'proCFPS_parameters.tsv'
-    #         ), 'r'
-    #     ) as fp:
-    #         tested_df = input_importer(fp)
-
-    #     tested_dictionary = input_processor(tested_df)
-    #     print(tested_dictionary)
-    #     self.assertDictEqual(
-    #             expected_dictionary,
-    #             tested_dictionary
-    #         )
-
     def test_concentrations_to_volumes(self):
         (
             cfps_parameters_df,

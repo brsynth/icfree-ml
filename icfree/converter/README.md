@@ -25,7 +25,7 @@ python -m icfree.converter \
 
 Below is an example of an input file:
 
-| Parameter    | maxValue | Stock concentration | deadVolume | Ratios              |
+| Parameter    | maxValue | stockConcentration  | deadVolume | Ratios              |
 |--------------|----------|---------------------|------------|---------------------|
 | Mg-glutamate | 4        | 168                 | 0          | 0.0 0.1 0.3 0.5 1.0 |
 | k-glutamate  | 80       | 3360                | 0          |                     |
