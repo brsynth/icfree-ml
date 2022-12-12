@@ -1,4 +1,7 @@
-from argparse import ArgumentParser
+from argparse import (
+    ArgumentParser,
+    RawTextHelpFormatter
+)
 from ._version import __version__
 from typing import (
     Callable,
@@ -16,7 +19,7 @@ def build_args_parser(
     parser = ArgumentParser(
         prog=prog,
         description=description,
-        epilog=epilog
+        epilog=epilog, formatter_class=RawTextHelpFormatter
     )
 
     # Build Parser with rptools common arguments
