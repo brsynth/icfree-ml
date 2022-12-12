@@ -61,7 +61,10 @@ def entry_point():
 
     parser = build_args_parser(
         prog='iCFree',
-        description='Package to process cell-free with ECHO® robot'
+        description='\
+            Package to process cell-free with ECHO® robot.\
+            Only \'sampler\', \'converter\', \'plates_generator\' and \'instructor\' \
+            modules are runnable (python -m icfree.<module>).'
     )
     args = parser.parse_args()
 
