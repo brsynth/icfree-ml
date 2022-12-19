@@ -3,22 +3,18 @@
 
 Design of experiments (DoE) and machine learning packages for the iCFree project
 
+# Requirements
+
+Python 3.8+
+
 # Installation
 
 ~~~bash
-git clone https://github.com/brsynth/icfree-ml.git
+conda env create -n <env_name> icfree
 ~~~
 
 ~~~bash
-cd icfree-ml
-~~~
-
-~~~bash
-conda env create -f environment.yaml
-~~~
-
-~~~bash
-conda activate icfree
+conda activate <env_name>
 ~~~
 
 # Sampler
