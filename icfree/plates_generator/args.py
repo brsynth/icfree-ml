@@ -20,7 +20,7 @@ DEFAULT_ARGS = {
     'DEST_PLATE_WELL_CAPACITY': 60000,
     'PLATE_DIMENSIONS': '16x24',
     'OPTIMIZE_WELL_VOLUMES': [],
-    'OUTPUT_FORMAT': 'json'
+    'OUTPUT_FORMAT': 'csv'
 }
 
 
@@ -105,7 +105,7 @@ def add_arguments(parser):
     parser.add_argument(
         '-ofmt', '--output-format',
         type=str,
-        choices=['csv', 'tsv', 'json'],
+        choices=['csv', 'tsv'],
         default=DEFAULT_ARGS['OUTPUT_FORMAT'],
         help=('Output file format'
               f' (default: {DEFAULT_ARGS["OUTPUT_FORMAT"]})')

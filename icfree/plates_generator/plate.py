@@ -92,60 +92,43 @@ class Plate:
             'Wells': self.get_wells()
         }
 
-    def to_json(self, path: str) -> None:
-        with open(path, 'w') as f:
-            json_dump(self.to_dict(), f, indent=4)
-
-    def to_csv(
-        self,
-        path: str,
-        sep: str = ','
-    ) -> None:
+    def to_file(self, path: str, format: str) -> None:
+        if format == 'csv':
+            sep=','
+        elif format == 'tsv':
+            sep='\t'
         # Save wells as a csv file
         df = DataFrame(self.get_wells()).transpose()
         df.index.name = 'Well'
         _path = os_path.splitext(path)
-        df.to_csv(f'{_path[0]}_wells{_path[1]}', sep=sep)
+        df.to_csv(path, sep=sep)
         # Save metadata as a csv file
-        # get dict without wells and parameters
+        # get dict without wells
         _dict = {
             k: v for k, v in self.to_dict().items()
             if k != 'Wells'
-            and k != 'Parameters'
         }
-        with open(f'{_path[0]}_infos{_path[1]}', 'w') as f:
-            for k, v in _dict.items():
-                f.write(f'{k}{sep}{v}\n')
+        # put wells filename in metadata
+        _dict['Wells'] = path
+        with open(f'{_path[0]}.json', 'w') as f:
+            json_dump(_dict, f, indent=4)
 
     @staticmethod
-    def from_csv(
+    def wells_from_csv(
         path: str,
         sep: str = ',',
         logger: Logger = getLogger(__name__)
     ) -> 'Plate':
         # Read wells from data csv file
         df = pd_read_csv(path, sep=sep, index_col=0)
-        # Read metadata from metadata csv file
-        _path = os_path.splitext(path)
-        reader = csv_reader(open(f'{_path[0][:-6]}_infos{_path[1]}', 'r'))
-        d_plate = {}
-        for row in reader:
-            k, v = row
-            d_plate[k] = v
-        plate = Plate(
-            dimensions=d_plate['Dimensions'],
-            dead_volume=d_plate['deadVolume'],
-            well_capacity=d_plate['Well capacity'],
-            logger=logger
-        )
-        plate.__wells = df.to_dict(orient='index')
+        wells_d = df.to_dict(orient='index')
         # Remove NaN values
-        for well in plate.__wells:
-            plate.__wells[well] = {
-                k: v for k, v in plate.__wells[well].items()
+        for well in wells_d:
+            wells_d[well] = {
+                k: v for k, v in wells_d[well].items()
                 if not pd_isna(v)
             }
-        return plate
+        return wells_d
 
     @staticmethod
     def from_file(
@@ -153,37 +136,21 @@ class Plate:
         logger: Logger = getLogger(__name__)
     ) -> 'Plate':
         logger.debug(f"Loading plate from {path}...")
-        if path.endswith('.json'):
-            return Plate.from_json(path, logger=logger)
-        elif path.endswith('.csv'):
-            return Plate.from_csv(path, logger=logger)
-        elif path.endswith('.tsv'):
-            return Plate.from_csv(path, sep='\t', logger=logger)
-        else:
-            raise ValueError(f"File format not supported: {path}")
-
-    def to_file(self, path: str, format: str) -> None:
-        if format == 'csv':
-            self.to_csv(path, sep=',')
-        elif format == 'tsv':
-            self.to_csv(path, sep='\t')
-        elif format == 'json':
-            self.to_json(path)
-
-    @staticmethod
-    def from_json(
-        path: str,
-        logger: Logger = getLogger(__name__)
-    ) -> 'Plate':
+        # Load metadata from json file
         with open(path, 'r') as f:
             d_plate = json_load(f)
+        wells_file = d_plate['Wells']
+        # Load wells from csv/tsv file
+        if wells_file.endswith('.csv'):
+            d_plate['Wells'] = Plate.wells_from_csv(wells_file, sep=',', logger=logger)
+        elif wells_file.endswith('.tsv'):
+            d_plate['Wells'] = Plate.wells_from_csv(wells_file, sep='\t', logger=logger)
         plate = Plate(
             dimensions=d_plate['Dimensions'],
             dead_volume=d_plate['deadVolume'],
             well_capacity=d_plate['Well capacity']
         )
         plate.__wells = d_plate['Wells']
-        # plate.__nb_empty_wells = d_plate['Empty wells']
         return plate
 
     def get_dimensions(self) -> str:
