@@ -17,7 +17,7 @@ python -m icfree.plates_generator \
   <li><code>-dsw</code>, <code>--dest-starting_well</code>: Starter well of destination plate to begin filling the 384 well-plate. (default: A1)</li>
   <li><code>-ssw</code>, <code>--src-starting_well</code>: Starter well of source plate to begin filling the 384 well-plate. (default: A1)</li>
   <li><code>-of</code>, --output-folder: Output folder to write output files (default: working dir)</li>
-  <li><code>-ofmt</code> {csv,tsv}, --output-format {csv,tsv}: Output file format (default: csv)</li>
+  <li><code>-ofmt</code> {csv,tsv}, --output-format {csv,tsv}: Output file format for wells file (default: csv)</li>
   <li><code>--nplicate</code>: Numbers of copies of volume sets (default: 3)</li>
   <li><code>--keep-nil-vol</code>: Keep nil volumes in instructions or not (default: yes)</li>
   <li><code>-spwc</code>, <code>--source_plate_well_capacity</code>: Maximum volume capacity of the source plate in nL (default: 60000)</li>
