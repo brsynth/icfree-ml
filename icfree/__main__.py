@@ -59,27 +59,29 @@ def get_modules(path: str) -> List[str]:
 
 def entry_point():
 
-    parser = build_args_parser(
-        prog='iCFree',
-        description='Package to process cell-free with ECHO® robot'
-    )
-    args = parser.parse_args()
+    prog = 'iCFree'
 
     modules = get_modules(
         os_path.dirname(os_path.abspath(__file__))
         )
 
     description = (
-        f'\nWelcome to {parser.prog}!\n'
-        f'\n\'{parser.prog}\' is a package that cannot be directly run. '
-        'Runnable tools are:\n'
+        f'\nWelcome to {prog}!\n'
+        f'\n\'{prog}\' is a package that cannot be directly run. '
+        'Runnable modules are:\n'
     )
     for module in modules:
         description += '   - '+module+'\n'
     description += (
-        '\nTo find help for a specific tool, please type:\n'
-        f'   python -m {parser.prog.lower()}.<tool_name> --help\n\n'
+        '\nTo find help for a specific module, please type:\n'
+        f'   python -m {prog.lower()}.<module> --help\n\n'
     )
+
+    parser = build_args_parser(
+        prog=prog,
+        description=description
+    )
+    args = parser.parse_args()
 
     print(description)
 

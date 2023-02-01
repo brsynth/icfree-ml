@@ -33,14 +33,14 @@ def add_arguments(parser):
         '--source_plates',
         nargs='+',  # 1 or more
         type=str,
-        help='Path to .json files containing source plates information'
+        help='Path to .csv files containing source plates information'
     )
 
     parser.add_argument(
         '--dest_plates',
         nargs='+',  # 1 or more
         type=str,
-        help='Path to .json files containing destination plates information',
+        help='Path to .csv files containing destination plates information',
     )
 
     parser.add_argument(

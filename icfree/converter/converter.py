@@ -59,92 +59,42 @@ def concentrations_to_volumes(
         cfps_parameters_df[
             [
                 'Parameter',
-                'Stock concentration'
+                'stockConcentration'
             ]
         ].to_numpy()
     )
     logger.debug(f'stock_concentrations: {stock_concentrations}')
-    # stock_concentrations_df = fromiter(
-    #     stock_concentrations_dict.values(),
-    #     dtype=float
-    # )
-    # logger.debug(f'Stock concentrations: {stock_concentrations_df}')
-
-    # Exract dead plate volumes from cfps_parameters_df
-    param_dead_volumes = dict(
-        cfps_parameters_df[
-            [
-                'Parameter',
-                'deadVolume'
-            ]
-        ].to_numpy()
-    )
-    param_dead_volumes['Water'] = 0
-    logger.debug(f'Parameter deadVolume:{param_dead_volumes}')
 
     # Calculate sample volume and stock concentrations ratio for each well
-    sample_volume_stock_ratio = {
-        param: sample_volume / stock_concentrations[param]
-        for param in stock_concentrations
-    }
-    # sample_volume_stock_ratio = \
-    #     sample_volume / stock_concentrations_df
-    # logger.debug(f'sample_volume_stock_ratio: {sample_volume_stock_ratio}')
     sample_volume_stock_ratio_df = Series(
-        sample_volume_stock_ratio
+        {
+            param: sample_volume / stock_concentrations[param]
+            for param in stock_concentrations
+        }
     )
     logger.debug(
         f'sample_volume_stock_ratio_df: {sample_volume_stock_ratio_df}'
     )
-    # # Fit columns order to concentrations
-    # first_key = list(concentrations_df.keys())[0]
-    # if sample_volume_stock_ratio_df.size != \
-    #    concentrations_df.columns.size:
-    #     msg = (
-    #         'It seems that the number of parameters is different '
-    #         'from the number of stock concentrations.'
-    #     )
-    #     raise ValueError(msg)
-    # sample_volume_stock_ratio_df = sample_volume_stock_ratio_df[
-    #     concentrations_df.columns
-    # ]
-    # logger.debug(
-    #     f'sample_volume_stock_ratio_df: {sample_volume_stock_ratio_df}'
-    # )
 
     volumes_df = {}
-    # volumes_summary = {}
-    # warning_volumes_report = {
-    #     'Min Report': {},
-    #     'Max Report': {}
-    # }
 
     # Convert concentrations into volumes
     # and make it a multiple of 2.5 (ECHO specs)
+    multiple = 2.5
     volumes_df = round(
         concentrations_df
         * sample_volume_stock_ratio_df
-        / 2.5, 1
-    ) * 2.5
+        / multiple, 0
+    ) * multiple
 
-    # # Add Water column
-    # volumes_df['Water'] = sample_volume - volumes_df.sum(axis=1)
+    # If a parameter has all values equal to 0,
+    # assign 'multiple' value
+    for param in volumes_df:
+        if volumes_df[param].sum() == 0:
+            volumes_df[param] = multiple
 
     logger.debug(
         f'volumes_df:\n{volumes_df}'
     )
-
-    #     # Check volumes
-    #     warning_volumes_report = check_volumes(
-    #             volumes_df[volumes_name],
-    #             lower_bound=10,
-    #             upper_bound=1000,
-    #             warning_volumes=warning_volumes_report,
-    #             logger=logger
-    #         )
-    #     logger.debug(f'{volumes_name} volumes:\n{volumes_df[volumes_name]}')
-
-    # # Convert Warning Report Dict to Dataframe
-    # warning_volumes_report = DataFrame.from_dict(warning_volumes_report)
 
     return volumes_df

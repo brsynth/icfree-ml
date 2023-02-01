@@ -176,8 +176,8 @@ def echo_instructions_generator(
         Dict with echo instructions dataframes
     """
     logger.debug('Generating Echo® instructions')
-    logger.debug('Source plates: %s', source_plates)
-    logger.debug('Destination plates: %s', dest_plates)
+    logger.debug(f'Source plates: {source_plates}')
+    logger.debug(f'Destination plates: {dest_plates}')
 
     # Reindex plates by factors ID
     # SRC

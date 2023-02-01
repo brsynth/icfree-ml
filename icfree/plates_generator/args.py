@@ -9,7 +9,7 @@ from icfree._version import __version__
 
 DEFAULT_ARGS = {
     'OUTPUT_FOLDER': os_getcwd(),
-    'SAMPLE_VOLUME': 10000,
+    'SAMPLE_VOLUME': 1000,
     'SOURCE_PLATE_DEAD_VOLUME': 15000,
     'DEST_PLATE_DEAD_VOLUME': 15000,
     'DEST_STARTING_WELL': 'A1',
@@ -20,7 +20,7 @@ DEFAULT_ARGS = {
     'DEST_PLATE_WELL_CAPACITY': 60000,
     'PLATE_DIMENSIONS': '16x24',
     'OPTIMIZE_WELL_VOLUMES': [],
-    'OUTPUT_FORMAT': 'csv'
+    'OUTPUT_FORMAT': 'json'
 }
 
 
