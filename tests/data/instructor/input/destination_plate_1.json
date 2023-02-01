@@ -14,7 +14,8 @@
         "Mg",
         "AA"
     ],
-    "Wells": {
+    "Wells": "tests/data/instructor/input/destination_plate_1.csv",
+    "Wells2": {
         "A1": {
             "CP": 125.0,
             "CPK": 125.0,

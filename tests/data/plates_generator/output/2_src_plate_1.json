@@ -8,15 +8,5 @@
         "CP",
         "CPK"
     ],
-    "Wells": {
-        "N24": {
-            "CP": 60000
-        },
-        "O24": {
-            "CPK": 60000
-        },
-        "P24": {
-            "tRNA": 60000
-        }
-    }
+    "Wells": "tests/data/plates_generator/output/2_src_plate_1.csv"
 }

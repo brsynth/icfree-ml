@@ -116,7 +116,7 @@ class TestPlatesGenerator(TestCase):
             vertical=True,
             plate_dimensions='16x24',
         )
-        expected_plate = Plate.from_json(
+        expected_plate = Plate.from_file(
             os_path.join(self.REF_FOLDER, 'source_plate_1.json')
         )
         self.assertEqual(source_plates['1'], expected_plate)
@@ -174,10 +174,10 @@ class TestPlatesGenerator(TestCase):
             vertical=True,
             plate_dimensions='16x24',
         )
-        expected_plate_1 = Plate.from_json(
+        expected_plate_1 = Plate.from_file(
             os_path.join(self.REF_FOLDER, '2_src_plate_1.json')
         )
-        expected_plate_2 = Plate.from_json(
+        expected_plate_2 = Plate.from_file(
             os_path.join(self.REF_FOLDER, '2_src_plate_2.json')
         )
         self.assertEqual(source_plates['1'], expected_plate_1)
@@ -228,7 +228,7 @@ class TestPlatesGenerator(TestCase):
             plate_well_capacity=60000,
             vertical=True,
         )
-        expected_plate = Plate.from_json(
+        expected_plate = Plate.from_file(
             os_path.join(self.REF_FOLDER, 'destination_plate_1.json')
         )
         self.assertEqual(dest_plates['1'], expected_plate)
@@ -248,10 +248,10 @@ class TestPlatesGenerator(TestCase):
             plate_well_capacity=60000,
             vertical=True,
         )
-        expected_plate_1 = Plate.from_json(
+        expected_plate_1 = Plate.from_file(
             os_path.join(self.REF_FOLDER, '2_dst_plate_1.json')
         )
-        expected_plate_2 = Plate.from_json(
+        expected_plate_2 = Plate.from_file(
             os_path.join(self.REF_FOLDER, '2_dst_plate_2.json')
         )
         self.assertEqual(dest_plates['1'], expected_plate_1)
@@ -323,41 +323,42 @@ class TestPlate(TestCase):
         )
         self.assertTrue(plate.well_out_of_range('A25'))
 
-    def test_plate_from_json(self):
-        plate = Plate.from_json(
+    def test_plate_from_file(self):
+        plate = Plate.from_file(
             os_path.join(self.REF_FOLDER, '2_dst_plate_1.json')
         )
         self.assertEqual(plate.get_well('N24')['CP'], 12.5)
 
-    def test_plate_to_json(self):
-        plate = Plate.from_json(
+    def test_plate_to_file(self):
+        plate = Plate.from_file(
             os_path.join(self.REF_FOLDER, 'source_plate_1.json')
         )
         tmp_outfile = os_path.join(
             gettempdir(),
             str(uuid1())
-        )
-        plate.to_file(tmp_outfile, 'json')
-        plate_test = Plate.from_json(tmp_outfile)
+        ) + '.csv'
+        plate.to_file(tmp_outfile, 'csv')
+        _tmp_outfile = os_path.splitext(tmp_outfile)
+        plate_test = Plate.from_file(f'{_tmp_outfile[0]}.json')
         self.assertEqual(plate, plate_test)
 
     def test_plate_to_csv(self):
-        plate = Plate.from_json(
+        plate = Plate.from_file(
             os_path.join(self.REF_FOLDER, 'source_plate_2.json')
         )
         tmp_outfile = os_path.join(
             gettempdir(),
             str(uuid1())
-        )
+        ) + '.csv'
         plate.to_file(tmp_outfile, 'csv')
-        df = pd_read_csv(f'{tmp_outfile}_wells', index_col=0)
+        df = pd_read_csv(f'{tmp_outfile}', index_col=0)
         ref_df = pd_read_csv(
             os_path.join(self.REF_FOLDER, 'source_plate_1.csv'),
             index_col=0
         )
         pd_testing.assert_frame_equal(df, ref_df)
         plate.to_file(tmp_outfile, 'tsv')
-        df = pd_read_csv(f'{tmp_outfile}_wells', index_col=0, sep='\t')
+        df = pd_read_csv(f'{tmp_outfile}', index_col=0, sep='\t')
         ref_df = pd_read_csv(
             os_path.join(self.REF_FOLDER, 'source_plate_1.tsv'),
             index_col=0,
@@ -366,13 +367,13 @@ class TestPlate(TestCase):
         pd_testing.assert_frame_equal(df, ref_df)
 
     def test_plate_get_well(self):
-        plate = Plate.from_json(
+        plate = Plate.from_file(
             os_path.join(self.REF_FOLDER, '2_dst_plate_1.json')
         )
         self.assertEqual(plate.get_well('N24')['CP'], 12.5)
 
     def test_plate_set_current_well(self):
-        plate = Plate.from_json(
+        plate = Plate.from_file(
             os_path.join(self.REF_FOLDER, 'source_plate_1.json')
         )
         plate.set_current_well('D4')
@@ -380,7 +381,7 @@ class TestPlate(TestCase):
         self.assertEqual(plate.get_current_well(), 'E4')
 
     def test_plate_fill_well(self):
-        plate = Plate.from_json(
+        plate = Plate.from_file(
             os_path.join(self.REF_FOLDER, '2_dst_plate_1.json')
         )
         plate.fill_well('CP', 12.5, 'A1')
@@ -404,7 +405,7 @@ class TestPlate(TestCase):
         # Add new parameter with out of range well
         with pytest_raises(IndexError):
             plate.fill_well('CP', 12.5, 'A25')
-        plate = Plate.from_json(
+        plate = Plate.from_file(
             os_path.join(self.REF_FOLDER, '2_dst_plate_1.json')
         )
         # Add already existing parameter
@@ -412,7 +413,7 @@ class TestPlate(TestCase):
             plate.fill_well('AA', 59483, 'N24')
 
     def test_plate_get_well_volume(self):
-        plate = Plate.from_json(
+        plate = Plate.from_file(
             os_path.join(self.REF_FOLDER, '2_dst_plate_1.json')
         )
         self.assertEqual(plate.get_well_volume('N24'), 517.5)
@@ -432,9 +433,10 @@ class TestPlate(TestCase):
 
     def test_plate_to_dict(self):
         file = os_path.join(self.REF_FOLDER, 'source_plate_1.json')
-        plate = Plate.from_json(file)
+        plate = Plate.from_file(file)
         with open(file, 'r') as f:
             d_plate = json_load(f)
+        d_plate['Wells'] = Plate.wells_from_csv(d_plate['Wells'])
         _d_plate = plate.to_dict()
         self.assertEqual(_d_plate['Dimensions'], d_plate['Dimensions'])
         self.assertEqual(
@@ -449,19 +451,19 @@ class TestPlate(TestCase):
 
     def test_plate___str__(self):
         file = os_path.join(self.REF_FOLDER, 'source_plate_1.json')
-        plate = Plate.from_json(file)
+        plate = Plate.from_file(file)
         s_plate = json_dumps(plate.to_dict(), indent=4)
         self.assertEqual(str(plate), s_plate)
 
     def test_plate___eq__(self):
         file = os_path.join(self.REF_FOLDER, 'source_plate_1.json')
-        plate = Plate.from_json(file)
-        plate_test = Plate.from_json(file)
+        plate = Plate.from_file(file)
+        plate_test = Plate.from_file(file)
         self.assertEqual(plate, plate_test)
         self.assertNotEqual(plate, Plate())
 
     def test_plate_reindex_wells_by_factor(self):
-        plate = Plate.from_json(
+        plate = Plate.from_file(
             os_path.join(self.REF_FOLDER, 'source_plate_1.json')
         )
         d = plate.reindex_wells_by_factor()
@@ -478,10 +480,10 @@ class TestPlate(TestCase):
         )
 
     def test_plate_get_volumes_summary_dict(self):
-        plate_1 = Plate.from_json(
+        plate_1 = Plate.from_file(
             os_path.join(self.REF_FOLDER, '2_src_plate_1.json')
         )
-        plate_2 = Plate.from_json(
+        plate_2 = Plate.from_file(
             os_path.join(self.REF_FOLDER, '2_src_plate_2.json')
         )
         d = Plate.get_volumes_summary(
@@ -501,10 +503,10 @@ class TestPlate(TestCase):
         )
 
     def test_plate_get_volumes_summary_pandas(self):
-        plate_1 = Plate.from_json(
+        plate_1 = Plate.from_file(
             os_path.join(self.REF_FOLDER, '2_src_plate_1.json')
         )
-        plate_2 = Plate.from_json(
+        plate_2 = Plate.from_file(
             os_path.join(self.REF_FOLDER, '2_src_plate_2.json')
         )
         df = Plate.get_volumes_summary(
@@ -525,10 +527,10 @@ class TestPlate(TestCase):
         )
 
     def test_plate_get_volumes_summary_str(self):
-        plate_1 = Plate.from_json(
+        plate_1 = Plate.from_file(
             os_path.join(self.REF_FOLDER, '2_src_plate_1.json')
         )
-        plate_2 = Plate.from_json(
+        plate_2 = Plate.from_file(
             os_path.join(self.REF_FOLDER, '2_src_plate_2.json')
         )
         s = Plate.get_volumes_summary(

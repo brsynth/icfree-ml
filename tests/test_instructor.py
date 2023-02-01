@@ -53,7 +53,7 @@ class TestInstructor(TestCase):
         )
 
     def test_check_volumes(self):
-        plate = Plate.from_json(self.dst_plt_1)
+        plate = Plate.from_file(self.dst_plt_1)
         warning_volumes_report = check_volumes(
             plate.to_dict(),
             lower_bound=10,
@@ -65,7 +65,7 @@ class TestInstructor(TestCase):
         )
 
     def test_check_volumes_warning_upper(self):
-        plate = Plate.from_json(self.src_plt_1)
+        plate = Plate.from_file(self.src_plt_1)
         warning_volumes_report = check_volumes(
             plate.to_dict(),
             lower_bound=10,
@@ -85,7 +85,7 @@ class TestInstructor(TestCase):
         )
 
     def test_check_volumes_warning_lower(self):
-        plate = Plate.from_json(self.dest_plate)
+        plate = Plate.from_file(self.dest_plate)
         warning_volumes_report = check_volumes(
             plate.to_dict(),
             lower_bound=100,
@@ -106,12 +106,12 @@ class TestInstructor(TestCase):
 
     def test_instructions_generator(self):
         source_plates = {
-            'plate_1': Plate.from_json(self.src_plt_1),
-            'plate_2': Plate.from_json(self.src_plt_2)
+            'plate_1': Plate.from_file(self.src_plt_1),
+            'plate_2': Plate.from_file(self.src_plt_2)
         }
         destination_plates = {
-            'plate_1': Plate.from_json(self.dst_plt_1),
-            'plate_2': Plate.from_json(self.dst_plt_2)
+            'plate_1': Plate.from_file(self.dst_plt_1),
+            'plate_2': Plate.from_file(self.dst_plt_2)
         }
         instructions = instructions_generator(
             source_plates,

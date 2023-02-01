@@ -16,7 +16,6 @@ from json import (
     dump as json_dump,
     load as json_load
 )
-from csv import reader as csv_reader
 from re import split as re_split
 from functools import reduce
 from collections import Counter
@@ -94,13 +93,14 @@ class Plate:
 
     def to_file(self, path: str, format: str) -> None:
         if format == 'csv':
-            sep=','
+            sep = ','
         elif format == 'tsv':
-            sep='\t'
+            sep = '\t'
+        else:
+            raise ValueError(f"Format {format} not supported")
         # Save wells as a csv file
         df = DataFrame(self.get_wells()).transpose()
         df.index.name = 'Well'
-        _path = os_path.splitext(path)
         df.to_csv(path, sep=sep)
         # Save metadata as a csv file
         # get dict without wells
@@ -110,6 +110,7 @@ class Plate:
         }
         # put wells filename in metadata
         _dict['Wells'] = path
+        _path = os_path.splitext(path)
         with open(f'{_path[0]}.json', 'w') as f:
             json_dump(_dict, f, indent=4)
 
@@ -142,9 +143,17 @@ class Plate:
         wells_file = d_plate['Wells']
         # Load wells from csv/tsv file
         if wells_file.endswith('.csv'):
-            d_plate['Wells'] = Plate.wells_from_csv(wells_file, sep=',', logger=logger)
+            d_plate['Wells'] = Plate.wells_from_csv(
+                wells_file,
+                sep=',',
+                logger=logger
+            )
         elif wells_file.endswith('.tsv'):
-            d_plate['Wells'] = Plate.wells_from_csv(wells_file, sep='\t', logger=logger)
+            d_plate['Wells'] = Plate.wells_from_csv(
+                wells_file,
+                sep='\t',
+                logger=logger
+            )
         plate = Plate(
             dimensions=d_plate['Dimensions'],
             dead_volume=d_plate['deadVolume'],

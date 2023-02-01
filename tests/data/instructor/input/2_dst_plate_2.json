@@ -13,7 +13,8 @@
         "CP",
         "CPK"
     ],
-    "Wells": {
+    "Wells": "tests/data/instructor/input/2_dst_plate_2.csv",
+    "Wells2": {
         "A1": {
             "CP": 37.5,
             "CPK": 125.0,
