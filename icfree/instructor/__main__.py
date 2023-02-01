@@ -47,15 +47,14 @@ def input_importer(
     source_plates = dict()
     for source_plate_path in source_plates_path:
         source_plates[source_plate_path] = \
-            Plate.from_json(source_plate_path, logger=logger)
+            Plate.from_file(source_plate_path, logger=logger)
     logger.debug('SOURCE PLATES')
     for plt in source_plates:
         logger.debug(plt)
-
     dest_plates = dict()
     for dest_plate_path in dest_plates_path:
         dest_plates[dest_plate_path] = \
-            Plate.from_json(dest_plate_path, logger=logger)
+            Plate.from_file(dest_plate_path, logger=logger)
     logger.debug('DESTINATION PLATES')
     for plt in dest_plates:
         logger.debug(plt)
@@ -80,18 +79,6 @@ def main():
         args.dest_plates,
         logger=logger
     )
-
-    # try:
-    #     (volumes,
-    #      param_dead_volumes,
-    #      warning_volumes_report) = concentrations_to_volumes(
-    #         cfps_parameters_df,
-    #         concentrations_df,
-    #         args.sample_volume,
-    #         logger=logger)
-    # except ValueError as e:
-    #     logger.error(f'{e}\nExiting...')
-    #     return -1
 
     # Check volumes
     warning_volumes_reports = list()

@@ -1,3 +1,4 @@
+from os import path as os_path
 from string import (
     ascii_uppercase as str_ascii_uppercase
 )
@@ -15,10 +16,15 @@ from json import (
     dump as json_dump,
     load as json_load
 )
+from csv import reader as csv_reader
 from re import split as re_split
 from functools import reduce
 from collections import Counter
-from pandas import DataFrame
+from pandas import (
+    DataFrame,
+    read_csv as pd_read_csv,
+    isna as pd_isna,
+)
 
 from .args import (
     DEFAULT_ARGS
@@ -95,8 +101,66 @@ class Plate:
         path: str,
         sep: str = ','
     ) -> None:
+        # Save wells as a csv file
         df = DataFrame(self.get_wells()).transpose()
-        df.to_csv(path, sep=sep)
+        df.index.name = 'Well'
+        _path = os_path.splitext(path)
+        df.to_csv(f'{_path[0]}_wells{_path[1]}', sep=sep)
+        # Save metadata as a csv file
+        # get dict without wells and parameters
+        _dict = {
+            k: v for k, v in self.to_dict().items()
+            if k != 'Wells'
+            and k != 'Parameters'
+        }
+        with open(f'{_path[0]}_infos{_path[1]}', 'w') as f:
+            for k, v in _dict.items():
+                f.write(f'{k}{sep}{v}\n')
+
+    @staticmethod
+    def from_csv(
+        path: str,
+        sep: str = ',',
+        logger: Logger = getLogger(__name__)
+    ) -> 'Plate':
+        # Read wells from data csv file
+        df = pd_read_csv(path, sep=sep, index_col=0)
+        # Read metadata from metadata csv file
+        _path = os_path.splitext(path)
+        reader = csv_reader(open(f'{_path[0][:-6]}_infos{_path[1]}', 'r'))
+        d_plate = {}
+        for row in reader:
+            k, v = row
+            d_plate[k] = v
+        plate = Plate(
+            dimensions=d_plate['Dimensions'],
+            dead_volume=d_plate['deadVolume'],
+            well_capacity=d_plate['Well capacity'],
+            logger=logger
+        )
+        plate.__wells = df.to_dict(orient='index')
+        # Remove NaN values
+        for well in plate.__wells:
+            plate.__wells[well] = {
+                k: v for k, v in plate.__wells[well].items()
+                if not pd_isna(v)
+            }
+        return plate
+
+    @staticmethod
+    def from_file(
+        path: str,
+        logger: Logger = getLogger(__name__)
+    ) -> 'Plate':
+        logger.debug(f"Loading plate from {path}...")
+        if path.endswith('.json'):
+            return Plate.from_json(path, logger=logger)
+        elif path.endswith('.csv'):
+            return Plate.from_csv(path, logger=logger)
+        elif path.endswith('.tsv'):
+            return Plate.from_csv(path, sep='\t', logger=logger)
+        else:
+            raise ValueError(f"File format not supported: {path}")
 
     def to_file(self, path: str, format: str) -> None:
         if format == 'csv':
