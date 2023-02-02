@@ -1,10 +1,11 @@
+import sys
 from argparse import (
     ArgumentParser
-    )
-
+)
 from os import getcwd as os_getcwd
+
 from brs_utils import add_logger_args
-from icfree._version import __version__
+
 
 DEFAULTS = {
     'OUTPUT_FOLDER': os_getcwd(),
@@ -15,20 +16,21 @@ DEFAULTS = {
 
 
 def build_args_parser(
-        program,
-        description):
+    signature: str,
+    description: str
+):
 
     parser = ArgumentParser(
-        program,
+        signature.split(' ')[0],
         description,
     )
 
-    parser = add_arguments(parser)
+    parser = add_arguments(parser, signature)
 
     return parser
 
 
-def add_arguments(parser):
+def add_arguments(parser, signature):
 
     parser.add_argument(
         'cfps',
@@ -89,7 +91,7 @@ def add_arguments(parser):
     parser.add_argument(
         '--version',
         action='version',
-        version='%(prog)s {}'.format(__version__),
+        version=signature,
         help='show the version number and exit'
     )
 
