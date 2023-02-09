@@ -19,12 +19,15 @@ from brs_utils import (
 
 from .sampler import (
     sampling,
-    levels_to_absvalues,
     save_values,
     set_sampling_ratios,
-    check_sampling
+    check_sampling,
+    convert
 )
 from .args import build_args_parser
+from icfree._version import __version__
+
+__signature__ = f'{sys.modules[__name__].__package__} {__version__}'
 
 
 def input_importer(
@@ -104,11 +107,14 @@ def input_processor(
 def main():
 
     parser = build_args_parser(
-        program='sampler',
+        signature=__signature__,
         description='Sample values'
     )
 
     args = parser.parse_args()
+
+    print(__signature__)
+    print()
 
     # CREATE LOGGER
     logger = create_logger(parser.prog, args.log)
@@ -116,12 +122,24 @@ def main():
     # READ INPUT FILE
     input_df = input_importer(args.cfps, logger=logger)
     parameters = input_processor(input_df, logger=logger)
+    logger.info('List of parameters')
+    # Compute the number of combinations,
+    # i.e. the maximum number of samples
+    nb_combinations = 1
+    for param, data in parameters.items():
+        nb_ratios = len(data['Ratios'])
+        logger.info(f'   {param}\t({nb_ratios} possible values)')
+        nb_combinations *= nb_ratios
+    logger.info('')
+    logger.info(f'Maximum number of unique samples: {nb_combinations}')
+    logger.info('')
 
     # Set the ratios for each parameter
     ratios = {
         parameter: data['Ratios']
         for parameter, data in parameters.items()
     }
+
     sampling_ratios = set_sampling_ratios(
         ratios=ratios,
         all_nb_steps=args.nb_sampling_steps,
@@ -130,28 +148,46 @@ def main():
     )
 
     # PROCESS TO THE SAMPLING
-    levels = sampling(
-        n_variable_parameters=len(parameters),
-        ratios=sampling_ratios,
-        nb_samples=args.nb_samples,
-        seed=args.seed,
-        logger=logger
-    )
-    # Check sampling
-    check_sampling(levels, logger)
+    try:
+        sampling_values = sampling(
+            nb_parameters=len(parameters),
+            ratios=sampling_ratios,
+            nb_samples=args.nb_samples,
+            seed=args.seed,
+            logger=logger
+        )
+    except ValueError as e:
+        logger.error(e)
+        logger.error('Exiting...')
+        sys.exit(1)
 
-    # CONVERT INTO ABSOLUTE VALUES
-    # Read the maxValue for each parameter involved in sampling
+    # import matplotlib.pyplot as plt
+    # plt.scatter(*zip(*sampling_values))
+    # plt.show()
+
+    # CONVERT RATIOS INTO VALUES
     max_values = [
         v['maxValue']
         for v in parameters.values()
     ]
-
-    # Convert
-    sampling_values = levels_to_absvalues(
-        levels,
-        max_values,
-        logger=logger
+    sampling_values = convert(sampling_values, max_values, logger=logger)
+    # # Read the maxValue for each parameter involved in sampling
+    # max_values = {
+    #     param:v['maxValue']
+    #     for param,v in parameters.items()
+    # }
+    # Get the min and max values for each parameter
+    min_max = []
+    for i in range(len(sampling_ratios.values())):
+        _sampling = list(sampling_ratios.values())[i]
+        min_max += [
+            (min(_sampling)*max_values[i], max(_sampling)*max_values[i])
+        ]
+    # Check sampling
+    check_sampling(
+        sampling_values,
+        min_max,
+        logger
     )
 
     # WRITE TO DISK

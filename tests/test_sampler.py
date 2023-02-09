@@ -36,7 +36,7 @@ from icfree.sampler.__main__ import (
 )
 from icfree.sampler.sampler import (
     sampling,
-    levels_to_absvalues,
+    convert,
     save_values,
     set_sampling_ratios,
     check_sampling
@@ -184,7 +184,8 @@ class Test(TestCase):
             os_path.join(
                 self.REF_FOLDER,
                 'sampling_array.json'
-            )
+            ),
+            10
         )
 
     def test_sampling_withSingleRatio(self):
@@ -198,25 +199,27 @@ class Test(TestCase):
             os_path.join(
                 self.REF_FOLDER,
                 'sampling_array_const.json'
-            )
+            ),
+            1
         )
 
     def _test_sampling(
         self,
         ratios: Dict,
         n_var_param: int,
-        ref_file: str
+        ref_file: str,
+        nb_samples: int
     ):
-        nb_samples = 10
         seed = 123
 
         sampling_array = sampling(
-            n_variable_parameters=n_var_param,
+            nb_parameters=n_var_param,
             ratios=ratios,
             nb_samples=nb_samples,
             seed=seed
         )
-
+        # for i, sample in enumerate(sampling_array):
+        #     print(f'    "{i}": [{", ".join(map(str, sample))}],')
         with open(ref_file, 'r') as f:
             _ref_sampling_array = json_load(f)
         ref_sampling_array = []
@@ -244,7 +247,7 @@ class Test(TestCase):
             all_nb_steps=5
         )
         doe_levels = sampling(
-            n_variable_parameters=n_variable_parameters,
+            nb_parameters=n_variable_parameters,
             ratios=ratios,
             seed=seed
         )
@@ -282,22 +285,39 @@ class Test(TestCase):
         sampling_with_no_max_value = np_array(
             [[0.0]]
         )
+        min_max = [(0.0, 1.0), (0.0, 1.0)]
         for _sampling in [
-            (sampling_with_duplicates, 'Duplicate found in sampling'),
-            (sampling_with_no_min_value, 'Min value not found in sampling'),
-            (sampling_with_no_max_value, 'Max value not found in sampling')
+            (
+                sampling_with_duplicates,
+                [
+                    'WARNING:foo:Duplicates found in sampling: 1',
+                    'WARNING:foo:   --> (0.0, 0.0)'
+                ]
+            ),
+            (
+                sampling_with_no_min_value,
+                ['WARNING:foo:Min value not found in sampling']
+            ),
+            (
+                sampling_with_no_max_value,
+                ['WARNING:foo:Max value not found in sampling']
+            )
         ]:
             with self.subTest("sampling", _sampling=_sampling):
                 sampling_array = _sampling[0]
                 expected_error = _sampling[1]
                 with self.assertLogs('foo', level='INFO') as cm:
-                    check_sampling(sampling_array, logger=getLogger('foo'))
+                    check_sampling(
+                        sampling_array,
+                        min_max,
+                        logger=getLogger('foo')
+                    )
                     self.assertEqual(
                         cm.output,
-                        [f'WARNING:foo:{expected_error}']
+                        expected_error
                     )
 
-    def test_levels_to_absvalues(self):
+    def test_convert(self):
         input_df = input_importer(os_path.join(
                 self.INPUT_FOLDER,
                 'tested_concentrations.tsv'
@@ -318,7 +338,7 @@ class Test(TestCase):
             all_nb_steps=doe_nb_concentrations
         )
         tested_sampling_array = sampling(
-            n_variable_parameters=n_variable_parameters,
+            nb_parameters=n_variable_parameters,
             ratios=ratios,
             nb_samples=nb_samples,
             seed=seed
@@ -329,7 +349,7 @@ class Test(TestCase):
             for v in parameters.values()
         ]
 
-        tested_concentrations_array = levels_to_absvalues(
+        tested_concentrations_array = convert(
             tested_sampling_array,
             max_conc,
         )
@@ -345,13 +365,14 @@ class Test(TestCase):
         ref_concentrations_array = []
         for sample in _ref_concentrations_array.values():
             ref_concentrations_array.append(sample)
-
+        # for i, sample in enumerate(tested_concentrations_array):
+        #     print(f'    "{i}": [{", ".join(map(str, sample))}],')
         assert_array_equal(
             tested_concentrations_array,
             np_array(ref_concentrations_array)
         )
 
-    def test_levels_to_absvalues_EmptyConcentrationsArray(self):
+    def test_convert_EmptyConcentrationsArray(self):
         input_df = input_importer(os_path.join(
                 self.INPUT_FOLDER,
                 'proCFPS_parameters_const.tsv'
@@ -365,7 +386,7 @@ class Test(TestCase):
             for parameter, data in parameters.items()
         }
         doe_levels = sampling(
-            n_variable_parameters=n_variable_parameters,
+            nb_parameters=n_variable_parameters,
             ratios=ratios,
             seed=seed
         )
@@ -374,9 +395,8 @@ class Test(TestCase):
             v['maxValue']
             for v in parameters.values()
         ]
-
         # Convert
-        doe_concentrations = levels_to_absvalues(
+        doe_concentrations = convert(
             doe_levels,
             max_conc,
         )
@@ -408,21 +428,6 @@ class Test(TestCase):
             output_folder=NamedTemporaryFile().name
         )
 
-    # def test_save_values_wExistingOutFolder_woGOI(self):
-    #     with TemporaryDirectory() as tmpFolder:
-    #         self._test_save_values(
-    #             input_file=self.proCFPS_parameters_woGOI,
-    #             output_folder=tmpFolder,
-    #             woGOI=True
-    #         )
-
-    # def test_save_values_woExistingOutFolder_woGOI(self):
-    #     self._test_save_values(
-    #         input_file=self.proCFPS_parameters_woGOI,
-    #         output_folder=NamedTemporaryFile().name,
-    #         woGOI=True
-    #     )
-
     def _test_save_values(
         self,
         input_file: str,
@@ -451,7 +456,7 @@ class Test(TestCase):
             all_ratios=doe_ratios,
         )
         doe_levels = sampling(
-            n_variable_parameters=n_variable_parameters,
+            nb_parameters=n_variable_parameters,
             ratios=ratios,
             nb_samples=nb_samples,
             seed=seed
@@ -461,39 +466,12 @@ class Test(TestCase):
             v['maxValue']
             for v in parameters.values()
         ]
-
-        sampling_values = levels_to_absvalues(
+        sampling_values = convert(
             doe_levels,
             max_conc,
         )
 
-        # dna_concentrations = {
-        #     v: dna_param[v]['maxValue']
-        #     for status, dna_param in parameters.items()
-        #     for v in dna_param
-        #     if status.startswith('dna')
-        # }
-
-        # const_concentrations = {
-        #         k: v['maxValue']
-        #         for k, v in parameters['const'].items()
-        #     }
-
-        # concentrations = assemble_values(
-        #     doe_concentrations,
-        #     dna_concentrations,
-        #     const_concentrations,
-        #     parameters={k: list(v.keys()) for k, v in parameters.items()}
-        # )
-
         # GENERATE PLATE FILES
-        # save_values(
-        #     concentrations['initial'],
-        #     concentrations['normalizer'],
-        #     concentrations['background'],
-        #     concentrations['parameters'],
-        #     output_folder=output_folder
-        # )
         save_values(
             values=sampling_values,
             parameters=list(parameters.keys()),
@@ -520,74 +498,6 @@ class Test(TestCase):
             tested_initial_set = fp4.read()
         # compare files
         assert ref_initial_set == tested_initial_set
-
-        # if not woGOI:
-        #     # Load ref file
-        #     ref_filename = 'ref_autofluorescence_LHS-None'
-        #     if woGOI:
-        #         ref_filename += '_woGOI'
-        #     with open(
-        #         os_path.join(
-        #                 self.REF_FOLDER,
-        #                 f'{ref_filename}.tsv'
-        #         )
-        #     ) as fp2:
-        #         ref_autofluorescence_set = fp2.read()
-        #     # Load generated file
-        #     with open(
-        #         os_path.join(
-        #                 output_folder,
-        #                 'autofluorescence.tsv'
-        #         )
-        #     ) as fp5:
-        #         tested_autofluorescence_set = fp5.read()
-        #     # compare files
-        #     assert ref_autofluorescence_set == tested_autofluorescence_set
-
-        # if not woGFP:
-        #     # Load ref file
-        #     ref_filename = 'ref_normalizer_LHS-None'
-        #     if woGOI:
-        #         ref_filename += '_woGOI'
-        #     with open(
-        #         os_path.join(
-        #                 self.REF_FOLDER,
-        #                 f'{ref_filename}.tsv'
-        #         )
-        #     ) as fp3:
-        #         ref_normalizer_set = fp3.read()
-        #     # Load generated file
-        #     with open(
-        #         os_path.join(
-        #                 output_folder,
-        #                 'normalizer.tsv'
-        #         )
-        #     ) as fp6:
-        #         tested_normalizer_set = fp6.read()
-        #     # compare files
-        #     assert ref_normalizer_set == tested_normalizer_set
-
-    # def test_change_status(self):
-    #     input_df = input_importer(
-    #         os_path.join(
-    #             self.INPUT_FOLDER,
-    #             'proCFPS_parameters.tsv'
-    #         )
-    #     )
-    #     parameters = input_processor(input_df)
-    #     parameters = change_status(parameters, 'const')
-    #     with open(
-    #         os_path.join(
-    #             self.REF_FOLDER,
-    #             'proCFPS_parameters_const.json'
-    #         ), 'r'
-    #     ) as fp:
-    #         expected_parameters = json_load(fp)
-
-    #     self.assertDictEqual(
-    #         parameters,
-    #         expected_parameters
-    #     )
 
     def test_LHS_results(self):
         input_df = input_importer(
@@ -619,11 +529,11 @@ class Test(TestCase):
         for i_run in range(100):
             # LHS sampling
             sampling_array = sampling(
-                n_variable_parameters=len(parameters),
+                nb_parameters=len(parameters),
                 ratios=ratios,
                 nb_samples=nb_samples
             )
-            doe_concentrations = levels_to_absvalues(
+            doe_concentrations = convert(
                 sampling_array,
                 max_conc
             )
@@ -645,11 +555,11 @@ class Test(TestCase):
         for i_run in range(nb_run):
             # LHS sampling
             sampling_array = sampling(
-                n_variable_parameters=len(parameters),
+                nb_parameters=len(parameters),
                 ratios=ratios,
                 nb_samples=nb_samples
             )
-            doe_concentrations = levels_to_absvalues(
+            doe_concentrations = convert(
                 sampling_array,
                 max_conc
             )
