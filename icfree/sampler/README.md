@@ -1,8 +1,15 @@
 
 # Sampler
-This module generates a list of values for all parameters given in the input file. The values are generated using a Latin Hypercube Sampling (LHS) method. The number of values generated is given by the user and the values are saved in csv or tsv file.
+This module generates a list of values for all parameters given in the input file. The values are generated using a Latin Hypercube Sampling (LHS) method (`lhs` function from the `pyDOE` package).
 
-The LHS values are generated using the `lhs` function from the `pyDOE` package and binned into bins to reduce the combinatorial space.
+. The number of values generated is given by the user and the values are saved in csv or tsv file.
+
+It is important to note that the user can pass some values that he whishes to combine. In this case, we are dealing with discrete space, and because LHS is working on continuous space the result sampling can contain duplicates. To avoid this, we have set some filters to select the appropriate sampling method. Let consider $N$ the number of possible combinations and $n$ the number of samples to generate. The following rules are applied:
+<ul>
+<li>If $n <= 1 \over 3 * N$, then LHS is applied. If the result sampling contain duplicates, then we replace them by random samples.</li>
+<li>If $n > 1 \over 3 * N$, then LHS is not required and we proceed to random sampling.</li>
+<li>If $n == N$, then we generate all the combinations.</li>
+</ul>
 
 ## Running from the CLI
 ~~~bash

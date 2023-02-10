@@ -122,30 +122,31 @@ def main():
     # READ INPUT FILE
     input_df = input_importer(args.cfps, logger=logger)
     parameters = input_processor(input_df, logger=logger)
-    logger.info('List of parameters')
-    # Compute the number of combinations,
-    # i.e. the maximum number of samples
-    nb_combinations = 1
-    for param, data in parameters.items():
-        nb_ratios = len(data['Ratios'])
-        logger.info(f'   {param}\t({nb_ratios} possible values)')
-        nb_combinations *= nb_ratios
-    logger.info('')
-    logger.info(f'Maximum number of unique samples: {nb_combinations}')
-    logger.info('')
 
     # Set the ratios for each parameter
     ratios = {
         parameter: data['Ratios']
         for parameter, data in parameters.items()
     }
-
     sampling_ratios = set_sampling_ratios(
         ratios=ratios,
         all_nb_steps=args.nb_sampling_steps,
         all_ratios=args.sampling_ratios,
         logger=logger
     )
+
+    # PRINT INFOS
+    logger.info('List of parameters')
+    # Compute the number of combinations,
+    # i.e. the maximum number of samples
+    nb_combinations = 1
+    for param, _ratios in sampling_ratios.items():
+        nb_ratios = len(_ratios)
+        logger.info(f'   {param}\t({nb_ratios} possible values)')
+        nb_combinations *= nb_ratios
+    logger.info('')
+    logger.info(f'Maximum number of unique samples: {nb_combinations}')
+    logger.info('')
 
     # PROCESS TO THE SAMPLING
     try:
@@ -171,11 +172,7 @@ def main():
         for v in parameters.values()
     ]
     sampling_values = convert(sampling_values, max_values, logger=logger)
-    # # Read the maxValue for each parameter involved in sampling
-    # max_values = {
-    #     param:v['maxValue']
-    #     for param,v in parameters.items()
-    # }
+
     # Get the min and max values for each parameter
     min_max = []
     for i in range(len(sampling_ratios.values())):

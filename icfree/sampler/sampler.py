@@ -116,84 +116,84 @@ def convert(
         return np_asarray([])
 
 
-def lhs_discrete_sampling(
-    n_features: int,
-    discrete_space: np_ndarray,
-    n_samples: int = DEFAULTS['NB_SAMPLES'],
-    seed: int = None,
-    logger: Logger = getLogger(__name__)
-) -> np_ndarray:
-    """
-    Generate a Latin Hypercube Sampling (LHS) in a discrete space.
+# def lhs_discrete_sampling(
+#     n_features: int,
+#     discrete_space: np_ndarray,
+#     n_samples: int = DEFAULTS['NB_SAMPLES'],
+#     seed: int = None,
+#     logger: Logger = getLogger(__name__)
+# ) -> np_ndarray:
+#     """
+#     Generate a Latin Hypercube Sampling (LHS) in a discrete space.
 
-    Parameters
-    ----------
-    n_samples : int
-        Number of samples to generate.
+#     Parameters
+#     ----------
+#     n_samples : int
+#         Number of samples to generate.
 
-    n_features : int
-        Number of features.
+#     n_features : int
+#         Number of features.
 
-    discrete_space : np_ndarray
-        Discrete space.
+#     discrete_space : np_ndarray
+#         Discrete space.
 
-    Returns
-    -------
-    samples : np_ndarray
-        N-by-samples array with uniformly spaced values between 0 and 1.
-    """
+#     Returns
+#     -------
+#     samples : np_ndarray
+#         N-by-samples array with uniformly spaced values between 0 and 1.
+#     """
 
-    logger.debug(f'n_samples: {n_samples}')
-    logger.debug(f'n_features: {n_features}')
-    logger.debug(f'discrete_space: {discrete_space}')
-    logger.debug(f'seed: {seed}')
+#     logger.debug(f'n_samples: {n_samples}')
+#     logger.debug(f'n_features: {n_features}')
+#     logger.debug(f'discrete_space: {discrete_space}')
+#     logger.debug(f'seed: {seed}')
 
-    # Set seed
-    np_random.seed(seed)
+#     # Set seed
+#     np_random.seed(seed)
 
-    # Initialize the samples array
-    samples = np_empty((n_samples, n_features))
+#     # Initialize the samples array
+#     samples = np_empty((n_samples, n_features))
 
-    # Loop over each feature
-    for i in range(n_features):
-        # Get the unique values of the current feature in the discrete space
-        # unique_values = np.unique(discrete_space[:, i])
-        unique_values = np_unique(discrete_space[i])
+#     # Loop over each feature
+#     for i in range(n_features):
+#         # Get the unique values of the current feature in the discrete space
+#         # unique_values = np.unique(discrete_space[:, i])
+#         unique_values = np_unique(discrete_space[i])
 
-        # Get the number of unique values
-        n_unique = unique_values.shape[0]
+#         # Get the number of unique values
+#         n_unique = unique_values.shape[0]
 
-        # Generate an array of random numbers between 0 and 1
-        random_numbers = np_random.rand(n_samples)
+#         # Generate an array of random numbers between 0 and 1
+#         random_numbers = np_random.rand(n_samples)
 
-        # Scale the random numbers so that they are between 0 and n_unique
-        scaled_random_numbers = (random_numbers * n_unique).astype(int)
+#         # Scale the random numbers so that they are between 0 and n_unique
+#         scaled_random_numbers = (random_numbers * n_unique).astype(int)
 
-        # Sort the unique values randomly
-        np_random.shuffle(unique_values)
+#         # Sort the unique values randomly
+#         np_random.shuffle(unique_values)
 
-        # Assign the random values to the samples
-        for j, rn in enumerate(scaled_random_numbers):
-            samples[j, i] = unique_values[rn]
+#         # Assign the random values to the samples
+#         for j, rn in enumerate(scaled_random_numbers):
+#             samples[j, i] = unique_values[rn]
 
-    return samples
+#     return samples
 
-    # Remove duplicates
-    samples = np_unique(samples, axis=0)
+#     # Remove duplicates
+#     samples = np_unique(samples, axis=0)
 
-    from numpy import vstack as np_vstack
-    # Resample if the number of unique samples is less than n_samples
-    while samples.shape[0] < n_samples:
-        new_samples = lhs_discrete_sampling(
-            n_samples=n_samples - samples.shape[0],
-            n_features=n_features,
-            discrete_space=discrete_space,
-            seed=seed,
-            logger=logger
-        )
-        samples = np_vstack((samples, new_samples))
+#     from numpy import vstack as np_vstack
+#     # Resample if the number of unique samples is less than n_samples
+#     while samples.shape[0] < n_samples:
+#         new_samples = lhs_discrete_sampling(
+#             n_samples=n_samples - samples.shape[0],
+#             n_features=n_features,
+#             discrete_space=discrete_space,
+#             seed=seed,
+#             logger=logger
+#         )
+#         samples = np_vstack((samples, new_samples))
 
-    return samples[:n_samples]
+#     return samples[:n_samples]
 
 
 def bin_LHS(
@@ -225,6 +225,11 @@ def bin_LHS(
     samples : np_ndarray
         N-by-samples array with uniformly spaced values between 0 and 1.
     """
+    logger.debug(f'nb_parameters: {nb_parameters}')
+    logger.debug(f'nb_samples: {nb_samples}')
+    logger.debug(f'nb_levels: {nb_levels}')
+    logger.debug(f'seed: {seed}')
+
     if seed is None:
         sampling = lhs(
             nb_parameters,
@@ -346,6 +351,100 @@ def full_factorial_sampling(
     )
 
 
+def replace_duplicates(
+    sampling: np_ndarray,
+    nb_samples: int,
+    nb_levels: List[int],
+    seed: int = None,
+    logger: Logger = getLogger(__name__)
+):
+    """
+    Replace duplicates by random samples.
+
+    Parameters
+    ----------
+    sampling : np_ndarray
+        N-by-samples array with duplicates.
+
+    nb_samples : int
+        Number of samples to generate.
+
+    nb_levels : List[int]
+        Number of levels for each parameter.
+
+    seed : int
+        Seed for the random number generator.
+
+    Returns
+    -------
+    samples : np_ndarray
+        N-by-samples array with no duplicate.
+    """
+    logger.debug(f'sampling: {sampling}')
+    logger.debug(f'nb_samples: {nb_samples}')
+    logger.debug(f'nb_levels: {nb_levels}')
+    logger.debug(f'seed: {seed}')
+    # Remove duplicates
+    sampling = remove_duplicates(sampling)
+    nb_duplicates = nb_samples - sampling.shape[0]
+    if nb_duplicates > 0:
+        logger.warning(f'{nb_duplicates} duplicates removed')
+
+    while nb_duplicates > 0:
+        # Generate random new samples
+        logger.warning(f'Generating {nb_duplicates} random sample(s)')
+        new_samples = random_sampling(
+            nb_samples=nb_samples - sampling.shape[0],
+            nb_levels=nb_levels,
+            seed=seed,
+            logger=logger
+        )
+        # Add new samples to sampling
+        sampling = np_vstack((sampling, new_samples))
+        # Remove duplicates
+        sampling = remove_duplicates(sampling)
+        nb_duplicates = nb_samples - sampling.shape[0]
+        logger.warning(f'{nb_duplicates} duplicates removed')
+
+    return sampling
+
+
+def replace_values_by_ratios(
+    sampling: np_ndarray,
+    nb_parameters: int,
+    ratios: Dict,
+    logger: Logger = getLogger(__name__)
+):
+    """
+    Replace values by ratios.
+
+    Parameters
+    ----------
+    sampling : np_ndarray
+        Sampling array.
+
+    nb_parameters : int
+        Number of variable parameters.
+
+    ratios: Dict
+        Ratios for each parameter.
+
+    Returns
+    -------
+    f_sampling : np_ndarray
+        Sampling array with vratios.
+    """
+    logger.debug(f'sampling: {sampling}')
+    logger.debug(f'nb_parameters: {nb_parameters}')
+    logger.debug(f'ratios: {ratios}')
+    f_sampling = sampling.astype(float)
+    for i in range(nb_parameters):
+        f_sampling[:, i] = np_asarray(
+            list(ratios.values())[i]
+        )[sampling[:, i].astype(int)]
+    return f_sampling
+
+
 def sampling(
     nb_parameters,
     ratios: Dict,
@@ -390,131 +489,55 @@ def sampling(
     # than the number of possible combinations
     # And select the sampling method
     nb_combinations = np_prod(nb_levels)
-    if nb_samples == nb_combinations:
+
+    if nb_samples > nb_combinations:
+        raise ValueError(
+            f'Number of samples ({nb_samples}) is greater than the number of '
+            f'possible combinations ({np_prod(nb_levels)})'
+        )
+
+    elif nb_samples == nb_combinations:
         logger.warning(
             f'Number of samples ({nb_samples}) is equal to the number of '
             f'possible combinations ({np_prod(nb_levels)})'
         )
         logger.warning('Proceeding to full factorial design')
         # Proceed to full factorial design
-        sampling = full_factorial_sampling(
-            nb_levels=nb_levels,
-            logger=logger
-        )
+        sampling = full_factorial_sampling(nb_levels, logger)
+
     elif nb_samples > nb_combinations / 3:
         logger.warning(
             f'Number of samples ({nb_samples}) is greater than 1/3 of the '
             f'number of possible combinations ({np_prod(nb_levels)})'
         )
         logger.warning('Proceeding to random sampling')
-        # 1. Proceed to initial random sampling
+        # Proceed to initial random sampling
         sampling = random_sampling(
-            nb_samples=nb_samples,
-            nb_levels=nb_levels,
-            seed=seed,
-            logger=logger
+            nb_samples, nb_levels, seed, logger
         )
+        # If needed, replace duplicate samples by random ones
+        sampling = replace_duplicates(
+            sampling, nb_samples, nb_levels, seed, logger
+        )
+
     else:
-        # 1. Generate initial LHS
+        # Generate initial LHS
         sampling = bin_LHS(
-            nb_parameters,
-            nb_samples,
-            nb_levels,
-            seed=seed,
-            logger=logger
+            nb_parameters, nb_samples, nb_levels, seed, logger
+        )
+        # If needed, replace duplicate samples by random ones
+        sampling = replace_duplicates(
+            sampling, nb_samples, nb_levels, seed, logger
         )
 
-    # 2. If needed, replace duplicate samples by random ones
-    # 2.1 remove duplicates
-    sampling = remove_duplicates(sampling)
-    nb_duplicates = nb_samples - sampling.shape[0]
-    logger.warning(f'{nb_duplicates} duplicates removed')
-    while nb_duplicates > 0:
-        # 2.2 generate random new samples
-        logger.warning(f'Generating {nb_duplicates} random sample(s)')
-        new_samples = random_sampling(
-            nb_samples=nb_samples - sampling.shape[0],
-            nb_levels=nb_levels,
-            seed=seed,
-            logger=logger
-        )
-        # 2.3 add new samples to sampling
-        sampling = np_vstack((sampling, new_samples))
-        # 2.4 remove duplicates
-        sampling = remove_duplicates(sampling)
-        nb_duplicates = nb_samples - sampling.shape[0]
-        logger.warning(f'{nb_duplicates} duplicates removed')
+    # Replace values by ratios
+    sampling = replace_values_by_ratios(
+        sampling, nb_parameters, ratios, logger
+    )
 
-    # 3. Replace values by ratios
-    f_sampling = sampling.astype(float)
-    for i in range(nb_parameters):
-        f_sampling[:, i] = np_asarray(
-            list(ratios.values())[i]
-        )[sampling[:, i].astype(int)]
+    logger.debug(f'LHS:\n{sampling}')
 
-    logger.debug(f'LHS:\n{f_sampling}')
-
-    return f_sampling
-
-
-# def sampling(
-#     bin_values: Dict,
-#     nb_samples: int,
-#     seed: int,
-#     logger: Logger = getLogger(__name__)
-# ) -> list:
-#     """
-#     Sample values.
-
-#     Parameters
-#     ----------
-#     bin_values: dict
-#         Dictionnary of sampling values.
-#     nb_samples: int
-#         Number of samples.
-#     seed: int
-#         Seed for random sampling.
-
-#     Returns
-#     -------
-#     values: list
-#         List of sampled values.
-#     """
-
-#     logger.debug(f'bin values: {bin_values}')
-#     logger.debug(f'nb samples: {nb_samples}')
-#     logger.debug(f'seed: {seed}')
-
-#     # set the seed
-#     if seed is not None:
-#         random.seed(seed)
-
-#     # create an array of the values lists
-#     lists = np_array(list(bin_values.values()))
-
-#     # create an empty list to store the samples
-#     samples = []
-
-#     # do LHS sampling
-
-#     # loop over the number of samples
-#     for i in range(nb_samples):
-#         # create an empty list to store the current sample
-#         sample = []
-#         for lst in lists:
-#             # shuffle the list
-#             random.shuffle(lst)
-#             # select the first value from the shuffled list
-#             value = lst[0]
-#             # add the value to the current sample
-#             sample.append(value)
-#         # append the current sample to the list of samples
-#         samples.append(sample)
-
-#     logger.debug(f'samples: {samples}')
-
-#     # convert the list of samples to a numpy array
-#     return np_array(samples)
+    return sampling
 
 
 def check_sampling(
@@ -567,158 +590,7 @@ def check_sampling(
     logger.debug('Sampling checked')
 
 
-# def levels_to_absvalues(
-#     levels_array,
-#     maximum_values,
-#     decimals: int = 3,
-#     logger: Logger = getLogger(__name__)
-# ):
-#     """
-#     Multiply levels array by maximum concentrations array.
-
-#     Parameters
-#     ----------
-#     levels_array : 2d-array
-#         N-by-samples array with uniformly spaced values between 0 and 1.
-
-#     maximum_values : 1d-array
-#         N-maximum-values array with values for each variable factor.
-
-#     Returns
-#     -------
-#     values : 2d-array
-#         N-by-samples array with values for each factor.
-#     """
-#     logger.debug(f'LEVELS ARRAY:\n{levels_array}')
-#     logger.debug(f'maxValueS:\n{maximum_values}')
-#     if levels_array is None or levels_array.size <= 0:
-#         return np_asarray([])
-
-#     values = np_multiply(
-#         levels_array,
-#         maximum_values
-#     )
-#     values = np_round(
-#         values.astype(np_double),
-#         decimals
-#     )
-#     logger.debug(f'VALUES:\n{values}')
-
-#     return values
-
-
-# def assemble_values(
-#     sampling_values: np_ndarray,
-#     dna_values: np_ndarray,
-#     const_values: np_ndarray,
-#     parameters,
-#     logger: Logger = getLogger(__name__)
-# ):
-#     """
-#     Concatenate variable and fixed concentrations array with control array.
-
-#     Parameters
-#     ----------
-#     sampling_values : 1d-array
-#         Array with variable concentrations values for each factor.
-
-#     dna_values : 1d-array
-#         Array with values for each factor which are related to DNA
-#         with bin values (0 or max. conc.).
-
-#     const_values : 1d-array
-#         Array with constant values for each factor.
-
-#     parameters: dict
-#         Dictionnary of cfps parameters.
-
-#     Returns
-#     -------
-#     initial_set_df : dataframe
-#         Matrix generated from the concatenation of all samples.
-
-#     normalizer_set_df : dataframe
-#         Duplicate of initial_set. 0 is assigned to the GOI-DNA column.
-
-#     autofluorescence_set_df : dataframe
-#         Duplicate of normalizer_set. 0 is assigned to the GFP-DNA column.
-
-#     parameters: List
-#         List of the name of cfps parameters
-#     """
-#     logger.debug(f'SAMPLING VALUES:\n{sampling_values}')
-#     logger.debug(f'DNA VALUES:\n{dna_values}')
-#     logger.debug(f'CONST VALUES:\n{const_values}')
-
-#     # Add DoE combinatorial parameters
-#     headers = parameters
-#     initial_set_array = sampling_values.copy()
-
-#     # Add constant parameters
-#     # If the is no DoE concentrations
-#     if len(initial_set_array) == 0:
-#         # Then fill with const concentrations
-#         initial_set_array = [
-#             np_fromiter(const_values.values(), dtype=float)
-#         ]
-#     else:  # Else, add const concentrations to DoE ones
-#         initial_set_array = [
-#             np_concatenate(
-#                 (concentrations,
-#                  list(const_values.values()))
-#             )
-#             for concentrations in initial_set_array
-#         ]
-#     headers += parameters['const']
-
-#     # Add combinatorial parameters
-#     initial_set_array = [
-#         np_concatenate((concentrations, list(dna_values.values())))
-#         for concentrations in initial_set_array
-#     ]
-#     headers += sum(
-#         [
-#             v for k, v
-#             in parameters.items()
-#             if k.startswith('dna')],
-#         []
-#     )
-
-#     # Create initial set with partial concentrations
-#     initial_set_df = DataFrame(initial_set_array)
-#     initial_set_df.columns = headers
-#     logger.debug(f'INITIAL SET:\n{initial_set_df}')
-
-#     # Create normalizer set with GOI to 0
-#     normalizer_set_df = None
-#     if 'dna_fluo' in parameters:
-#         normalizer_set_df = initial_set_df.copy()
-#         normalizer_set_df.columns = headers
-#         normalizer_set_df[parameters['dna_fluo']] *= 0
-#     logger.debug(f'NORMALIZER SET:\n{normalizer_set_df}')
-
-#     # Create normalizer set with GFP to 0
-#     autofluorescence_set_df = None
-#     if 'dna_goi' in parameters:
-#         autofluorescence_set_df = normalizer_set_df.copy()
-#         autofluorescence_set_df.columns = headers
-#         autofluorescence_set_df[parameters['dna_goi']] *= 0
-#     logger.debug(f'BACKGROUND SET:\n{autofluorescence_set_df}')
-
-#     logger.debug(f'HEADERS: {headers}')
-
-#     return {
-#         'parameters': headers,
-#         'initial': initial_set_df,
-#         'normalizer': normalizer_set_df,
-#         'background': autofluorescence_set_df
-#     }
-
-
 def save_values(
-    # initial_set_df,
-    # normalizer_set_df,
-    # autofluorescence_set_df,
     values,
     parameters,
     output_folder: str = DEFAULTS['OUTPUT_FOLDER'],
