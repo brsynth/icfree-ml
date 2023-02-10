@@ -10,7 +10,6 @@ from numpy import (
     prod as np_prod,
     vstack as np_vstack,
     floor as np_floor,
-    empty as np_empty,
     unique as np_unique,
     random as np_random,
     array as np_array,
