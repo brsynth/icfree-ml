@@ -1,6 +1,4 @@
-from argparse import (
-    ArgumentParser
-)
+from argparse import ArgumentParser
 from os import getcwd as os_getcwd
 
 from brs_utils import add_logger_args
@@ -73,6 +71,7 @@ def add_arguments(parser, signature):
     parser.add_argument(
         '--nb-samples',
         type=int,
+        # type=arg_range(1, 100),
         default=DEFAULTS['NB_SAMPLES'],
         help=('Number of samples to generate for all factors'
               f' (default: {DEFAULTS["NB_SAMPLES"]})')
