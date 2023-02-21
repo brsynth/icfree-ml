@@ -232,7 +232,7 @@ def echo_instructions_generator(
         def_src_plate_type = src_plate_type.pop(0)
     # Put src_plate_type in a dict
     src_plate_type_dict = {}
-    for i in range (0, len(src_plate_type), 2):
+    for i in range(0, len(src_plate_type), 2):
         src_plate_type_dict[src_plate_type[i]] = src_plate_type[i+1]
     # Set plate type for each parameter
     for factor in src_plates_by_factor:
@@ -246,6 +246,7 @@ def echo_instructions_generator(
     for factor in dst_plates_by_factor:
         src_plt_id = src_plates_by_factor[factor]['plt_id']
         src_wells = src_plates_by_factor[factor]['wells']
+        src_plt_type = src_plates_by_factor[factor]['plt_type']
         if len(src_wells) > 1:
             src_well_ids = \
                 f'{{{"-".join(src_plates_by_factor[factor]["wells"])}}}'
@@ -256,7 +257,7 @@ def echo_instructions_generator(
             dst_well_id = dst_well[0]
             dst_well_vol = dst_well[1]
             instructions.loc[len(instructions.index)] = [
-                f'Source[{src_plt_id}]', src_plates_by_factor[factor]['plt_type'], src_well_ids,
+                f'Source[{src_plt_id}]', src_plt_type, src_well_ids,
                 f'Destination[{dst_plt_id}]', dst_well_id, dst_well_vol,
                 factor
             ]
