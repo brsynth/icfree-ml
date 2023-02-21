@@ -1,3 +1,8 @@
+'''
+Converter module
+
+Converts concentrations into volumes from sampler module
+'''
 import sys
 from logging import (
     Logger,
@@ -28,6 +33,8 @@ def input_importer(
         TSV of cfps parameters, status, maximum and stock concentrations
     values : tsv file
         Dataset with concentration values
+    logger: Logger
+        Logger, default is getLogger(__name__)
 
     Returns
     -------
@@ -50,6 +57,9 @@ def input_importer(
 
 
 def main():
+    """
+    Main function
+    """
     parser = build_args_parser(
         program='converter',
         description='Convert concentrations into volumes'

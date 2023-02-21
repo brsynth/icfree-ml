@@ -1,3 +1,13 @@
+'''
+iCFree: A package for cell-free protein synthesis
+
+iCFree is a package for cell-free protein synthesis (CFPS) that allows to
+design and optimize CFPS reactions. It is composed of the following modules:
+- sampler: sample values with DoE methods
+- converter: convert concentrations into volumes (optional)
+- plates_generator: generates source and destination plates
+- instructor: generate instructions for robotic pipetting
+'''
 from glob import glob
 from os import path as os_path
 from argparse import (
@@ -14,6 +24,21 @@ def init(
     parser: ArgumentParser,
     args: Namespace
 ) -> Logger:
+    '''
+    Initialize the logger and print the program name and version
+
+    Parameters
+    ----------
+    parser: ArgumentParser
+        ArgumentParser
+    args: Namespace
+        Namespace
+
+    Returns
+    -------
+    logger: Logger
+        Logger, default is getLogger(__name__)
+    '''
     from brs_utils import create_logger
     from ._version import __version__
 
@@ -38,6 +63,19 @@ def init(
 
 
 def get_modules(path: str) -> List[str]:
+    '''
+    Get modules from path
+
+    Parameters
+    ----------
+    path: str
+        Path
+
+    Returns
+    -------
+    modules: List[str]
+        Modules
+    '''
     paths = [
         os_path.abspath(
             os_path.join(f + os_path.pardir)
@@ -58,6 +96,9 @@ def get_modules(path: str) -> List[str]:
 
 
 def entry_point():
+    '''
+    Entry point for iCFree
+    '''
 
     prog = 'iCFree'
 

@@ -1,3 +1,8 @@
+'''
+Sampler module
+
+Generates sampling dataframes from list of cfps parameters.
+'''
 import sys
 from pandas import (
     read_csv as pd_read_csv,
@@ -39,8 +44,10 @@ def input_importer(
 
     Parameters
     ----------
-    input_file : tsv file
+    cfps_parameters : tsv file
         tsv with list of cfps parameters and relative features
+    logger: Logger
+        Logger, default is getLogger(__name__)
 
     Returns
     -------
@@ -65,8 +72,10 @@ def input_processor(
 
     Parameters
     ----------
-    input_df: 2d-array
+    cfps_parameters_df: 2d-array
         N-by-samples array where values are uniformly spaced between 0 and 1.
+    logger: Logger
+        Logger, default is getLogger(__name__)
 
     Returns
     -------
@@ -105,6 +114,9 @@ def input_processor(
 
 
 def main():
+    """
+    Main function
+    """
 
     parser = build_args_parser(
         signature=__signature__,
