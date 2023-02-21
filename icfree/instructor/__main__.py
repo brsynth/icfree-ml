@@ -1,3 +1,9 @@
+"""
+Instructor module
+
+This module is used to create instructions for the robot from
+source and destination plates given from plates_generator module
+"""
 import sys
 from pandas import concat as pd_concat
 from typing import List
@@ -33,6 +39,8 @@ def input_importer(
         Path to source plates
     dest_plates_path : List[str]
         Path to destination plates
+    logger: Logger
+        Logger
 
     Returns
     -------
@@ -63,6 +71,7 @@ def input_importer(
 
 
 def main():
+    '''main function'''
     parser = build_args_parser(
         program='instructor',
         description='Generates instructions for robots'
@@ -91,7 +100,7 @@ def main():
         )
         warning_volumes_report['Plate'] = plt_n
         warning_volumes_reports.append(warning_volumes_report)
-    warning_volumes_reports = pd_concat(warning_volumes_reports)
+    warning_volumes_report = pd_concat(warning_volumes_reports)
 
     # Save warning volumes
     save_df(
