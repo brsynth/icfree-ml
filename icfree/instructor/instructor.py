@@ -129,6 +129,7 @@ def instructions_generator(
     source_plates: Dict,
     dest_plates: Dict,
     robot: str = DEFAULT_ARGS['ROBOT'],
+    src_plate_type: str = DEFAULT_ARGS['SRC_PLATE_TYPE'],
     logger: Logger = getLogger(__name__)
 ) -> DataFrame:
     """
@@ -142,6 +143,8 @@ def instructions_generator(
         Destination plates distribution
     robot: str
         Robot name
+    src_plate_type: str
+        Source plate type (for ECHO only)
 
     Returns
     -------
@@ -151,6 +154,7 @@ def instructions_generator(
     return globals()[f'{robot.lower()}_instructions_generator'](
         source_plates,
         dest_plates,
+        src_plate_type,
         logger=logger
     )
 
@@ -158,6 +162,7 @@ def instructions_generator(
 def echo_instructions_generator(
     source_plates: Dict,
     dest_plates: Dict,
+    src_plate_type: str = DEFAULT_ARGS['SRC_PLATE_TYPE'],
     logger: Logger = getLogger(__name__)
 ) -> DataFrame:
     """
@@ -169,6 +174,8 @@ def echo_instructions_generator(
         Source plates distribution
     dest_plates: Dict
         Destination plates distribution
+    src_plate_type: str
+        Source plate type
 
     Returns
     -------
@@ -178,6 +185,7 @@ def echo_instructions_generator(
     logger.debug('Generating Echo® instructions')
     logger.debug(f'Source plates: {source_plates}')
     logger.debug(f'Destination plates: {dest_plates}')
+    logger.debug(f'Source plate type: {src_plate_type}')
 
     # Reindex plates by factors ID
     # SRC
@@ -217,6 +225,24 @@ def echo_instructions_generator(
             'Sample ID'
         ]
     )
+
+    # Get source plate type
+    def_src_plate_type = DEFAULT_ARGS['SRC_PLATE_TYPE']
+    if len(src_plate_type) % 2 == 1:
+        def_src_plate_type = src_plate_type.pop(0)
+    # Put src_plate_type in a dict
+    src_plate_type_dict = {}
+    for i in range (0, len(src_plate_type), 2):
+        src_plate_type_dict[src_plate_type[i]] = src_plate_type[i+1]
+    # Set plate type for each parameter
+    for factor in src_plates_by_factor:
+        if factor in src_plate_type_dict:
+            src_plates_by_factor[factor]['plt_type'] = \
+                src_plate_type_dict[factor]
+        else:
+            src_plates_by_factor[factor]['plt_type'] = def_src_plate_type
+
+    # Generate instructions
     for factor in dst_plates_by_factor:
         src_plt_id = src_plates_by_factor[factor]['plt_id']
         src_wells = src_plates_by_factor[factor]['wells']
@@ -230,7 +256,7 @@ def echo_instructions_generator(
             dst_well_id = dst_well[0]
             dst_well_vol = dst_well[1]
             instructions.loc[len(instructions.index)] = [
-                f'Source[{src_plt_id}]', '384PP_AQ_GP3', src_well_ids,
+                f'Source[{src_plt_id}]', src_plates_by_factor[factor]['plt_type'], src_well_ids,
                 f'Destination[{dst_plt_id}]', dst_well_id, dst_well_vol,
                 factor
             ]

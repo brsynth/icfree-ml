@@ -110,10 +110,12 @@ def main():
         logger=logger
     )
 
+    # Generate instructions
     echo_instructions = instructions_generator(
             source_plates=source_plates,
             dest_plates=dest_plates,
             robot=args.robot,
+            src_plate_type=args.src_plate_type,
             logger=logger
         )
 

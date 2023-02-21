@@ -129,3 +129,49 @@ class TestInstructor(TestCase):
             instructions,
             ref_instructions
         )
+
+    def test_src_plate_type(self):
+        source_plates = {
+            'plate_1': Plate.from_file(self.src_plt_1),
+            'plate_2': Plate.from_file(self.src_plt_2)
+        }
+        destination_plates = {
+            'plate_1': Plate.from_file(self.dst_plt_1),
+            'plate_2': Plate.from_file(self.dst_plt_2)
+        }
+        src_plate_type = ['384PP_AQ_GP3', 'CPK', '384PP_AQ_CP']
+        instructions = instructions_generator(
+            source_plates,
+            destination_plates,
+            src_plate_type=src_plate_type,
+            robot='echo'
+        )
+        # Read csv ref file
+        ref_instructions_file = os_path.join(
+            self.output_folder,
+            'echo_instructions.csv'
+        )
+        ref_instructions = pd_read_csv(ref_instructions_file)
+        # Compare
+        pd_testing.assert_frame_equal(
+            instructions,
+            ref_instructions
+        )
+        src_plate_type = ['384PP_AQ_CP']
+        instructions = instructions_generator(
+            source_plates,
+            destination_plates,
+            src_plate_type=src_plate_type,
+            robot='echo'
+        )
+        # Read csv ref file
+        ref_instructions_file = os_path.join(
+            self.output_folder,
+            'echo_instructions2.csv'
+        )
+        ref_instructions = pd_read_csv(ref_instructions_file)
+        # Compare
+        pd_testing.assert_frame_equal(
+            instructions,
+            ref_instructions
+        )

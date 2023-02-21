@@ -10,6 +10,7 @@ from icfree._version import __version__
 DEFAULT_ARGS = {
     'OUTPUT_FOLDER': os_getcwd(),
     'ROBOT': 'echo',
+    'SRC_PLATE_TYPE': '384PP_AQ_GP3'
 }
 
 
@@ -57,6 +58,19 @@ def add_arguments(parser):
         default=DEFAULT_ARGS['OUTPUT_FOLDER'],
         help=('Output folder to write output files'
               f' (default: {DEFAULT_ARGS["OUTPUT_FOLDER"]})')
+    )
+
+    parser.add_argument(
+        '-spt', '--src-plate-type',
+        type=str,
+        nargs='+',
+        default=DEFAULT_ARGS['SRC_PLATE_TYPE'],
+        help=(
+            'Source plate type (for ECHO robot). '
+            'If number of args are odd, the first arg is the plate type by default. '
+            'Then, each pair of args is a sample ID and a plate type.'
+            f' (default: {DEFAULT_ARGS["SRC_PLATE_TYPE"]})'
+        )
     )
 
     # Add logger arguments
