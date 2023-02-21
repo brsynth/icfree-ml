@@ -488,7 +488,7 @@ class TestPlate(TestCase):
         )
         d = Plate.get_volumes_summary(
             [plate_1, plate_2],
-            type='dict'
+            type_='dict'
         )
         self.assertDictEqual(
             d,
@@ -511,7 +511,7 @@ class TestPlate(TestCase):
         )
         df = Plate.get_volumes_summary(
             [plate_1, plate_2],
-            type='pandas'
+            type_='pandas'
         )
         pd_testing.assert_frame_equal(
             df,
@@ -535,7 +535,7 @@ class TestPlate(TestCase):
         )
         s = Plate.get_volumes_summary(
             [plate_1, plate_2],
-            type='str'
+            type_='str'
         )
         with open(
             os_path.join(

@@ -149,7 +149,7 @@ class TestInstructor(TestCase):
         # Read csv ref file
         ref_instructions_file = os_path.join(
             self.output_folder,
-            'echo_instructions.csv'
+            'echo_instructions1.csv'
         )
         ref_instructions = pd_read_csv(ref_instructions_file)
         # Compare
