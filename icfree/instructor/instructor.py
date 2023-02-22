@@ -248,8 +248,11 @@ def echo_instructions_generator(
         src_wells = src_plates_by_factor[factor]['wells']
         src_plt_type = src_plates_by_factor[factor]['plt_type']
         if len(src_wells) > 1:
+            # first_well = src_plates_by_factor[factor]["wells"][0]
             src_well_ids = \
-                f'{{{"-".join(src_plates_by_factor[factor]["wells"])}}}'
+                f'{{{";".join(src_plates_by_factor[factor]["wells"])}}}'
+            # src_well_ids = \
+            #     f'{{{first_well}:{last_well}}}'
         else:
             src_well_ids = src_plates_by_factor[factor]['wells'][0]
         dst_plt_id = dst_plates_by_factor[factor]['plt_id']
