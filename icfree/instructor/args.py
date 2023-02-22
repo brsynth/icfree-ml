@@ -41,9 +41,8 @@ def add_arguments(parser):
         '--source_wells',
         nargs='+',  # 1 or more
         type=str,
-        help=
-            'Path to .csv/tsv files containing source wells content. '
-            'If set, overwrite "Wells" entry in .json file.'
+        help='Path to .csv/tsv files containing source wells content. '
+        'If set, overwrite "Wells" entry in .json file.'
     )
 
     parser.add_argument(
@@ -57,9 +56,8 @@ def add_arguments(parser):
         '--dest_wells',
         nargs='+',  # 1 or more
         type=str,
-        help=
-            'Path to .csv/tsv files containing dest wells content. '
-            'If set, overwrite "Wells" entry in .json file.'
+        help='Path to .csv/tsv files containing dest wells content. '
+        'If set, overwrite "Wells" entry in .json file.'
     )
 
     parser.add_argument(
