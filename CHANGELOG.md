@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.1.0](https://github.com/brsynth/icfree-ml/tree/2.1.0) (2023-02-22)
+
+[Full Changelog](https://github.com/brsynth/icfree-ml/compare/2.0.2...2.1.0)
+
 ## [2.0.2](https://github.com/brsynth/icfree-ml/tree/2.0.2) (2023-02-10)
 
 [Full Changelog](https://github.com/brsynth/icfree-ml/compare/2.0.1...2.0.2)
