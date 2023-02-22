@@ -1,3 +1,4 @@
+[![Tests](https://github.com/brsynth/icfree-ml/actions/workflows/test.yml/badge.svg)](https://github.com/brsynth/icfree-ml/actions/workflows/test.yml)
 
 # Description
 
