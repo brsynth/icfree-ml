@@ -545,3 +545,12 @@ class TestPlate(TestCase):
         ) as f:
             lines = f.readlines()
         self.assertEqual(s, ''.join(lines))
+
+    def test_from_file(self):
+        file = os_path.join(self.REF_FOLDER, '2_src_plate_1.json')
+        wells_files = os_path.join(self.REF_FOLDER, '2_src_plate_2.csv')
+        plate = Plate.from_file(file, wells_files)
+        self.assertDictEqual(
+            plate.to_dict()['Wells'],
+            Plate.wells_from_csv(wells_files)
+        )

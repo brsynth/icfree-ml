@@ -139,33 +139,42 @@ class Plate:
     @staticmethod
     def from_file(
         path: str,
+        wells_file: str = None,
         logger: Logger = getLogger(__name__)
     ) -> 'Plate':
         '''Load plate from file'''
+
         logger.debug(f"Loading plate from {path}...")
+
         # Load metadata from json file
         with open(path, 'r') as f:
             d_plate = json_load(f)
-        wells_file = d_plate['Wells']
+
+        # If wells_file is not specified, use the one in metadata
+        if wells_file is None:
+            wells_file = d_plate['Wells']
+
         # Load wells from csv/tsv file
         if wells_file.endswith('.csv'):
-            d_plate['Wells'] = Plate.wells_from_csv(
-                wells_file,
-                sep=',',
-                logger=logger
-            )
+            sep = ','
         elif wells_file.endswith('.tsv'):
-            d_plate['Wells'] = Plate.wells_from_csv(
-                wells_file,
-                sep='\t',
-                logger=logger
-            )
+            sep = '\t'
+        else:
+            raise ValueError(f"Format {wells_file} not supported")
+        d_plate['Wells'] = Plate.wells_from_csv(
+            wells_file,
+            sep=sep,
+            logger=logger
+        )
+
+        # Create plate
         plate = Plate(
             dimensions=d_plate['Dimensions'],
             dead_volume=d_plate['deadVolume'],
             well_capacity=d_plate['Well capacity']
         )
         plate.__wells = d_plate['Wells']
+
         return plate
 
     def get_dimensions(self) -> str:

@@ -27,7 +27,9 @@ from icfree.plates_generator.plate import Plate
 
 def input_importer(
     source_plates_path: List[str],
+    source_wells_path: List[str],
     dest_plates_path: List[str],
+    dest_wells_path: List[str],
     logger: Logger = getLogger(__name__)
 ):
     """
@@ -37,8 +39,12 @@ def input_importer(
     ----------
     source_plates_path : List[str]
         Path to source plates
+    source_wells_path : List[str]
+        Path to source wells
     dest_plates_path : List[str]
         Path to destination plates
+    dest_wells_path : List[str]
+        Path to destination wells
     logger: Logger
         Logger
 
@@ -53,13 +59,29 @@ def input_importer(
     logger.debug(f'dest_plates_path: {dest_plates_path}')
 
     source_plates = dict()
-    for source_plate_path in source_plates_path:
-        source_plates[source_plate_path] = \
-            Plate.from_file(source_plate_path, logger=logger)
+    if not source_wells_path:
+        source_wells_path = [None] * len(source_plates_path)
+    for i in range(len(source_plates_path)):
+        source_plates[source_plates_path[i]] = \
+            Plate.from_file(
+                source_plates_path[i],
+                source_wells_path[i],
+                logger=logger
+            )
     logger.debug('SOURCE PLATES')
     for plt in source_plates:
         logger.debug(plt)
+
     dest_plates = dict()
+    if not dest_wells_path:
+        dest_wells_path = [None] * len(dest_plates_path)
+    for i in range(len(dest_plates_path)):
+        dest_plates[dest_plates_path[i]] = \
+            Plate.from_file(
+                dest_plates_path[i],
+                dest_wells_path[i],
+                logger=logger
+            )
     for dest_plate_path in dest_plates_path:
         dest_plates[dest_plate_path] = \
             Plate.from_file(dest_plate_path, logger=logger)
@@ -85,7 +107,9 @@ def main():
     (source_plates,
      dest_plates) = input_importer(
         args.source_plates,
+        args.source_wells,
         args.dest_plates,
+        args.dest_wells,
         logger=logger
     )
 
