@@ -82,7 +82,7 @@ def add_arguments(parser):
         nargs='+',
         default=DEFAULT_ARGS['SRC_PLATE_TYPE'],
         help=(
-            'Source plate type (for ECHO robot). If number of args are odd, '
+            'Source plate type (for ECHO robot). If number of args is odd, '
             'the first arg is the plate type by default. '
             'Then, each pair of args is a sample ID and a plate type.'
             f' (default: {DEFAULT_ARGS["SRC_PLATE_TYPE"]})'
