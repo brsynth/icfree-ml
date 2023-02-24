@@ -122,7 +122,7 @@ def main():
                 args.output_folder,
                 f'source_plate_{plt_name}.{args.output_format}'
             ),
-            format=args.output_format
+            args.output_format
         )
 
     # Save destination plates
@@ -132,7 +132,7 @@ def main():
                 args.output_folder,
                 f'destination_plate_{plt_name}.{args.output_format}'
             ),
-            format=args.output_format
+            args.output_format
         )
 
     # Save volumes summary
