@@ -15,8 +15,8 @@ python -m icfree.converter <parameters_file.tsv> <concentrations_file.tsv>
 
 Samples can be found here:
 
-* [parameters.tsv](../../tests/data/converter/input/parameters.tsv)
-* [concentrations.tsv](../../tests/data/converter/input/sampling_concentrations.tsv)
+* [parameters.tsv](/tests/data/converter/input/parameters.tsv)
+* [concentrations.tsv](/tests/data/converter/input/sampling_concentrations.tsv)
 
 ## Optional arguments
 <ul>
