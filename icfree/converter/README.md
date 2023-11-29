@@ -9,10 +9,14 @@ python -m icfree.converter <parameters_file.tsv> <concentrations_file.tsv>
 
 ## Positional arguments
 <ul>
-<li><code>parameters_file.tsv</code>: File containing informations (maximum value, stock conentration, dead volumes, ratios) on parameters to convert concentrations. An example can be find here: [tests/data/converter/input/proCFPS_parameters.tsv](proCFPS_parameters.tsv)</li>
-<li><code>concentrations_file.tsv</code>: Output folder to write output files (default: working dir)</li>
+<li><code>parameters_file.tsv</code>: File containing informations (maximum value, stock conentration, dead volumes, ratios) on parameters to convert concentrations</li>
+<li><code>concentrations_file.tsv</code>: File containing concentrations to convert</li>
 </ul>
-[parameters.tsv](tests/data/converter/input/parameters.tsv)
+
+Samples can be found here:
+
+* [parameters.tsv](tests/data/converter/input/parameters.tsv)
+* [concentrations.tsv](tests/data/converter/input/sampling_concentrations.tsv)
 
 ## Optional arguments
 <ul>
