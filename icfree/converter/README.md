@@ -4,10 +4,16 @@ The `plates_generator` module works with volume values as input. This `converter
 
 ## Running from the CLI
 ~~~bash
-python -m icfree.converter <cfps-parameters tsv file> <concentrations tsv file>
+python -m icfree.converter <parameters_file.tsv> <concentrations_file.tsv>
 ~~~
 
-## Options
+## Positional arguments
+<ul>
+<li><code>parameters_file.tsv</code>: File containing informations (maximum value, stock conentration, dead volumes, ratios) on parameters to convert concentrations. An example can be find here: [tests/data/converter/input/proCFPS_parameters.tsv](proCFPS_parameters.tsv)</li>
+<li><code>concentrations_file.tsv</code>: Output folder to write output files (default: working dir)</li>
+</ul>
+
+## Optional arguments
 <ul>
 <li><code>-v</code> or <code>--sample_volume</code>: Final sample volume in each well in nL (default: 1000)</li>
 <li><code>-of</code>, --output-folder: Output folder to write output files (default: working dir)</li>
