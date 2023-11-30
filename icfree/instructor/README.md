@@ -1,15 +1,26 @@
 
 # Instructor
-The module generates a list of instructions to perform the experiment.
+The module generates a list of instructions to perform the experiment on a given liquid handler (e.g. ECHO).
 
-## Running from the CLI
+<!-- resize and center image -->
+<p align="center">
+<img src="/img/instructor.png" width="500">
+</p>
+
+### Running from the CLI
 ~~~bash
 python -m icfree.instructor 
-  --source_plates <source_plate file 1> <source_plate file 2>... \
-  --dest_plates <dest_plate file 1> <dest_plate file 2>... \
+  --source_plates <src_plate_file_1.json> <src_plate_file_2.json>... \
+  --dest_plates <dst_plate_file_1.json> <dst_plate_file_2.json>... \
 ~~~
 
-## Options
+### Positional arguments
+<ul>
+  <li><code>src_plate_file.json</code>: File containing the source plate description.</li>
+  <li><code>dst_plate_file.json</code>: File containing the destination plate description.</li>
+</ul>
+
+### Optional arguments
 <ul>
   <li><code>-of</code>, <code>--output-folder</code>: Output folder to write output files (default: working dir)</li>
   <li><code>--robot</code>: Robot name (default: echo)</li>
@@ -17,30 +28,28 @@ python -m icfree.instructor
   <li><code>--dest_plates</code>: Destination plates files.</li>
 </ul>
 
-## Example
+### Example
 ~~~bash
 python -m icfree.instructor \
-  --source_plates out/source_plate_1.json \
-  --dest_plates out/destination_plate_1.json \
+  --source_plates tests/data/plates_generator/output/source_plate_1.json \
+  --dest_plates tests/data/plates_generator/output/destination_plate_1.json \
   --robot echo \
   -of out
 ~~~
 
-## Output
-The output file is:
-<ul>
-<li><code>instructions.csv</code>: contains the instructions to perform the experiment</li>
-<li><code>volumes_warning.csv</code>: contains the volumes that may cause issues with the choosen robot</li>
-</ul>
+### Output
+The output files is:
 
-# Help
+* [instructions.csv](../../tests/data/instructor/output/echo_instructions.csv): contains the instructions to perform the experiment on the ECHO machine
+
+### Help
 Display help by running:
 ~~~bash
 python -m icfree.instructor --help
 ~~~
 
-# Authors
-Joan Hérisson, Yorgo EL MOUBAYED
+### Authors
+Joan Hérisson
 
-# License
+### License
 Released under the MIT licence. See the [LICENSE](https://github.com/brsynth/icfree-ml/blob/main/LICENSE.md) file for details.
