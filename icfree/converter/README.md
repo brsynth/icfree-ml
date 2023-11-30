@@ -1,5 +1,10 @@
 
 # Converter
+<!-- resize and center image -->
+<p align="center">
+<img src="/img/converter.png" width="400">
+</p>
+
 The `plates_generator` module works with volume values as input. This `converter` module converts concentration values into volume values.
 
 ### Running from the CLI
@@ -13,7 +18,7 @@ python -m icfree.converter <parameters_file.tsv> <concentrations_file.tsv>
 <li><code>concentrations_file.tsv</code>: File containing concentrations to convert</li>
 </ul>
 
-Samples can be found here:
+Examples can be found here:
 
 * [concentrations.tsv](/tests/data/converter/input/sampling_concentrations.tsv)
 
