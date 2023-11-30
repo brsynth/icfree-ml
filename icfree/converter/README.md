@@ -1,11 +1,12 @@
 
 # Converter
+
+The `plates_generator` module works with volume values as input. This `converter` module converts concentration values into volume values.
+
 <!-- resize and center image -->
 <p align="center">
 <img src="/img/converter.png" width="400">
 </p>
-
-The `plates_generator` module works with volume values as input. This `converter` module converts concentration values into volume values.
 
 ### Running from the CLI
 ~~~bash

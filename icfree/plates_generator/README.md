@@ -1,11 +1,12 @@
 
 # Plates Generator
+
+This module generates a list of source and destination plates according to the set of volume samples to test.
+
 <!-- resize and center image -->
 <p align="center">
 <img src="/img/plates_generator.png" width="500">
 </p>
-
-This module generates a list of source and destination plates according to the set of volume samples to test.
 
 ### Running from the CLI
 ~~~bash
