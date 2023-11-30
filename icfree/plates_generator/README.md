@@ -62,8 +62,10 @@ python -m icfree.plates_generator \
 ### Output
 The output files are:
 
-* [source_plate.json](/tests/data/plates_generator/output/source_plate_1.json): describe the source plate(s)
-* [destination_plate.json](/tests/data/plates_generator/output/destination_plate_1.json): describe the destination plate(s)
+* [source_plate.json](/tests/data/plates_generator/output/source_plate_1.json): describe the source plate 1
+* [source_plate.csv](/tests/data/plates_generator/output/source_plate_1.csv): source plate 1 volumes
+* [destination_plate.json](/tests/data/plates_generator/output/destination_plate_1.json): describe the destination plate 1
+* [destination_plate.csv](/tests/data/plates_generator/output/destination_plate_1.csv): destination plate 1 volumes
 * [volumes_summary.tsv](/tests/data/plates_generator/output/plate_volumes_summary.json): contains the summary of parameters volumes
 
 ### Help
