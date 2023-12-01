@@ -16,8 +16,9 @@ from argparse import (
 )
 from logging import Logger
 from typing import List
-from .args import build_args_parser
 from colored import fg, attr
+
+from .args import build_args_parser
 
 
 def init(
