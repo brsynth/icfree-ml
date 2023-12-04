@@ -82,9 +82,6 @@ def input_importer(
                 dest_wells_path[i],
                 logger=logger
             )
-    for dest_plate_path in dest_plates_path:
-        dest_plates[dest_plate_path] = \
-            Plate.from_file(dest_plate_path, logger=logger)
     logger.debug('DESTINATION PLATES')
     for plt in dest_plates:
         logger.debug(plt)

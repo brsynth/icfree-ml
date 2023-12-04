@@ -40,24 +40,25 @@ python -m icfree.sampler \
 
 Below is an example of an input file:
 
-|**Parameter**|**maxValue**|**deadVolume**|**Ratios**             |
-|---------|--------|----------|-------------------|
-|CP       |125     |0         |0.0 0.1 0.3 0.5 1.0|
-|CPK      |125     |0         |1                  |
-|tRNA     |125     |0         |                   |
-|AA       |125     |0         |                   |
-|ribosomes|125     |0         |                   |
-|mRNA     |125     |0         |                   |
-|Mg       |125     |0         |                   |
-|K        |125     |0         |                   |
+| Parameter | maxValue | Ratios              |
+|-----------|----------|---------------------|
+| CP        | 125      | 0.0 0.1 0.3 0.5 1.0 |
+| CPK       | 125      | 1                   |
+| tRNA      | 125      |                     |
+| AA        | 125      |                     |
+| ribosomes | 125      |                     |
+| mRNA      | 125      |                     |
+| Mg        | 125      |                     |
+| K         | 125      |                     |
 
 The first column is the parameter (or factor) names.
 
 The second column is the maxValue of the parameter that will be used in the sampling.
 
-The third column is the deadVolume of the parameter. This is used to calculate the volume of the parameter that will not be pipetted by the robot (because of viscosity).
+The third column is the specific ratios we want to have for this parameter. If nothing defined, then take ratios given in program options.
+If one single number is given, then take this number as a const value.
+If no value is given, then take the default ratios (`nb_samples` linear ratios from 0 to 1).
 
-The fourth column is the specific ratios we want to have for this parameter. If nothing defined, then take ratios given in program options. If one single number is given, then take this number as a const value.
 
 ## Output
 The output file is:

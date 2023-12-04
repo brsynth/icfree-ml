@@ -32,7 +32,7 @@ class Test(TestCase):
         )
         self.proCFPS_parameters = os_path.join(
             self.INPUT_FOLDER,
-            'proCFPS_parameters.tsv'
+            'parameters.tsv'
         )
         self.sampling_concentrations = os_path.join(
             self.INPUT_FOLDER,

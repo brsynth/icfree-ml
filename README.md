@@ -4,6 +4,8 @@
 
 Design of experiments (DoE) and machine learning packages for the iCFree project
 
+![icfree](/img/icfree.png)
+
 # Requirements
 
 Python 3.8+
