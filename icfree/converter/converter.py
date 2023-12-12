@@ -58,7 +58,7 @@ def concentrations_to_volumes(
     stock_concentrations = dict(
         cfps_parameters_df[
             [
-                'Parameter',
+                'Component',
                 'stockConcentration'
             ]
         ].to_numpy()
