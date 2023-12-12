@@ -1,42 +1,37 @@
 [
     {
-        "Parameter":"CP",
+        "Parameter":"Component_1",
         "Min":12.5,
         "Max":""
     },
     {
-        "Parameter":"tRNA",
-        "Min":25.0,
+        "Parameter":"Component_3",
+        "Min":31.25,
         "Max":""
     },
     {
-        "Parameter":"AA",
-        "Min":25.0,
+        "Parameter":"Component_4",
+        "Min":31.25,
         "Max":""
     },
     {
-        "Parameter":"ribosomes",
-        "Min":25.0,
+        "Parameter":"Component_5",
+        "Min":31.25,
         "Max":""
     },
     {
-        "Parameter":"mRNA",
-        "Min":25.0,
+        "Parameter":"Component_6",
+        "Min":31.25,
         "Max":""
     },
     {
-        "Parameter":"Mg",
-        "Min":25.0,
+        "Parameter":"Component_7",
+        "Min":31.25,
         "Max":""
     },
     {
-        "Parameter":"K",
-        "Min":25.0,
-        "Max":""
-    },
-    {
-        "Parameter":"Water",
-        "Min":-185.0,
+        "Parameter":"Component_8",
+        "Min":31.25,
         "Max":""
     }
 ]

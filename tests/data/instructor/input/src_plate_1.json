@@ -4,9 +4,9 @@
     "Well capacity": 60000,
     "Current well": "P24",
     "Parameters": [
-        "tRNA",
-        "CP",
-        "CPK"
+        "Component_1",
+        "Component_2",
+        "Component_3"
     ],
-    "Wells": "tests/data/instructor/input/2_src_plate_1.csv"
+    "Wells": "tests/data/plates_generator/output/src_plate_1.csv"
 }
