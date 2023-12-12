@@ -9,16 +9,14 @@ from os import (
 from numpy.testing import (
     assert_array_equal
 )
-from pandas.testing import (
-    assert_frame_equal
-)
 from pandas import DataFrame
 from numpy import (
     append as np_append,
     arange as np_arange,
     asarray as np_asarray,
     array as np_array,
-    unique as np_unique
+    unique as np_unique,
+    array_equal as np_array_equal
 )
 from json import (
     load as json_load
@@ -60,13 +58,9 @@ class Test(TestCase):
         'output'
     )
 
-    proCFPS_parameters = os_path.join(
+    parameters = os_path.join(
         INPUT_FOLDER,
-        'proCFPS_parameters.tsv'
-    )
-    proCFPS_parameters_woGOI = os_path.join(
-        INPUT_FOLDER,
-        'proCFPS_parameters_woGOI.tsv'
+        'parameters.tsv'
     )
 
     def test_input_importer(self):
@@ -79,24 +73,12 @@ class Test(TestCase):
             expected_df = DataFrame(
                 json_load(fp)
             )
-            cfps_parameters = os_path.join(
-                self.INPUT_FOLDER,
-                'proCFPS_parameters_woGOI.tsv'
-                )
-            tested_df = input_importer(cfps_parameters)
+            tested_df = input_importer(self.parameters)
             for i, row in tested_df.iterrows():
-                if isinstance(row['Ratios'], str):
-                    tested_df.at[i, 'Ratios'] = list(
-                        map(
-                            float,
-                            row['Ratios'].split(',')
-                        )
-                    )
-                else:
+                if not isinstance(row['Ratios'], str):
                     tested_df.at[i, 'Ratios'] = None
-            assert_frame_equal(
-                expected_df,
-                tested_df
+            self.assertTrue(
+                np_array_equal(tested_df.values, expected_df.values)
             )
 
     def test_input_processor(self):
@@ -111,13 +93,12 @@ class Test(TestCase):
         with open(
             os_path.join(
                     self.INPUT_FOLDER,
-                    'proCFPS_parameters.tsv'
+                    'parameters.tsv'
             ), 'r'
         ) as fp:
             tested_df = input_importer(fp)
 
         tested_dictionary = input_processor(tested_df)
-        print(tested_dictionary)
         self.assertDictEqual(
                 expected_dictionary,
                 tested_dictionary
@@ -135,7 +116,7 @@ class Test(TestCase):
     #     with open(
     #         os_path.join(
     #                 self.INPUT_FOLDER,
-    #                 'proCFPS_parameters_woConst.tsv'
+    #                 'parameters_woConst.tsv'
     #         ), 'r'
     #     ) as fp:
     #         tested_df = input_importer(fp)
@@ -158,7 +139,7 @@ class Test(TestCase):
     #     with open(
     #         os_path.join(
     #                 self.INPUT_FOLDER,
-    #                 'proCFPS_parameters_woDoE.tsv'
+    #                 'parameters_woDoE.tsv'
     #         ), 'r'
     #     ) as fp:
     #         tested_df = input_importer(fp)
@@ -234,18 +215,22 @@ class Test(TestCase):
     def test_sampling_Const(self):
         input_df = input_importer(os_path.join(
                 self.INPUT_FOLDER,
-                'proCFPS_parameters_const.tsv'
+                'parameters.tsv'
                 ))
-        input_processor(input_df)
+        parameters = input_processor(input_df)
 
         n_variable_parameters = 0
         seed = 123
-        ratios = set_sampling_ratios(
-            ratios=dict.fromkeys(
-                range(n_variable_parameters), None
-            ),
-            all_nb_steps=5
-        )
+        ratios = {
+            parameter: data['Ratios']
+            for parameter, data in parameters.items()
+        }
+        # ratios = set_sampling_ratios(
+        #     ratios=dict.fromkeys(
+        #         range(n_variable_parameters), None
+        #     ),
+        #     all_nb_steps=5
+        # )
         doe_levels = sampling(
             nb_parameters=n_variable_parameters,
             ratios=ratios,
@@ -320,7 +305,7 @@ class Test(TestCase):
     def test_convert(self):
         input_df = input_importer(os_path.join(
                 self.INPUT_FOLDER,
-                'tested_concentrations.tsv'
+                'parameters.tsv'
                 ))
 
         parameters = input_processor(input_df)
@@ -354,19 +339,15 @@ class Test(TestCase):
             max_conc,
         )
 
-        # Refrence array generated from mutipltying
-        # sampling_array.pickle and ref_maximum_concentrations.json
+        # Reference array
         with open(
             os_path.join(
                 self.REF_FOLDER,
                 'ref_concentrations_array.json'
                 ), 'r') as f:
-            _ref_concentrations_array = json_load(f)
-        ref_concentrations_array = []
-        for sample in _ref_concentrations_array.values():
-            ref_concentrations_array.append(sample)
-        # for i, sample in enumerate(tested_concentrations_array):
-        #     print(f'    "{i}": [{", ".join(map(str, sample))}],')
+            ref_concentrations_array = json_load(f)
+        import json
+        print(json.dumps(tested_concentrations_array.tolist(), indent=4))
         assert_array_equal(
             tested_concentrations_array,
             np_array(ref_concentrations_array)
@@ -375,7 +356,7 @@ class Test(TestCase):
     def test_convert_EmptyConcentrationsArray(self):
         input_df = input_importer(os_path.join(
                 self.INPUT_FOLDER,
-                'proCFPS_parameters_const.tsv'
+                'parameters.tsv'
                 ))
         parameters = input_processor(input_df)
 
@@ -410,7 +391,7 @@ class Test(TestCase):
     def test_save_values_csv(self):
         with TemporaryDirectory() as tmpFolder:
             self._test_save_values(
-                input_file=self.proCFPS_parameters,
+                input_file=self.parameters,
                 output_folder=tmpFolder,
                 output_format='csv'
             )
@@ -418,13 +399,13 @@ class Test(TestCase):
     def test_save_values_wExistingOutFolder(self):
         with TemporaryDirectory() as tmpFolder:
             self._test_save_values(
-                input_file=self.proCFPS_parameters,
+                input_file=self.parameters,
                 output_folder=tmpFolder
             )
 
     def test_save_values_woExistingOutFolder(self):
         self._test_save_values(
-            input_file=self.proCFPS_parameters,
+            input_file=self.parameters,
             output_folder=NamedTemporaryFile().name
         )
 
@@ -444,7 +425,7 @@ class Test(TestCase):
             np_arange(0.0, 1.0, 1/(doe_nb_concentrations-1)),
             1.0
         ).tolist()
-        nb_samples = 10
+        nb_samples = 100
         seed = 123
         ratios = {
             parameter: data['Ratios']
@@ -480,7 +461,7 @@ class Test(TestCase):
         )
 
         # Load ref file
-        ref_filename = 'ref_initial_LHS-None'
+        ref_filename = 'sampling'
         with open(
             os_path.join(
                     self.REF_FOLDER,
@@ -496,6 +477,7 @@ class Test(TestCase):
             )
         ) as fp4:
             tested_initial_set = fp4.read()
+        print(f'sampling.{output_format}')
         # compare files
         assert ref_initial_set == tested_initial_set
 
@@ -503,7 +485,7 @@ class Test(TestCase):
         input_df = input_importer(
             os_path.join(
                 self.INPUT_FOLDER,
-                'proCFPS_parameters.tsv'
+                'parameters.tsv'
             )
         )
         parameters = input_processor(input_df)

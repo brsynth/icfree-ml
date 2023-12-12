@@ -36,7 +36,7 @@ __signature__ = f'{sys.modules[__name__].__package__} {__version__}'
 
 
 def input_importer(
-    cfps_parameters,
+    parameters,
     logger: Logger = getLogger(__name__)
 ) -> DataFrame:
     """
@@ -51,20 +51,18 @@ def input_importer(
 
     Returns
     -------
-    cfps_parameters_df : DataFrame
+    parameters_df : DataFrame
         Pandas dataframe populated with cfps_parameters data
     """
-    cfps_parameters_df = pd_read_csv(
-                        cfps_parameters,
-                        sep='\t')
+    parameters_df = pd_read_csv(parameters, sep='\t')
 
-    logger.debug(f'CFPs parameters dataframe: {cfps_parameters_df}')
+    logger.debug(f'CFPs parameters dataframe: {parameters_df}')
 
-    return cfps_parameters_df
+    return parameters_df
 
 
 def input_processor(
-    cfps_parameters_df: DataFrame,
+    parameters_df: DataFrame,
     logger: Logger = getLogger(__name__)
 ) -> Dict:
     """
@@ -72,7 +70,7 @@ def input_processor(
 
     Parameters
     ----------
-    cfps_parameters_df: 2d-array
+    parameters_df: 2d-array
         N-by-samples array where values are uniformly spaced between 0 and 1.
     logger: Logger
         Logger, default is getLogger(__name__)
@@ -82,33 +80,33 @@ def input_processor(
     parameters: dict
         Dictionnary of parameters.
         First level is indexed on 'Status' column.
-        Second level is indexed on 'Parameter' column.
+        Second level is indexed on 'Component' column.
     """
     parameters = {}
 
-    for dic in cfps_parameters_df.to_dict('records'):
-        parameters[dic['Parameter']] = {
-            k: dic[k] for k in dic.keys() - {'Parameter'}
+    for dic in parameters_df.to_dict('records'):
+        parameters[dic['Component']] = {
+            k: dic[k] for k in dic.keys() - {'Component'}
         }
         # Convert list of ratios str into list of float
         # ratio is a list of float
-        if isinstance(parameters[dic['Parameter']]['Ratios'], str):
-            parameters[dic['Parameter']]['Ratios'] = list(
+        if isinstance(parameters[dic['Component']]['Ratios'], str):
+            parameters[dic['Component']]['Ratios'] = list(
                 map(
                     float,
                     findall(
                         r"(?:\d*\.\d+|\d+)",
-                        parameters[dic['Parameter']]['Ratios']
+                        parameters[dic['Component']]['Ratios']
                     )
                 )
             )
         # ratio is nan
-        elif isnan(parameters[dic['Parameter']]['Ratios']):
-            parameters[dic['Parameter']]['Ratios'] = []
+        elif isnan(parameters[dic['Component']]['Ratios']):
+            parameters[dic['Component']]['Ratios'] = []
         # ratio is a float
         else:
-            parameters[dic['Parameter']]['Ratios'] = \
-                [parameters[dic['Parameter']]['Ratios']]
+            parameters[dic['Component']]['Ratios'] = \
+                [parameters[dic['Component']]['Ratios']]
 
     return parameters
 

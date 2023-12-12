@@ -1,11 +1,11 @@
 {
-    "CP": 60000,
-    "CPK": 60000,
-    "tRNA": 60000,
-    "AA": 60000,
-    "ribosomes": 60000,
-    "mRNA": 60000,
-    "Mg": 60000,
-    "K": 60000,
-    "Water": 1260000
+    "Component_1": 60000,
+    "Component_2": 60000,
+    "Component_3": 60000,
+    "Component_4": 60000,
+    "Component_5": 60000,
+    "Component_6": 60000,
+    "Component_7": 60000,
+    "Component_8": 60000,
+    "Water": 1320000
 }

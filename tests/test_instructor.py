@@ -40,16 +40,16 @@ class TestInstructor(TestCase):
                     f'{plate_type}_plt_{str(i)}',
                     os_path.join(
                         self.input_folder,
-                        f'2_{plate_type}_plate_{i}.json'
+                        f'{plate_type}_plate_{i}.json'
                     )
                 )
         self.source_plate = os_path.join(
             self.input_folder,
-            'source_plate_1.json'
+            'source_plate.json'
         )
         self.dest_plate = os_path.join(
             self.input_folder,
-            'destination_plate_1.json'
+            'destination_plate.json'
         )
 
     def test_check_volumes(self):
@@ -120,8 +120,8 @@ class TestInstructor(TestCase):
         )
         # Read csv ref file
         ref_instructions_file = os_path.join(
-            self.output_folder,
-            'echo_instructions.csv'
+            self.ref_folder,
+            'echo_instructions_1.csv'
         )
         ref_instructions = pd_read_csv(ref_instructions_file)
         # Compare
@@ -139,7 +139,7 @@ class TestInstructor(TestCase):
             'plate_1': Plate.from_file(self.dst_plt_1),
             'plate_2': Plate.from_file(self.dst_plt_2)
         }
-        src_plate_type = ['384PP_AQ_GP3', 'CPK', '384PP_AQ_CP']
+        src_plate_type = ['384PP_AQ_GP3', 'Component_2', '384PP_AQ_TEST']
         instructions = instructions_generator(
             source_plates,
             destination_plates,
@@ -148,8 +148,8 @@ class TestInstructor(TestCase):
         )
         # Read csv ref file
         ref_instructions_file = os_path.join(
-            self.output_folder,
-            'echo_instructions1.csv'
+            self.ref_folder,
+            'echo_instructions_2.csv'
         )
         ref_instructions = pd_read_csv(ref_instructions_file)
         # Compare
@@ -157,7 +157,7 @@ class TestInstructor(TestCase):
             instructions,
             ref_instructions
         )
-        src_plate_type = ['384PP_AQ_CP']
+        src_plate_type = ['384PP_AQ_TEST']
         instructions = instructions_generator(
             source_plates,
             destination_plates,
@@ -166,8 +166,8 @@ class TestInstructor(TestCase):
         )
         # Read csv ref file
         ref_instructions_file = os_path.join(
-            self.output_folder,
-            'echo_instructions2.csv'
+            self.ref_folder,
+            'echo_instructions_3.csv'
         )
         ref_instructions = pd_read_csv(ref_instructions_file)
         # Compare

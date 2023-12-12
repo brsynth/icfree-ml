@@ -15,10 +15,8 @@ python -m icfree.instructor
 ~~~
 
 ### Positional arguments
-<ul>
-  <li><code>src_plate_file.json</code>: File containing the source plate description.</li>
-  <li><code>dst_plate_file.json</code>: File containing the destination plate description.</li>
-</ul>
+* [src_plate.json](/tests/data/instructor/input/source_plate.json): File containing the source plate description.
+* [dst_plate.json](/tests/data/instructor/input/destination_plate.json): File containing the destination plate description.
 
 ### Optional arguments
 <ul>
@@ -31,8 +29,8 @@ python -m icfree.instructor
 ### Example
 ~~~bash
 python -m icfree.instructor \
-  --source_plates tests/data/plates_generator/output/source_plate_1.json \
-  --dest_plates tests/data/plates_generator/output/destination_plate_1.json \
+  --source_plates tests/data/instructor/input/source_plate.json \
+  --dest_plates tests/data/instructor/input/destination_plate.json \
   --robot echo \
   -of out
 ~~~
@@ -40,7 +38,7 @@ python -m icfree.instructor \
 ### Output
 The output files is:
 
-* [instructions.csv](../../tests/data/instructor/output/echo_instructions.csv): contains the instructions to perform the experiment on the ECHO machine
+* [instructions.csv](/tests/data/instructor/output/instructions.csv): contains the instructions to perform the experiment on the ECHO machine
 
 ### Help
 Display help by running:

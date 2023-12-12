@@ -1,16 +1,16 @@
 [
     {
-        "Parameter":"CP",
+        "Parameter":"Component_1",
         "Min":"",
         "Max":60000.0
     },
     {
-        "Parameter":"CPK",
+        "Parameter":"Component_2",
         "Min":"",
         "Max":60000.0
     },
     {
-        "Parameter":"tRNA",
+        "Parameter":"Component_3",
         "Min":"",
         "Max":60000.0
     }
