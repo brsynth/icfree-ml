@@ -20,7 +20,7 @@ from icfree.utils import save_df
 
 
 def input_importer(
-    cfps_parameters,
+    parameters,
     values,
     logger: Logger = getLogger(__name__)
 ):
@@ -43,17 +43,17 @@ def input_importer(
     values_df : DataFrame
         Dataframe with sampling data
     """
-    cfps_parameters_df = read_csv(
-        cfps_parameters,
+    parameters_df = read_csv(
+        parameters,
         sep='[,\t]',
         engine='python'
     )
-    logger.debug(f'cfps_parameters_df:\n{cfps_parameters_df}')
+    logger.debug(f'parameters_df:\n{parameters_df}')
 
     values_df = read_csv(values, sep='[,\t]', engine='python')
     logger.debug(f'values_df:\n{values_df}')
 
-    return cfps_parameters_df, values_df
+    return parameters_df, values_df
 
 
 def main():
