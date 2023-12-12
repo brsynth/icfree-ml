@@ -11,15 +11,19 @@ This module generates a list of source and destination plates according to the s
 ### Running from the CLI
 ~~~bash
 python -m icfree.plates_generator \
-  <parameters_file.tsv> \
-  <vol_sampling_file.[csv|tsv]>
+  <parameters.tsv> \
+  <vol_sampling.[csv|tsv]>
 ~~~
 
 ### Positional arguments
-<ul>
-<li><code>parameters_file.tsv</code>: File containing informations (maximum value, stock conentration, dead volumes, ratios) on parameters</li>
-<li><code>vol_sampling_file.tsv</code>: File containing volumes to test</li>
-</ul>
+* [parameters.tsv](/tests/data/sampler/input/parameters.tsv): File containing informations (maximum value, stock conentration, dead volumes, ratios) on parameters
+  * The first column is the parameter (or factor) names.
+  * The second column is the maximum value of the parameter that will be used in the sampling.
+  * The third column is the concentration of the stock.
+  * The fourth column is the dead volume of the parameter. This is used to calculate the volume of the parameter that will not be pipetted by the robot (because of viscosity).
+  * The fifth column is the specific ratios we want to have for this parameter. If nothing defined, then take ratios given in program options. If one single number is given, then take this number as a const value.
+
+* [sampling.tsv](/tests/data/sampler/input/sampling.tsv): File containing volumes to test
 
 ### Options
 <ul>
@@ -38,23 +42,12 @@ python -m icfree.plates_generator \
   <li><code>--plate-dimensions</code>: Dimensions of plate separated by a 'x', e.g. <code>nb_rows x nb_cols</code> (default: 16x24).
 </ul>
 
-Examples can be found here:
-
-* [vol_sampling.[csv|tsv]](/tests/data/plates_generator/input/samplingB3.tsv)
-
-* [parameters.tsv](/tests/data/plates_generator/input/proCFPS_parameters.tsv)
-
-  * The first column is the parameter (or factor) names.
-  * The second column is the maximum value of the parameter that will be used in the sampling.
-  * The third column is the concentration of the stock.
-  * The fourth column is the dead volume of the parameter. This is used to calculate the volume of the parameter that will not be pipetted by the robot (because of viscosity).
-  * The fifth column is the specific ratios we want to have for this parameter. If nothing defined, then take ratios given in program options. If one single number is given, then take this number as a const value.
 
 ### Example
 ~~~bash
 python -m icfree.plates_generator \
-  tests/data/plates_generator/input/proCFPS_parametersB3.tsv \
-  tests/data/plates_generator/input/sampling.csv \
+  tests/data/plates_generator/input/parameters.tsv \
+  tests/data/plates_generator/input/sampling.tsv \
   -v 1000 \
   -of out
 ~~~
