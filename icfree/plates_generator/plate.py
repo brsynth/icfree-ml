@@ -171,9 +171,11 @@ class Plate:
         plate = Plate(
             dimensions=d_plate['Dimensions'],
             dead_volume=d_plate['deadVolume'],
-            well_capacity=d_plate['Well capacity']
+            well_capacity=d_plate['Well capacity'],
+            logger=logger
         )
         plate.__wells = d_plate['Wells']
+        plate.set_current_well(d_plate['Current well'])
 
         return plate
 
@@ -446,15 +448,15 @@ class Plate:
     #     self.__nb_empty_wells = min(nb_empty_wells, self.get_nb_wells())
 
     def fill_well(self, parameter: str, volume: float, well: str = '') -> None:
-        """Fill the well with the given volume.
+        """Fill the well with the given parameter for the given volume.
 
         Parameters
         ----------
-        parameter : str
+        parameter: str
             Parameter to put in the well
-        volume : float
+        volume: float
             Volume to put in the well
-        well : str, optional
+        well: str, optional
             Name of the well to fill, by default use the current one
         """
         if well == '':
@@ -487,10 +489,10 @@ class Plate:
             #     f'The volume {volume} is greater than '
             #     f'the well capacity {self.get_well_capacity()}.'
             # )
-        self.__logger.debug(
-            f'Filling well {well} with {volume} of {parameter}'
-        )
         self.__wells[well][parameter] += volume
+        self.__logger.debug(
+            f'Well {well} with {volume} of {parameter} filled'
+        )
         # self.set_nb_empty_wells(self.get_nb_empty_wells() - 1)
 
     def reindex_wells_by_factor(self, plate_id: str = '0') -> Dict:
