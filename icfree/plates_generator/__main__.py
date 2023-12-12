@@ -78,7 +78,7 @@ def main():
 
     values_df['Water'] = \
         args.sample_volume - values_df.sum(axis=1)
-    
+
     # Exract dead plate volumes from cfps_parameters_df
     dead_volumes = extract_dead_volumes(
         parameters_df,

@@ -9,9 +9,6 @@ from os import (
 from numpy.testing import (
     assert_array_equal
 )
-from pandas.testing import (
-    assert_frame_equal
-)
 from pandas import DataFrame
 from numpy import (
     append as np_append,
@@ -79,21 +76,10 @@ class Test(TestCase):
             tested_df = input_importer(self.parameters)
             for i, row in tested_df.iterrows():
                 if not isinstance(row['Ratios'], str):
-            #         tested_df.at[i, 'Ratios'] = list(
-            #             map(
-            #                 float,
-            #                 row['Ratios'].split(' ')
-            #             )
-            #         )
-            #     else:
                     tested_df.at[i, 'Ratios'] = None
             self.assertTrue(
                 np_array_equal(tested_df.values, expected_df.values)
             )
-            # assert_frame_equal(
-            #     expected_df,
-            #     tested_df
-            # )
 
     def test_input_processor(self):
         with open(
