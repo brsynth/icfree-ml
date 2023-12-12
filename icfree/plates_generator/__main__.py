@@ -70,19 +70,18 @@ def main():
     # CREATE LOGGER
     logger = create_logger(parser.prog, args.log)
 
-    (cfps_parameters_df,
-     values_df) = input_importer(
-        args.cfps,
+    parameters_df, values_df = input_importer(
+        args.parameters,
         args.volumes,
         logger=logger
     )
 
     values_df['Water'] = \
         args.sample_volume - values_df.sum(axis=1)
-
+    
     # Exract dead plate volumes from cfps_parameters_df
     dead_volumes = extract_dead_volumes(
-        cfps_parameters_df,
+        parameters_df,
         logger=logger
     )
 

@@ -21,7 +21,7 @@ from .plate import Plate
 
 
 def extract_dead_volumes(
-    cfps_parameters_df: DataFrame,
+    parameters_df: DataFrame,
     logger: Logger = getLogger(__name__)
 ) -> DataFrame:
     """
@@ -39,12 +39,12 @@ def extract_dead_volumes(
     dead_volumes : Dict
         Dict with deadVolumes data
     """
-    logger.debug(f'cfps_parameters_df:\n{cfps_parameters_df}')
+    logger.debug(f'parameters_df:\n{parameters_df}')
 
     dead_volumes = dict(
-        cfps_parameters_df[
+        parameters_df[
             [
-                'Parameter',
+                'Component',
                 'deadVolume'
             ]
         ].to_numpy()

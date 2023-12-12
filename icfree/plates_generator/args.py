@@ -41,9 +41,9 @@ def build_args_parser(
 def add_arguments(parser):
 
     parser.add_argument(
-        'cfps',
+        'parameters',
         type=str,
-        help='Path to a .tsv file containing CFPS parameters and features',
+        help='Path to a .tsv file containing component parameters',
     )
 
     parser.add_argument(
