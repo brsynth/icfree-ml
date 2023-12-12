@@ -4,43 +4,39 @@
     "Well capacity": 60000,
     "Current well": "J1",
     "Parameters": [
-        "mRNA",
-        "K",
         "Water",
-        "tRNA",
-        "CPK",
-        "CP",
-        "ribosomes",
-        "Mg",
-        "AA"
+        "Component_1",
+        "Component_2",
+        "Component_3",
+        "Component_4",
+        "Component_5",
+        "Component_6",
+        "Component_7"
     ],
     "Wells": "tests/data/plates_generator/output/source_plate_1.csv",
     "Wells2": {
         "A1": {
-            "CP": 60000
+            "Component_1": 60000
         },
         "B1": {
-            "CPK": 60000
+            "Component_2": 60000
         },
         "C1": {
-            "tRNA": 60000
+            "Component_3": 60000
         },
         "D1": {
-            "AA": 60000
+            "Component_4": 60000
         },
         "E1": {
-            "ribosomes": 60000
+            "Component_5": 60000
         },
         "F1": {
-            "mRNA": 60000
+            "Component_6": 60000
         },
         "G1": {
-            "Mg": 60000
+            "Component_7": 60000
         },
         "H1": {
-            "K": 60000
-        },
-        "I1": {
             "Water": 60000
         }
     }
