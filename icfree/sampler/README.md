@@ -38,15 +38,15 @@ python -m icfree.sampler \
 Below is an example of a [parameters.tsv](/tests/data/sampler/input/parameters.tsv) file:
 
 
-|Component|maxValue|deadVolume|Ratios|
-|---------|--------|----------|------|
-|Component_1|125|0|0.0 0.1 0.3 0.5 1.0|
-|Component_2|125|0|1|
-|Component_3|125|0| |
-|Component_4|125|0| |
-|Component_5|125|0| |
-|Component_6|125|0| |
-|Component_7|125|0| |
+|Component|maxValue|Ratios|
+|---------|--------|------|
+|Component_1|125|0.0 0.1 0.3 0.5 1.0|
+|Component_2|125|1|
+|Component_3|125| |
+|Component_4|125| |
+|Component_5|125| |
+|Component_6|125| |
+|Component_7|125| |
 
 The first column is the parameter (or factor) names.
 

@@ -16,9 +16,10 @@ from .args import (
 
 
 def concentrations_to_volumes(
-    cfps_parameters_df: DataFrame,
+    parameters_df: DataFrame,
     concentrations_df: Dict,
     sample_volume: int = DEFAULT_ARGS['SAMPLE_VOLUME'],
+    multiple: float = 1,
     logger: Logger = getLogger(__name__)
 ):
     """
@@ -28,12 +29,14 @@ def concentrations_to_volumes(
 
     Parameters
     ----------
-    cfps_parameters_df : DataFrame
-        Dataframe with cfps_parameters data
+    parameters_df : DataFrame
+        Dataframe with parameters data
     concentrations_df : Dict
         Dataframes with concentrations data
     sample_volume: int
-        Final sample volume in each well. Defaults to 10000 nL
+        Final sample volume in each well. Defaults to 1000 nL
+    multiple: float
+        Multiple to round volumes. Defaults to 1
 
     Returns
     -------
@@ -50,13 +53,14 @@ def concentrations_to_volumes(
     """
     logger.info('Converting concentrations to volumes...')
     # Print out parameters
-    logger.debug(f'cfps parameters:\n{cfps_parameters_df}')
+    logger.debug(f'parameters:\n{parameters_df}')
     logger.debug(f'concentrations:\n{concentrations_df}')
-    logger.debug(f'Sample volume: {sample_volume}')
+    logger.debug(f'sample volume: {sample_volume}')
+    logger.debug(f'multiple: {multiple}')
 
     # Exract stock concentrations from cfps_parameters_df
     stock_concentrations = dict(
-        cfps_parameters_df[
+        parameters_df[
             [
                 'Component',
                 'stockConcentration'
@@ -79,8 +83,6 @@ def concentrations_to_volumes(
     volumes_df = {}
 
     # Convert concentrations into volumes
-    # and make it a multiple of 2.5 (ECHO specs)
-    multiple = 2.5
     volumes_df = round(
         concentrations_df
         * sample_volume_stock_ratio_df
@@ -88,7 +90,7 @@ def concentrations_to_volumes(
     ) * multiple
 
     # If a parameter has all values equal to 0,
-    # assign 'multiple' value
+    # assign 'multiple' value as minimum volume
     for param in volumes_df:
         if volumes_df[param].sum() == 0:
             volumes_df[param] = multiple
