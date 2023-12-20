@@ -7,9 +7,11 @@ from os import getcwd as os_getcwd
 from brs_utils import add_logger_args
 from icfree._version import __version__
 
+
 DEFAULT_ARGS = {
     'OUTPUT_FOLDER': os_getcwd(),
     'SAMPLE_VOLUME': 1000,
+    'ROBOT': 'echo',
 }
 
 
@@ -30,15 +32,15 @@ def build_args_parser(
 def add_arguments(parser):
 
     parser.add_argument(
-        'cfps',
+        'parameters',
         type=str,
-        help='Path to a .tsv file containing CFPS parameters and features',
+        help='Path to the file (.tsv) containing component parameters',
     )
 
     parser.add_argument(
         'concentrations',
         type=str,
-        help='Path to file containing concentrations to convert'
+        help='Path to file (.tsv) containing concentrations to convert'
     )
 
     parser.add_argument(
@@ -55,6 +57,14 @@ def add_arguments(parser):
         default=DEFAULT_ARGS['OUTPUT_FOLDER'],
         help=('Output folder to write output files'
               f' (default: {DEFAULT_ARGS["OUTPUT_FOLDER"]})')
+    )
+
+    parser.add_argument(
+        '-r', '--robot',
+        type=str,
+        default=DEFAULT_ARGS['ROBOT'],
+        help='Name of the robot to use (activate 2.5 multiple for volumes)'
+        f' (default: {DEFAULT_ARGS["ROBOT"]})',
     )
 
     # Add logger arguments

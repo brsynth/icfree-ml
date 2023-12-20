@@ -54,7 +54,8 @@ class Test(TestCase):
         volumes_df = concentrations_to_volumes(
             cfps_parameters_df,
             concentrations_df,
-            1000
+            1000,
+            2.5
         )
         expected_df = pd_read_csv(self.sampling_volumes, sep='\t')
         assert_frame_equal(
