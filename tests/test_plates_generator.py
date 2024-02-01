@@ -60,7 +60,7 @@ class TestPlatesGenerator(TestCase):
         )
 
     def test_init_plate(self):
-        plate = init_plate()
+        plate = init_plate(dimensions='16x24')
         self.assertEqual(len(plate.get_cols()), 24)
         self.assertEqual(len(plate.get_rows()), 16)
         self.assertEqual(plate.get_dead_volume(), 15000)
@@ -103,8 +103,8 @@ class TestPlatesGenerator(TestCase):
         # Generate dest plates
         dest_plates = dst_plate_generator(
             volumes=values_df,
-            starting_well='A1',
-            plate_well_capacity=60000,
+            start_well='A1',
+            well_capacity=60000,
             vertical=True,
         )
 
@@ -112,12 +112,12 @@ class TestPlatesGenerator(TestCase):
         source_plates = src_plate_generator(
             dest_plates=dest_plates,
             plate_dead_volume=15000,
-            plate_well_capacity=60000,
+            well_capacity=60000,
             param_dead_volumes=dead_volumes,
-            starting_well='A1',
-            optimize_well_volumes=[],
+            start_well='A1',
+            opt_well_vol=[],
             vertical=True,
-            plate_dimensions='16x24',
+            dimensions='16x24',
         )
         expected_plate = Plate.from_file(
             os_path.join(self.REF_FOLDER, 'source_plate_1.json')
@@ -141,8 +141,8 @@ class TestPlatesGenerator(TestCase):
         # Generate dest plates
         dest_plates = dst_plate_generator(
             volumes=values_df,
-            starting_well='A1',
-            plate_well_capacity=60000,
+            start_well='A1',
+            well_capacity=60000,
             vertical=True,
         )
 
@@ -150,12 +150,12 @@ class TestPlatesGenerator(TestCase):
         source_plates = src_plate_generator(
             dest_plates=dest_plates,
             plate_dead_volume=15000,
-            plate_well_capacity=60000,
+            well_capacity=60000,
             param_dead_volumes=dead_volumes,
-            starting_well='A1',
-            optimize_well_volumes=['Component_1'],
+            start_well='A1',
+            opt_well_vol=['Component_1'],
             vertical=True,
-            plate_dimensions='16x24',
+            dimensions='16x24',
         )
         self.assertEqual(
             source_plates[0].get_well('A1')['Component_1'],
@@ -179,8 +179,8 @@ class TestPlatesGenerator(TestCase):
         # Generate dest plates
         dest_plates = dst_plate_generator(
             volumes=values_df,
-            starting_well='A1',
-            plate_well_capacity=60000,
+            start_well='A1',
+            well_capacity=60000,
             vertical=True,
         )
 
@@ -188,12 +188,12 @@ class TestPlatesGenerator(TestCase):
         source_plates = src_plate_generator(
             dest_plates=dest_plates,
             plate_dead_volume=15000,
-            plate_well_capacity=60000,
+            well_capacity=60000,
             param_dead_volumes=dead_volumes,
-            starting_well='N24',
-            optimize_well_volumes=[],
+            start_well='N24',
+            opt_well_vol=[],
             vertical=True,
-            plate_dimensions='16x24',
+            dimensions='16x24',
         )
         expected_plate_1 = Plate.from_file(
             os_path.join(self.REF_FOLDER, 'src_plate_1.json')
@@ -219,8 +219,8 @@ class TestPlatesGenerator(TestCase):
         # Generate dest plates
         dest_plates = dst_plate_generator(
             volumes=values_df,
-            starting_well='A1',
-            plate_well_capacity=60000,
+            start_well='A1',
+            well_capacity=60000,
             vertical=True,
         )
 
@@ -228,12 +228,12 @@ class TestPlatesGenerator(TestCase):
         source_plates = src_plate_generator(
             dest_plates=dest_plates,
             plate_dead_volume=15000,
-            plate_well_capacity=60000,
+            well_capacity=60000,
             param_dead_volumes=dead_volumes,
-            starting_well='A1',
-            optimize_well_volumes=[],
+            start_well='A1',
+            opt_well_vol=[],
             vertical=True,
-            plate_dimensions='16x24',
+            dimensions='16x24',
         )
         self.assertEqual(
             source_plates[0].get_well('A1')['Component_2'],
@@ -248,8 +248,8 @@ class TestPlatesGenerator(TestCase):
         # Generate destination plates
         dest_plates = dst_plate_generator(
             volumes=values_df,
-            starting_well='A1',
-            plate_well_capacity=60000,
+            start_well='A1',
+            well_capacity=60000,
             vertical=True,
         )
         expected_plate = Plate.from_file(
@@ -265,8 +265,8 @@ class TestPlatesGenerator(TestCase):
         # Generate destination plates
         dest_plates = dst_plate_generator(
             volumes=values_df,
-            starting_well='N24',
-            plate_well_capacity=60000,
+            start_well='N24',
+            well_capacity=60000,
             vertical=True,
         )
         expected_plate_1 = Plate.from_file(
@@ -481,7 +481,7 @@ class TestPlate(TestCase):
         plate = Plate.from_file(file)
         plate_test = Plate.from_file(file)
         self.assertEqual(plate, plate_test)
-        self.assertNotEqual(plate, Plate())
+        self.assertNotEqual(plate, Plate(dimensions='16x24'))
 
     def test_plate_reindex_wells_by_factor(self):
         plate = Plate.from_file(

@@ -91,10 +91,11 @@ def main():
     # Generate destination plates
     dest_plates = dst_plate_generator(
         volumes=values_df,
-        starting_well=args.dest_starting_well,
-        plate_well_capacity=args.dest_plate_well_capacity,
+        start_well=args.dst_start_well,
+        well_capacity=args.dst_plt_well_capacity,
         vertical=True,
         nplicates=args.nplicates,
+        dimensions=args.dst_plt_dim,
         logger=logger
     )
 
@@ -103,13 +104,13 @@ def main():
         source_plates = src_plate_generator(
             # volumes=values_df,
             dest_plates=dest_plates,
-            plate_dead_volume=args.source_plate_dead_volume,
-            plate_well_capacity=args.source_plate_well_capacity,
+            plate_dead_volume=args.src_plt_dead_volume,
+            well_capacity=args.src_plt_well_capacity,
             param_dead_volumes=dead_volumes,
-            starting_well=args.src_starting_well,
-            optimize_well_volumes=args.optimize_well_volumes,
+            start_well=args.src_start_well,
+            opt_well_vol=args.opt_well_vol,
             vertical=True,
-            plate_dimensions=args.plate_dimensions,
+            dimensions=args.src_plt_dim,
             logger=logger
         )
     except IndexError as e:

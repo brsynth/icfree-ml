@@ -36,9 +36,9 @@ class Plate:
 
     def __init__(
         self,
-        dimensions: str = DEFAULT_ARGS['PLATE_DIMENSIONS'],
-        dead_volume: int = DEFAULT_ARGS['SOURCE_PLATE_DEAD_VOLUME'],
-        well_capacity: float = DEFAULT_ARGS['SOURCE_PLATE_WELL_CAPACITY'],
+        dimensions: str,
+        dead_volume: int = DEFAULT_ARGS['SRC_PLT_DEAD_VOLUME'],
+        well_capacity: float = DEFAULT_ARGS['SRC_PLT_WELL_CAPACITY'],
         vertical: bool = True,
         logger: Logger = getLogger(__name__)
     ):

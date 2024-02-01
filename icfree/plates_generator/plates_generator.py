@@ -55,18 +55,18 @@ def extract_dead_volumes(
 
 
 def init_plate(
-    starting_well: str = DEFAULT_ARGS['SRC_STARTING_WELL'],
+    dimensions: str,
+    start_well: str = DEFAULT_ARGS['SRC_PLT_START_WELL'],
     vertical: bool = True,
-    dimensions: str = DEFAULT_ARGS['PLATE_DIMENSIONS'],
-    dead_volume: int = DEFAULT_ARGS['SOURCE_PLATE_DEAD_VOLUME'],
-    well_capacity: float = DEFAULT_ARGS['SOURCE_PLATE_WELL_CAPACITY'],
+    dead_volume: int = DEFAULT_ARGS['SRC_PLT_DEAD_VOLUME'],
+    well_capacity: float = DEFAULT_ARGS['SRC_PLT_WELL_CAPACITY'],
     logger: Logger = getLogger(__name__)
 ) -> Plate:
     """Initialize a Plate object
 
     Parameters
     ----------
-    starting_well : str, optional
+    start_well : str, optional
         Well to fill first, by default 'A1'
     vertical : bool, optional
         Reading/writing direction, by default True
@@ -91,15 +91,15 @@ def init_plate(
         vertical=vertical,
         logger=logger
     )
-    plate.set_current_well(starting_well)
+    plate.set_current_well(start_well)
     return plate
 
 
 def dst_plate_generator(
     volumes: DataFrame,
-    plt_dim: str = DEFAULT_ARGS['PLATE_DIMENSIONS'],
-    starting_well: str = DEFAULT_ARGS['DEST_STARTING_WELL'],
-    plate_well_capacity: float = DEFAULT_ARGS['SOURCE_PLATE_WELL_CAPACITY'],
+    dimensions: str = DEFAULT_ARGS['DST_PLT_DIM'],
+    start_well: str = DEFAULT_ARGS['DST_PLT_START_WELL'],
+    well_capacity: float = DEFAULT_ARGS['DST_PLT_WELL_CAPACITY'],
     vertical: bool = True,
     nplicates: int = DEFAULT_ARGS['NPLICATES'],
     logger: Logger = getLogger(__name__)
@@ -111,11 +111,11 @@ def dst_plate_generator(
     ----------
     volumes: DataFrame
         DataFrames with samples
-    plt_dim: str
+    dimensions: str
         Plate dimensions, by default '16x24'
-    starting_well : str
+    start_well : str
         Starter well to begin filling the 384 well-plate. Defaults to 'A1'
-    plate_well_capacity: float
+    well_capacity: float
         Plate well capacity, by default 60000
     vertical: bool
         - True: plate is filled column by column from top to bottom
@@ -137,9 +137,9 @@ def dst_plate_generator(
         # Generate destination plate(s)
         plates += __dst_plate_generator(
             volumes=volumes,
-            plt_dim=plt_dim,
-            starting_well=starting_well,
-            plate_well_capacity=plate_well_capacity,
+            dimensions=dimensions,
+            start_well=start_well,
+            well_capacity=well_capacity,
             vertical=vertical,
             logger=logger
         )
@@ -153,9 +153,9 @@ def dst_plate_generator(
 
 def __dst_plate_generator(
     volumes: DataFrame,
-    plt_dim: str = DEFAULT_ARGS['PLATE_DIMENSIONS'],
-    starting_well: str = DEFAULT_ARGS['DEST_STARTING_WELL'],
-    plate_well_capacity: float = DEFAULT_ARGS['SOURCE_PLATE_WELL_CAPACITY'],
+    dimensions: str = DEFAULT_ARGS['DST_PLT_DIM'],
+    start_well: str = DEFAULT_ARGS['DST_PLT_START_WELL'],
+    well_capacity: float = DEFAULT_ARGS['DST_PLT_WELL_CAPACITY'],
     vertical: bool = True,
     logger: Logger = getLogger(__name__)
 ) -> List:
@@ -166,11 +166,11 @@ def __dst_plate_generator(
     ----------
     volumes: DataFrame
         DataFrames with samples
-    plt_dim: str
+    dimensions: str
         Plate dimensions, by default '16x24'
-    starting_well : str
+    start_well : str
         Starter well to begin filling the 384 well-plate. Defaults to 'A1'
-    plate_well_capacity: float
+    well_capacity: float
         Plate well capacity, by default 60000
     vertical: bool
         - True: plate is filled column by column from top to bottom
@@ -188,10 +188,10 @@ def __dst_plate_generator(
     # plt_idx = 1
     plates = []
     plate = init_plate(
-        starting_well=starting_well,
+        start_well=start_well,
         dead_volume=plate_dead_volume,
-        dimensions=plt_dim,
-        well_capacity=plate_well_capacity,
+        dimensions=dimensions,
+        well_capacity=well_capacity,
         vertical=vertical,
         logger=logger
     )
@@ -216,7 +216,7 @@ def __dst_plate_generator(
             plate = Plate(
                 dimensions=plate.get_dimensions(),
                 dead_volume=plate_dead_volume,
-                well_capacity=plate_well_capacity,
+                well_capacity=well_capacity,
                 vertical=vertical,
                 logger=logger
             )
@@ -232,12 +232,12 @@ def src_plate_generator(
     # volumes: DataFrame,
     dest_plates: List,
     param_dead_volumes: Dict,
-    plate_dead_volume: int = DEFAULT_ARGS['SOURCE_PLATE_DEAD_VOLUME'],
-    plate_well_capacity: float = DEFAULT_ARGS['SOURCE_PLATE_WELL_CAPACITY'],
-    starting_well: str = DEFAULT_ARGS['SRC_STARTING_WELL'],
-    optimize_well_volumes: List = DEFAULT_ARGS['OPTIMIZE_WELL_VOLUMES'],
+    plate_dead_volume: int = DEFAULT_ARGS['SRC_PLT_DEAD_VOLUME'],
+    well_capacity: float = DEFAULT_ARGS['SRC_PLT_WELL_CAPACITY'],
+    start_well: str = DEFAULT_ARGS['SRC_PLT_START_WELL'],
+    opt_well_vol: List = DEFAULT_ARGS['OPTIMIZE_WELL_VOLUMES'],
     vertical: bool = True,
-    plate_dimensions: str = DEFAULT_ARGS['PLATE_DIMENSIONS'],
+    dimensions: str = DEFAULT_ARGS['SRC_PLT_DIM'],
     logger: Logger = getLogger(__name__)
 ) -> List:
     """
@@ -253,16 +253,16 @@ def src_plate_generator(
         deadVolumes of parameters
     plate_dead_volume: int
         Source plate deadVolume. Defaults to 15000 nL
-    plate_well_capacity: float
+    well_capacity: float
         Source plate well capacity. Defaults to 60000 nL
-    starting_well : str
+    start_well : str
         Starter well to begin filling the 384 well-plate. Defaults to 'A1'
-    optimize_well_volumes: List
+    opt_well_vol: List
         List of parameters to optimize. set to [] if none
     vertical: bool
         - True: plate is filled column by column from top to bottom
         - False: plate is filled row by row from left to right
-    plate_dimensions: str
+    dimensions: str
         Dimensions of the plate given as a string with nb_rows
         and nb_cols separated by 'x'
     logger: Logger
@@ -277,19 +277,19 @@ def src_plate_generator(
     logger.debug(f'dest_plates:\n{dest_plates}')
     logger.debug(f'param_dead_volumes: {param_dead_volumes}')
     logger.debug(f'plate_dead_volume: {plate_dead_volume}')
-    logger.debug(f'plate_well_capacity: {plate_well_capacity}')
-    logger.debug(f'starting_well: {starting_well}')
-    logger.debug(f'optimize_well_volumes: {optimize_well_volumes}')
+    logger.debug(f'plate_well_capacity: {well_capacity}')
+    logger.debug(f'starting_well: {start_well}')
+    logger.debug(f'optimize_well_volumes: {opt_well_vol}')
     logger.debug(f'vertical: {vertical}')
-    logger.debug(f'plate_dimensions: {plate_dimensions}')
+    logger.debug(f'plate_dimensions: {dimensions}')
 
     plates = []
     nb_plates = 1
     plate = init_plate(
-        starting_well=starting_well,
+        start_well=start_well,
         dead_volume=plate_dead_volume,
-        dimensions=plate_dimensions,
-        well_capacity=plate_well_capacity,
+        dimensions=dimensions,
+        well_capacity=well_capacity,
         vertical=vertical,
         logger=logger
     )
@@ -333,11 +333,11 @@ def src_plate_generator(
             vol_sums[factor] / nb_wells / 2.5
         ) * 2.5
         logger.debug(f'net_volume_per_well: {net_volume_per_well}')
-        logger.debug(f'optmize_well_volumes: {optimize_well_volumes}')
+        logger.debug(f'optmize_well_volumes: {opt_well_vol}')
         # Optimize well volume
         if (
-            factor in optimize_well_volumes
-            or optimize_well_volumes == ['all']
+            factor in opt_well_vol
+            or opt_well_vol == ['all']
         ):
             # Net volume per well
             volume_per_well = (
@@ -361,7 +361,7 @@ def src_plate_generator(
                 plate = Plate(
                     dimensions=plate.get_dimensions(),
                     dead_volume=plate_dead_volume,
-                    well_capacity=plate_well_capacity,
+                    well_capacity=well_capacity,
                     vertical=vertical,
                     logger=logger
                 )
