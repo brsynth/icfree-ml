@@ -1,0 +1,17 @@
+{
+    "Dimensions": "16x24",
+    "deadVolume": 0,
+    "Well capacity": 60000,
+    "Current well": "P24",
+    "Parameters": [
+        "Component_1",
+        "Component_2",
+        "Component_3",
+        "Component_4",
+        "Component_5",
+        "Component_6",
+        "Component_7",
+        "Component_8"
+    ],
+    "Wells": "tests/data/plates_generator/output/dst_plate_1.csv"
+}

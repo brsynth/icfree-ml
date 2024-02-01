@@ -1,7 +1,10 @@
+[![Tests](https://github.com/brsynth/icfree-ml/actions/workflows/test.yml/badge.svg)](https://github.com/brsynth/icfree-ml/actions/workflows/test.yml)
 
 # Description
 
 Design of experiments (DoE) and machine learning packages for the iCFree project
+
+![icfree](/img/icfree.png)
 
 # Requirements
 

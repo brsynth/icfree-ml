@@ -1,6 +1,4 @@
-#!/usr/bin/env python
-# coding: utf-8
-
+"""Plates generator module"""
 from pandas import DataFrame
 from math import (
     ceil,
@@ -23,7 +21,7 @@ from .plate import Plate
 
 
 def extract_dead_volumes(
-    cfps_parameters_df: DataFrame,
+    parameters_df: DataFrame,
     logger: Logger = getLogger(__name__)
 ) -> DataFrame:
     """
@@ -33,22 +31,20 @@ def extract_dead_volumes(
     ----------
     cfps_parameters_df : DataFrame
         Dataframe with cfps_parameters data
-    volumes_df : DataFrame
-        Dataframe with volumes data
     logger: Logger
-        Logger
+        Logger, default is getLogger(__name__)
 
     Returns
     -------
     dead_volumes : Dict
         Dict with deadVolumes data
     """
-    logger.debug(f'cfps_parameters_df:\n{cfps_parameters_df}')
+    logger.debug(f'parameters_df:\n{parameters_df}')
 
     dead_volumes = dict(
-        cfps_parameters_df[
+        parameters_df[
             [
-                'Parameter',
+                'Component',
                 'deadVolume'
             ]
         ].to_numpy()
@@ -60,7 +56,7 @@ def extract_dead_volumes(
 
 def init_plate(
     starting_well: str = DEFAULT_ARGS['SRC_STARTING_WELL'],
-    vertical: str = True,
+    vertical: bool = True,
     dimensions: str = DEFAULT_ARGS['PLATE_DIMENSIONS'],
     dead_volume: int = DEFAULT_ARGS['SOURCE_PLATE_DEAD_VOLUME'],
     well_capacity: float = DEFAULT_ARGS['SOURCE_PLATE_WELL_CAPACITY'],
@@ -72,7 +68,7 @@ def init_plate(
     ----------
     starting_well : str, optional
         Well to fill first, by default 'A1'
-    vertical : str, optional
+    vertical : bool, optional
         Reading/writing direction, by default True
     dimensions : str, optional
         Dimensions, by default '16x24'
@@ -104,9 +100,10 @@ def dst_plate_generator(
     plt_dim: str = DEFAULT_ARGS['PLATE_DIMENSIONS'],
     starting_well: str = DEFAULT_ARGS['DEST_STARTING_WELL'],
     plate_well_capacity: float = DEFAULT_ARGS['SOURCE_PLATE_WELL_CAPACITY'],
-    vertical: str = True,
+    vertical: bool = True,
+    nplicates: int = DEFAULT_ARGS['NPLICATES'],
     logger: Logger = getLogger(__name__)
-) -> Dict:
+) -> List:
     """
     Generate destination plates dataframe
 
@@ -118,6 +115,63 @@ def dst_plate_generator(
         Plate dimensions, by default '16x24'
     starting_well : str
         Starter well to begin filling the 384 well-plate. Defaults to 'A1'
+    plate_well_capacity: float
+        Plate well capacity, by default 60000
+    vertical: bool
+        - True: plate is filled column by column from top to bottom
+        - False: plate is filled row by row from left to right
+    nplicates: int
+        Number of plates to generate, by default 1
+    logger: Logger
+        Logger
+
+    Returns
+    -------
+    plates: List
+        List with destination plates dataframes
+    """
+
+    plates = []
+
+    for i in range(nplicates):
+        # Generate destination plate(s)
+        plates += __dst_plate_generator(
+            volumes=volumes,
+            plt_dim=plt_dim,
+            starting_well=starting_well,
+            plate_well_capacity=plate_well_capacity,
+            vertical=vertical,
+            logger=logger
+        )
+
+    if nplicates > 1:
+        # Merge plates
+        return Plate.merge(plates)
+
+    return plates
+
+
+def __dst_plate_generator(
+    volumes: DataFrame,
+    plt_dim: str = DEFAULT_ARGS['PLATE_DIMENSIONS'],
+    starting_well: str = DEFAULT_ARGS['DEST_STARTING_WELL'],
+    plate_well_capacity: float = DEFAULT_ARGS['SOURCE_PLATE_WELL_CAPACITY'],
+    vertical: bool = True,
+    logger: Logger = getLogger(__name__)
+) -> List:
+    """
+    Generate destination plates dataframe
+
+    Parameters
+    ----------
+    volumes: DataFrame
+        DataFrames with samples
+    plt_dim: str
+        Plate dimensions, by default '16x24'
+    starting_well : str
+        Starter well to begin filling the 384 well-plate. Defaults to 'A1'
+    plate_well_capacity: float
+        Plate well capacity, by default 60000
     vertical: bool
         - True: plate is filled column by column from top to bottom
         - False: plate is filled row by row from left to right
@@ -126,13 +180,13 @@ def dst_plate_generator(
 
     Returns
     -------
-    plates: Dict
-        Dict with destination plates dataframes
+    plates: List
+        List with destination plates dataframes
     """
     # No deadVolume for destination plates
     plate_dead_volume = 0
-    plt_idx = 1
-    plates = {}
+    # plt_idx = 1
+    plates = []
     plate = init_plate(
         starting_well=starting_well,
         dead_volume=plate_dead_volume,
@@ -154,8 +208,9 @@ def dst_plate_generator(
             plate.next_well()
         except ValueError:  # Out of plate
             # Store current plate
-            plates[str(plt_idx)] = deepcopy(plate)
-            plt_idx += 1
+            # plates[str(plt_idx)] = deepcopy(plate)
+            plates.append(deepcopy(plate))
+            # plt_idx += 1
             # Create new plate
             logger.warning('A new destination plate is created')
             plate = Plate(
@@ -167,7 +222,8 @@ def dst_plate_generator(
             )
 
     # Store last plate
-    plates[str(plt_idx)] = deepcopy(plate)
+    # plates[str(plt_idx)] = deepcopy(plate)
+    plates.append(deepcopy(plate))
 
     return plates
 
@@ -179,7 +235,7 @@ def src_plate_generator(
     plate_well_capacity: float = DEFAULT_ARGS['SOURCE_PLATE_WELL_CAPACITY'],
     starting_well: str = DEFAULT_ARGS['SRC_STARTING_WELL'],
     optimize_well_volumes: List = DEFAULT_ARGS['OPTIMIZE_WELL_VOLUMES'],
-    vertical: str = True,
+    vertical: bool = True,
     plate_dimensions: str = DEFAULT_ARGS['PLATE_DIMENSIONS'],
     logger: Logger = getLogger(__name__)
 ) -> Dict:
@@ -192,8 +248,10 @@ def src_plate_generator(
         DataFrames with factors
     param_dead_volumes: Dict
         deadVolumes of parameters
-    plate_dead_volume
+    plate_dead_volume: int
         Source plate deadVolume. Defaults to 15000 nL
+    plate_well_capacity: float
+        Source plate well capacity. Defaults to 60000 nL
     starting_well : str
         Starter well to begin filling the 384 well-plate. Defaults to 'A1'
     optimize_well_volumes: List

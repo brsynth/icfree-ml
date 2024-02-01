@@ -1,82 +1,42 @@
 {
-    "Mg-glutamate": {
-        "maxValue": 4.0,
-        "deadVolume": 0,
-        "Ratios": [0.0, 0.1, 0.3, 0.5, 1.0]
+    "Component_1": {
+        "maxValue": 125,
+        "Ratios": [
+            0.0,
+            0.1,
+            0.3,
+            0.5,
+            1.0
+        ]
     },
-    "k-glutamate": {
-        "maxValue": 80.0,
-        "deadVolume": 0,
+    "Component_2": {
+        "maxValue": 125,
+        "Ratios": [
+            1.0
+        ]
+    },
+    "Component_3": {
+        "maxValue": 125,
         "Ratios": []
     },
-    "CoA": {
-        "maxValue": 0.26,
-        "deadVolume": 0,
+    "Component_4": {
+        "maxValue": 125,
         "Ratios": []
     },
-    "3-PGA": {
-        "maxValue": 30.0,
-        "deadVolume": 0,
+    "Component_5": {
+        "maxValue": 125,
         "Ratios": []
     },
-    "NTP": {
-        "maxValue": 1.5,
-        "deadVolume": 0,
+    "Component_6": {
+        "maxValue": 125,
         "Ratios": []
     },
-    "NAD": {
-        "maxValue": 0.33,
-        "deadVolume": 0,
+    "Component_7": {
+        "maxValue": 125,
         "Ratios": []
     },
-    "Folinic acid": {
-        "maxValue": 0.068,
-        "deadVolume": 0,
+    "Component_8": {
+        "maxValue": 125,
         "Ratios": []
-    },
-    "Spermidine": {
-        "maxValue": 1.0,
-        "deadVolume": 0,
-        "Ratios": []
-    },
-    "tRNA": {
-        "maxValue": 0.2,
-        "deadVolume": 0,
-        "Ratios": []
-    },
-    "Amino acids": {
-        "maxValue": 1.5,
-        "deadVolume": 0,
-        "Ratios": []
-    },
-    "CAMP": {
-        "maxValue": 0.75,
-        "deadVolume": 0,
-        "Ratios": []
-    },
-    "Extract": {
-        "maxValue": 30.0,
-        "deadVolume": 2000,
-        "Ratios": [1.0]
-    },
-    "HEPES": {
-        "maxValue": 50.0,
-        "deadVolume": 0,
-        "Ratios": [1.0]
-    },
-    "PEG": {
-        "maxValue": 2.0,
-        "deadVolume": 4000,
-        "Ratios": [1.0]
-    },
-    "Promoter": {
-        "maxValue": 10.0,
-        "deadVolume": 0,
-        "Ratios": [1.0]
-    },
-    "RBS": {
-        "maxValue": 10.0,
-        "deadVolume": 0,
-        "Ratios": [1.0]
     }
 }

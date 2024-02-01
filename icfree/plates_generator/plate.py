@@ -1,3 +1,4 @@
+'''Plate class'''
 from os import path as os_path
 from string import (
     ascii_uppercase as str_ascii_uppercase
@@ -7,6 +8,7 @@ from typing import (
     List,
     Type
 )
+from copy import deepcopy
 from logging import (
     Logger,
     getLogger
@@ -16,7 +18,6 @@ from json import (
     dump as json_dump,
     load as json_load
 )
-from csv import reader as csv_reader
 from re import split as re_split
 from functools import reduce
 from collections import Counter
@@ -32,6 +33,7 @@ from .args import (
 
 
 class Plate:
+    '''Plate class'''
 
     def __init__(
         self,
@@ -70,6 +72,9 @@ class Plate:
 
     def __str__(self) -> str:
         return json_dumps(self.to_dict(), indent=4)
+    
+    def __repr__(self) -> str:
+        return self.__str__()
 
     def __eq__(self, other: Type['Plate']) -> bool:
         return (
@@ -80,8 +85,47 @@ class Plate:
             and self.get_nb_columns() == other.get_nb_columns()
             # and self.get_nb_empty_wells() == other.get_nb_empty_wells()
         )
+    
+    @staticmethod
+    def merge(plates: List[Type['Plate']], model: 'Plate' = None) -> List[Type['Plate']]:
+        '''Merge wells from list of plates to a new plate respecting the model'''
 
-    def to_dict(self) -> str:
+        if len(plates) <= 0:
+            return []
+
+        if not model:
+            model = plates[0]
+
+        res_plates = [
+            Plate(
+                dimensions=model.get_dimensions(),
+                dead_volume=model.get_dead_volume(),
+                well_capacity=model.get_well_capacity(),
+                vertical=model.get_vertical()
+            )
+        ]
+        # Add the wells of the following plates to the first one
+        for plate in plates:
+            for well_d in plate.get_wells().values():
+                # Fill the well with all param volumes
+                for param, volume in well_d.items():
+                    res_plates[-1].fill_well(param, volume)
+                try:
+                    res_plates[-1].next_well()
+                except ValueError:  # Out of plate
+                    res_plates.append(
+                        Plate(
+                            dimensions=model.get_dimensions(),
+                            dead_volume=model.get_dead_volume(),
+                            well_capacity=model.get_well_capacity(),
+                            vertical=model.get_vertical()
+                        )
+                    )
+
+        return res_plates
+
+    def to_dict(self) -> Dict:
+        '''Return a dict representation of the plate'''
         return {
             'Dimensions': self.get_dimensions(),
             'deadVolume': self.get_dead_volume(),
@@ -92,110 +136,109 @@ class Plate:
             'Wells': self.get_wells()
         }
 
-    def to_json(self, path: str) -> None:
-        with open(path, 'w') as f:
-            json_dump(self.to_dict(), f, indent=4)
-
-    def to_csv(
-        self,
-        path: str,
-        sep: str = ','
-    ) -> None:
+    def to_file(self, path: str, format_: str) -> None:
+        '''Save plate to file'''
+        if format_ == 'csv':
+            sep = ','
+        elif format_ == 'tsv':
+            sep = '\t'
+        else:
+            raise ValueError(f"Format {format_} not supported")
         # Save wells as a csv file
         df = DataFrame(self.get_wells()).transpose()
         df.index.name = 'Well'
-        _path = os_path.splitext(path)
-        df.to_csv(f'{_path[0]}_wells{_path[1]}', sep=sep)
+        df.to_csv(path, sep=sep)
         # Save metadata as a csv file
-        # get dict without wells and parameters
+        # get dict without wells
         _dict = {
             k: v for k, v in self.to_dict().items()
             if k != 'Wells'
-            and k != 'Parameters'
         }
-        with open(f'{_path[0]}_infos{_path[1]}', 'w') as f:
-            for k, v in _dict.items():
-                f.write(f'{k}{sep}{v}\n')
+        # put wells filename in metadata
+        _dict['Wells'] = path
+        _path = os_path.splitext(path)
+        with open(f'{_path[0]}.json', 'w') as f:
+            json_dump(_dict, f, indent=4)
 
     @staticmethod
-    def from_csv(
+    def wells_from_csv(
         path: str,
         sep: str = ',',
         logger: Logger = getLogger(__name__)
     ) -> 'Plate':
+        '''Read wells from csv file'''
         # Read wells from data csv file
         df = pd_read_csv(path, sep=sep, index_col=0)
-        # Read metadata from metadata csv file
-        _path = os_path.splitext(path)
-        reader = csv_reader(open(f'{_path[0][:-6]}_infos{_path[1]}', 'r'))
-        d_plate = {}
-        for row in reader:
-            k, v = row
-            d_plate[k] = v
+        wells_d = df.to_dict(orient='index')
+        # Remove NaN values
+        for well in wells_d:
+            wells_d[well] = {
+                k: v for k, v in wells_d[well].items()
+                if not pd_isna(v)
+            }
+        return wells_d
+
+    @staticmethod
+    def from_file(
+        path: str,
+        wells_file: str = None,
+        logger: Logger = getLogger(__name__)
+    ) -> 'Plate':
+        '''Load plate from file'''
+
+        logger.debug(f"Loading plate from {path}...")
+
+        # Load metadata from json file
+        with open(path, 'r') as f:
+            d_plate = json_load(f)
+
+        # If wells_file is not specified, use the one in metadata
+        if wells_file is None:
+            wells_file = d_plate['Wells']
+
+        # Load wells from csv/tsv file
+        if wells_file.endswith('.csv'):
+            sep = ','
+        elif wells_file.endswith('.tsv'):
+            sep = '\t'
+        else:
+            raise ValueError(f"Format {wells_file} not supported")
+        d_plate['Wells'] = Plate.wells_from_csv(
+            wells_file,
+            sep=sep,
+            logger=logger
+        )
+
+        # Create plate
         plate = Plate(
             dimensions=d_plate['Dimensions'],
             dead_volume=d_plate['deadVolume'],
             well_capacity=d_plate['Well capacity'],
             logger=logger
         )
-        plate.__wells = df.to_dict(orient='index')
-        # Remove NaN values
-        for well in plate.__wells:
-            plate.__wells[well] = {
-                k: v for k, v in plate.__wells[well].items()
-                if not pd_isna(v)
-            }
-        return plate
-
-    @staticmethod
-    def from_file(
-        path: str,
-        logger: Logger = getLogger(__name__)
-    ) -> 'Plate':
-        logger.debug(f"Loading plate from {path}...")
-        if path.endswith('.json'):
-            return Plate.from_json(path, logger=logger)
-        elif path.endswith('.csv'):
-            return Plate.from_csv(path, logger=logger)
-        elif path.endswith('.tsv'):
-            return Plate.from_csv(path, sep='\t', logger=logger)
-        else:
-            raise ValueError(f"File format not supported: {path}")
-
-    def to_file(self, path: str, format: str) -> None:
-        if format == 'csv':
-            self.to_csv(path, sep=',')
-        elif format == 'tsv':
-            self.to_csv(path, sep='\t')
-        elif format == 'json':
-            self.to_json(path)
-
-    @staticmethod
-    def from_json(
-        path: str,
-        logger: Logger = getLogger(__name__)
-    ) -> 'Plate':
-        with open(path, 'r') as f:
-            d_plate = json_load(f)
-        plate = Plate(
-            dimensions=d_plate['Dimensions'],
-            dead_volume=d_plate['deadVolume'],
-            well_capacity=d_plate['Well capacity']
-        )
         plate.__wells = d_plate['Wells']
-        # plate.__nb_empty_wells = d_plate['Empty wells']
+        plate.set_current_well(d_plate['Current well'])
+
         return plate
+
+    def get_vertical(self) -> bool:
+        '''Return the vertical'''
+        return self.__vertical
 
     def get_dimensions(self) -> str:
+        '''Return the plate dimensions'''
         return f'{self.get_nb_rows()}x{self.get_nb_cols()}'
 
     def get_columns(self) -> List:
+        '''Return the list of columns'''
         return self.__columns
 
     def get_cols(self) -> List:
+        '''Return the list of columns'''
         return self.get_columns()
 
     def get_rows(self) -> List:
+        '''Return the list of rows'''
         return self.__rows
 
     def __get_row_by_index(self, index: int) -> str:
@@ -245,36 +288,71 @@ class Plate:
             return self.get_cols()[index % self.get_nb_cols()]
 
     def get_nb_rows(self) -> int:
+        '''Return the number of rows'''
         return len(self.__rows)
 
     def get_nb_cols(self) -> int:
+        '''Return the number of columns'''
         return self.get_nb_columns()
 
     def get_nb_columns(self) -> int:
+        '''Return the number of columns'''
         return len(self.__columns)
 
     def get_nb_wells(self) -> int:
+        '''Return the number of wells'''
         return self.get_nb_rows() * self.get_nb_columns()
+    
+    def get_nb_filled_wells(self) -> int:
+        '''Return the number of filled wells'''
+        return len(self.get_list_of_wells())
 
     # def get_nb_empty_wells(self) -> int:
     #     return self.__nb_empty_wells
 
     def get_wells(self) -> Dict:
+        '''Return the wells'''
         return self.__wells
 
-    def get_list_of_wells(self) -> Dict:
+    def get_list_of_wells(self) -> List:
+        '''Return the list of wells'''
         return list(self.__wells.keys())
 
     def get_list_of_parameters(self) -> List:
+        '''Return the list of parameters'''
         parameters = [list(well.keys()) for well in self.get_wells().values()]
-        if parameters == []:
+        if not parameters:
             return []
         return list(set(reduce(lambda x, y: x+y, parameters)))
 
     def get_well(self, well: str) -> Dict:
+        """Return the well.
+
+        Parameters
+        ----------
+        well : str
+            Well name
+
+        Returns
+        -------
+        dict
+            Well
+        """
         return self.__wells.get(well, {})
 
     def __get_well_index(self, well: str) -> int:
+        """Get the index of the specified well.
+
+        Parameters
+        ----------
+        well : str
+            Well name
+
+        Returns
+        -------
+        int
+            Well index
+        """
         res = re_split(r'(\d+)', well)
         row = str(res[0])
         col = str(res[1])
@@ -287,15 +365,30 @@ class Plate:
             raise ValueError(msg)
 
     def get_well_volume(self, well: str) -> int:
+        """Get the volume of the specified well.
+
+        Parameters
+        ----------
+        well : str
+            Well name
+
+        Returns
+        -------
+        int
+            Well volume
+        """
         return sum(self.get_well(well).values())
 
     def get_dead_volume(self) -> int:
+        """Get the dead volume of the plate."""
         return self.__dead_volume
 
     def get_well_capacity(self) -> float:
+        """Get the well capacity of the plate."""
         return self.__well_capacity
 
-    def __get_current_well_index(self) -> str:
+    def __get_current_well_index(self) -> int:
+        """Get the current well index."""
         return self.__cur_well_index
 
     def get_current_well(
@@ -309,6 +402,18 @@ class Plate:
         )
 
     def well_out_of_range(self, well: str) -> bool:
+        """Check if the well is out of the plate range.
+
+        Parameters
+        ----------
+        well : str
+            Well name
+
+        Returns
+        -------
+        bool
+            True if the well is out of the plate range, False otherwise
+        """
         try:
             self.__get_well_index(well)
             return False
@@ -393,15 +498,15 @@ class Plate:
     #     self.__nb_empty_wells = min(nb_empty_wells, self.get_nb_wells())
 
     def fill_well(self, parameter: str, volume: float, well: str = '') -> None:
-        """Fill the well with the given volume.
+        """Fill the well with the given parameter for the given volume.
 
         Parameters
         ----------
-        parameter : str
+        parameter: str
             Parameter to put in the well
-        volume : float
+        volume: float
             Volume to put in the well
-        well : str, optional
+        well: str, optional
             Name of the well to fill, by default use the current one
         """
         if well == '':
@@ -427,20 +532,32 @@ class Plate:
             total_vol = volume
         # The total volume is greater than the well capacity
         if total_vol > self.get_well_capacity():
-            msg = f'The volume {volume} is greater than ' \
-                f'the well capacity {self.get_well_capacity()}.'
+            msg = f'The volume {total_vol} is greater than ' \
+                f'the well ({well}) capacity {self.get_well_capacity()}.'
             raise ValueError(msg)
             # self.__logger.warning(
             #     f'The volume {volume} is greater than '
             #     f'the well capacity {self.get_well_capacity()}.'
             # )
-        self.__logger.debug(
-            f'Filling well {well} with {volume} of {parameter}'
-        )
         self.__wells[well][parameter] += volume
+        self.__logger.debug(
+            f'Well {well} with {volume} of {parameter} filled'
+        )
         # self.set_nb_empty_wells(self.get_nb_empty_wells() - 1)
 
     def reindex_wells_by_factor(self, plate_id: str = '0') -> Dict:
+        """Reindex the wells by factor.
+
+        Parameters
+        ----------
+        plate_id : str, optional
+            Plate ID, by default '0'
+
+        Returns
+        -------
+        Dict
+            Reindexed wells by factor
+        """
         # Reindex plate by factors ID
         plate_by_factor = {}
         for well_id, well in self.get_wells().items():
@@ -457,6 +574,18 @@ class Plate:
 
     @staticmethod
     def __get_volumes_per_factor(plates: List['Plate']) -> Dict:
+        """Get the volumes per factor.
+
+        Parameters
+        ----------
+        plates : List['Plate']
+            List of plates
+
+        Returns
+        -------
+        Dict
+            Volumes per factor
+        """
         volume_by_factor = []
         # # Reindex plate by factors ID
         # for plt in plates:
@@ -478,25 +607,29 @@ class Plate:
     @staticmethod
     def get_volumes_summary(
         plates: List['Plate'],
-        type: str,
+        type_: str,
         logger: Logger = getLogger(__name__)
-    ) -> Type:
+    ) -> Dict or DataFrame or str:
         """Get a summary of the volumes per factor.
 
         Parameters
         ----------
         plates : List[Plate]
             List of plates
+        type_ : str
+            Type of the summary
+        logger : Logger, optional
+            Logger, by default getLogger(__name__)
 
         Returns
         -------
-        Type
+        Dict or DataFrame or str
             Summary of the volumes per factor
         """
         volumes = Plate.__get_volumes_per_factor(plates)
-        if type == 'dict':
+        if type_ == 'dict':
             return volumes
-        elif type == 'pandas':
+        elif type_ == 'pandas':
             vol_summary = DataFrame.from_dict(volumes, orient='index')
             vol_summary.index.name = 'Factor'
             vol_summary.columns = ['Sample+deadVolumes']

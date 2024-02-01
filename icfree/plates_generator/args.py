@@ -14,13 +14,13 @@ DEFAULT_ARGS = {
     'DEST_PLATE_DEAD_VOLUME': 15000,
     'DEST_STARTING_WELL': 'A1',
     'SRC_STARTING_WELL': 'A1',
-    'NPLICATE': 3,
+    'NPLICATES': 1,
     'KEEP_NIL_VOL': False,
     'SOURCE_PLATE_WELL_CAPACITY': 60000,
     'DEST_PLATE_WELL_CAPACITY': 60000,
     'PLATE_DIMENSIONS': '16x24',
     'OPTIMIZE_WELL_VOLUMES': [],
-    'OUTPUT_FORMAT': 'json'
+    'OUTPUT_FORMAT': 'csv'
 }
 
 
@@ -41,9 +41,9 @@ def build_args_parser(
 def add_arguments(parser):
 
     parser.add_argument(
-        'cfps',
+        'parameters',
         type=str,
-        help='Path to a .tsv file containing CFPS parameters and features',
+        help='Path to a .tsv file containing component parameters',
     )
 
     parser.add_argument(
@@ -105,18 +105,18 @@ def add_arguments(parser):
     parser.add_argument(
         '-ofmt', '--output-format',
         type=str,
-        choices=['csv', 'tsv', 'json'],
+        choices=['csv', 'tsv'],
         default=DEFAULT_ARGS['OUTPUT_FORMAT'],
         help=('Output file format'
               f' (default: {DEFAULT_ARGS["OUTPUT_FORMAT"]})')
     )
 
     parser.add_argument(
-        '--nplicate',
+        '--nplicates',
         type=int,
-        default=DEFAULT_ARGS['NPLICATE'],
+        default=DEFAULT_ARGS['NPLICATES'],
         help=('Numbers of copies of volume sets'
-              f' (default: {DEFAULT_ARGS["NPLICATE"]})')
+              f' (default: {DEFAULT_ARGS["NPLICATES"]})')
     )
 
     parser.add_argument(

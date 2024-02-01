@@ -10,6 +10,7 @@ from icfree._version import __version__
 DEFAULT_ARGS = {
     'OUTPUT_FOLDER': os_getcwd(),
     'ROBOT': 'echo',
+    'SRC_PLATE_TYPE': '384PP_AQ_GP3'
 }
 
 
@@ -33,14 +34,30 @@ def add_arguments(parser):
         '--source_plates',
         nargs='+',  # 1 or more
         type=str,
-        help='Path to .csv files containing source plates information'
+        help='Path to .json files containing source plates information'
+    )
+
+    parser.add_argument(
+        '--source_wells',
+        nargs='+',  # 1 or more
+        type=str,
+        help='Path to .csv/tsv files containing source wells content. '
+        'If set, overwrite "Wells" entry in .json file.'
     )
 
     parser.add_argument(
         '--dest_plates',
         nargs='+',  # 1 or more
         type=str,
-        help='Path to .csv files containing destination plates information',
+        help='Path to .json files containing destination plates information',
+    )
+
+    parser.add_argument(
+        '--dest_wells',
+        nargs='+',  # 1 or more
+        type=str,
+        help='Path to .csv/tsv files containing dest wells content. '
+        'If set, overwrite "Wells" entry in .json file.'
     )
 
     parser.add_argument(
@@ -57,6 +74,19 @@ def add_arguments(parser):
         default=DEFAULT_ARGS['OUTPUT_FOLDER'],
         help=('Output folder to write output files'
               f' (default: {DEFAULT_ARGS["OUTPUT_FOLDER"]})')
+    )
+
+    parser.add_argument(
+        '-spt', '--src-plate-type',
+        type=str,
+        nargs='+',
+        default=DEFAULT_ARGS['SRC_PLATE_TYPE'],
+        help=(
+            'Source plate type (for ECHO robot). If number of args is odd, '
+            'the first arg is the plate type by default. '
+            'Then, each pair of args is a sample ID and a plate type.'
+            f' (default: {DEFAULT_ARGS["SRC_PLATE_TYPE"]})'
+        )
     )
 
     # Add logger arguments

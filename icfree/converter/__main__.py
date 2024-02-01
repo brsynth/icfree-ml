@@ -1,3 +1,8 @@
+'''
+Converter module
+
+Converts concentrations into volumes from sampler module
+'''
 import sys
 from logging import (
     Logger,
@@ -15,7 +20,7 @@ from icfree.utils import save_df
 
 
 def input_importer(
-    cfps_parameters,
+    parameters,
     values,
     logger: Logger = getLogger(__name__)
 ):
@@ -24,32 +29,37 @@ def input_importer(
 
     Parameters
     ----------
-    cfps_parameters : tsv file
-        TSV of cfps parameters, status, maximum and stock concentrations
+    parameters : tsv file
+        TSV of parameters, status, maximum and stock concentrations
     values : tsv file
         Dataset with concentration values
+    logger: Logger
+        Logger, default is getLogger(__name__)
 
     Returns
     -------
-    cfps_parameters_df : DataFrame
-        Dataframe with cfps_parameters data
+    parameters_df : DataFrame
+        Dataframe with parameters data
     values_df : DataFrame
         Dataframe with sampling data
     """
-    cfps_parameters_df = read_csv(
-        cfps_parameters,
+    parameters_df = read_csv(
+        parameters,
         sep='[,\t]',
         engine='python'
     )
-    logger.debug(f'cfps_parameters_df:\n{cfps_parameters_df}')
+    logger.debug(f'parameters_df:\n{parameters_df}')
 
     values_df = read_csv(values, sep='[,\t]', engine='python')
     logger.debug(f'values_df:\n{values_df}')
 
-    return cfps_parameters_df, values_df
+    return parameters_df, values_df
 
 
 def main():
+    """
+    Main function
+    """
     parser = build_args_parser(
         program='converter',
         description='Convert concentrations into volumes'
@@ -60,18 +70,25 @@ def main():
     # CREATE LOGGER
     logger = create_logger(parser.prog, args.log)
 
-    (cfps_parameters_df,
+    (parameters_df,
      concentrations_df) = input_importer(
         args.cfps,
         args.concentrations,
         logger=logger
     )
 
+    # set the multiple of volumes
+    if args.robot == 'echo':
+        multiple = 2.5
+    else:
+        multiple = 1
+
     try:
         volumes_df = concentrations_to_volumes(
-            cfps_parameters_df,
+            parameters_df,
             concentrations_df,
             args.sample_volume,
+            multiple=multiple,
             logger=logger
         )
     except ValueError as e:

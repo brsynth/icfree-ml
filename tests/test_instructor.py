@@ -40,20 +40,20 @@ class TestInstructor(TestCase):
                     f'{plate_type}_plt_{str(i)}',
                     os_path.join(
                         self.input_folder,
-                        f'2_{plate_type}_plate_{i}.json'
+                        f'{plate_type}_plate_{i}.json'
                     )
                 )
         self.source_plate = os_path.join(
             self.input_folder,
-            'source_plate_1.json'
+            'source_plate.json'
         )
         self.dest_plate = os_path.join(
             self.input_folder,
-            'destination_plate_1.json'
+            'destination_plate.json'
         )
 
     def test_check_volumes(self):
-        plate = Plate.from_json(self.dst_plt_1)
+        plate = Plate.from_file(self.dst_plt_1)
         warning_volumes_report = check_volumes(
             plate.to_dict(),
             lower_bound=10,
@@ -65,7 +65,7 @@ class TestInstructor(TestCase):
         )
 
     def test_check_volumes_warning_upper(self):
-        plate = Plate.from_json(self.src_plt_1)
+        plate = Plate.from_file(self.src_plt_1)
         warning_volumes_report = check_volumes(
             plate.to_dict(),
             lower_bound=10,
@@ -85,7 +85,7 @@ class TestInstructor(TestCase):
         )
 
     def test_check_volumes_warning_lower(self):
-        plate = Plate.from_json(self.dest_plate)
+        plate = Plate.from_file(self.dest_plate)
         warning_volumes_report = check_volumes(
             plate.to_dict(),
             lower_bound=100,
@@ -106,12 +106,12 @@ class TestInstructor(TestCase):
 
     def test_instructions_generator(self):
         source_plates = {
-            'plate_1': Plate.from_json(self.src_plt_1),
-            'plate_2': Plate.from_json(self.src_plt_2)
+            'plate_1': Plate.from_file(self.src_plt_1),
+            'plate_2': Plate.from_file(self.src_plt_2)
         }
         destination_plates = {
-            'plate_1': Plate.from_json(self.dst_plt_1),
-            'plate_2': Plate.from_json(self.dst_plt_2)
+            'plate_1': Plate.from_file(self.dst_plt_1),
+            'plate_2': Plate.from_file(self.dst_plt_2)
         }
         instructions = instructions_generator(
             source_plates,
@@ -120,8 +120,54 @@ class TestInstructor(TestCase):
         )
         # Read csv ref file
         ref_instructions_file = os_path.join(
-            self.output_folder,
-            'echo_instructions.csv'
+            self.ref_folder,
+            'echo_instructions_1.csv'
+        )
+        ref_instructions = pd_read_csv(ref_instructions_file)
+        # Compare
+        pd_testing.assert_frame_equal(
+            instructions,
+            ref_instructions
+        )
+
+    def test_src_plate_type(self):
+        source_plates = {
+            'plate_1': Plate.from_file(self.src_plt_1),
+            'plate_2': Plate.from_file(self.src_plt_2)
+        }
+        destination_plates = {
+            'plate_1': Plate.from_file(self.dst_plt_1),
+            'plate_2': Plate.from_file(self.dst_plt_2)
+        }
+        src_plate_type = ['384PP_AQ_GP3', 'Component_2', '384PP_AQ_TEST']
+        instructions = instructions_generator(
+            source_plates,
+            destination_plates,
+            src_plate_type=src_plate_type,
+            robot='echo'
+        )
+        # Read csv ref file
+        ref_instructions_file = os_path.join(
+            self.ref_folder,
+            'echo_instructions_2.csv'
+        )
+        ref_instructions = pd_read_csv(ref_instructions_file)
+        # Compare
+        pd_testing.assert_frame_equal(
+            instructions,
+            ref_instructions
+        )
+        src_plate_type = ['384PP_AQ_TEST']
+        instructions = instructions_generator(
+            source_plates,
+            destination_plates,
+            src_plate_type=src_plate_type,
+            robot='echo'
+        )
+        # Read csv ref file
+        ref_instructions_file = os_path.join(
+            self.ref_folder,
+            'echo_instructions_3.csv'
         )
         ref_instructions = pd_read_csv(ref_instructions_file)
         # Compare

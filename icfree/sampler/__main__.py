@@ -1,3 +1,8 @@
+'''
+Sampler module
+
+Generates sampling dataframes from list of cfps parameters.
+'''
 import sys
 from pandas import (
     read_csv as pd_read_csv,
@@ -19,16 +24,19 @@ from brs_utils import (
 
 from .sampler import (
     sampling,
-    levels_to_absvalues,
     save_values,
     set_sampling_ratios,
-    check_sampling
+    check_sampling,
+    convert
 )
 from .args import build_args_parser
+from icfree._version import __version__
+
+__signature__ = f'{sys.modules[__name__].__package__} {__version__}'
 
 
 def input_importer(
-    cfps_parameters,
+    parameters,
     logger: Logger = getLogger(__name__)
 ) -> DataFrame:
     """
@@ -36,25 +44,25 @@ def input_importer(
 
     Parameters
     ----------
-    input_file : tsv file
+    cfps_parameters : tsv file
         tsv with list of cfps parameters and relative features
+    logger: Logger
+        Logger, default is getLogger(__name__)
 
     Returns
     -------
-    cfps_parameters_df : DataFrame
+    parameters_df : DataFrame
         Pandas dataframe populated with cfps_parameters data
     """
-    cfps_parameters_df = pd_read_csv(
-                        cfps_parameters,
-                        sep='\t')
+    parameters_df = pd_read_csv(parameters, sep='\t')
 
-    logger.debug(f'CFPs parameters dataframe: {cfps_parameters_df}')
+    logger.debug(f'CFPs parameters dataframe: {parameters_df}')
 
-    return cfps_parameters_df
+    return parameters_df
 
 
 def input_processor(
-    cfps_parameters_df: DataFrame,
+    parameters_df: DataFrame,
     logger: Logger = getLogger(__name__)
 ) -> Dict:
     """
@@ -62,53 +70,61 @@ def input_processor(
 
     Parameters
     ----------
-    input_df: 2d-array
+    parameters_df: 2d-array
         N-by-samples array where values are uniformly spaced between 0 and 1.
+    logger: Logger
+        Logger, default is getLogger(__name__)
 
     Returns
     -------
     parameters: dict
         Dictionnary of parameters.
         First level is indexed on 'Status' column.
-        Second level is indexed on 'Parameter' column.
+        Second level is indexed on 'Component' column.
     """
     parameters = {}
 
-    for dic in cfps_parameters_df.to_dict('records'):
-        parameters[dic['Parameter']] = {
-            k: dic[k] for k in dic.keys() - {'Parameter'}
+    for dic in parameters_df.to_dict('records'):
+        parameters[dic['Component']] = {
+            k: dic[k] for k in dic.keys() - {'Component'}
         }
         # Convert list of ratios str into list of float
         # ratio is a list of float
-        if isinstance(parameters[dic['Parameter']]['Ratios'], str):
-            parameters[dic['Parameter']]['Ratios'] = list(
+        if isinstance(parameters[dic['Component']]['Ratios'], str):
+            parameters[dic['Component']]['Ratios'] = list(
                 map(
                     float,
                     findall(
                         r"(?:\d*\.\d+|\d+)",
-                        parameters[dic['Parameter']]['Ratios']
+                        parameters[dic['Component']]['Ratios']
                     )
                 )
             )
         # ratio is nan
-        elif isnan(parameters[dic['Parameter']]['Ratios']):
-            parameters[dic['Parameter']]['Ratios'] = []
+        elif isnan(parameters[dic['Component']]['Ratios']):
+            parameters[dic['Component']]['Ratios'] = []
         # ratio is a float
         else:
-            parameters[dic['Parameter']]['Ratios'] = \
-                [parameters[dic['Parameter']]['Ratios']]
+            parameters[dic['Component']]['Ratios'] = \
+                [parameters[dic['Component']]['Ratios']]
 
     return parameters
 
 
 def main():
+    """
+    Main function
+    """
 
     parser = build_args_parser(
-        program='sampler',
+        signature=__signature__,
         description='Sample values'
     )
 
     args = parser.parse_args()
+
+    print(__signature__)
+    print()
 
     # CREATE LOGGER
     logger = create_logger(parser.prog, args.log)
@@ -129,29 +145,56 @@ def main():
         logger=logger
     )
 
-    # PROCESS TO THE SAMPLING
-    levels = sampling(
-        n_variable_parameters=len(parameters),
-        ratios=sampling_ratios,
-        nb_samples=args.nb_samples,
-        seed=args.seed,
-        logger=logger
-    )
-    # Check sampling
-    check_sampling(levels, logger)
+    # PRINT INFOS
+    logger.info('List of parameters')
+    # Compute the number of combinations,
+    # i.e. the maximum number of samples
+    nb_combinations = 1
+    for param, _ratios in sampling_ratios.items():
+        nb_ratios = len(_ratios)
+        logger.info(f'   {param}\t({nb_ratios} possible values)')
+        nb_combinations *= nb_ratios
+    logger.info('')
+    logger.info(f'Maximum number of unique samples: {nb_combinations}')
+    logger.info('')
 
-    # CONVERT INTO ABSOLUTE VALUES
-    # Read the maxValue for each parameter involved in sampling
+    # PROCESS TO THE SAMPLING
+    try:
+        sampling_values = sampling(
+            nb_parameters=len(parameters),
+            ratios=sampling_ratios,
+            nb_samples=args.nb_samples,
+            seed=args.seed,
+            logger=logger
+        )
+    except ValueError as e:
+        logger.error(e)
+        logger.error('Exiting...')
+        sys.exit(1)
+
+    # import matplotlib.pyplot as plt
+    # plt.scatter(*zip(*sampling_values))
+    # plt.show()
+
+    # CONVERT RATIOS INTO VALUES
     max_values = [
         v['maxValue']
         for v in parameters.values()
     ]
+    sampling_values = convert(sampling_values, max_values, logger=logger)
 
-    # Convert
-    sampling_values = levels_to_absvalues(
-        levels,
-        max_values,
-        logger=logger
+    # Get the min and max values for each parameter
+    min_max = []
+    for i in range(len(sampling_ratios.values())):
+        _sampling = list(sampling_ratios.values())[i]
+        min_max += [
+            (min(_sampling)*max_values[i], max(_sampling)*max_values[i])
+        ]
+    # Check sampling
+    check_sampling(
+        sampling_values,
+        min_max,
+        logger
     )
 
     # WRITE TO DISK

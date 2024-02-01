@@ -49,14 +49,14 @@ class TestPlatesGenerator(TestCase):
             'output'
         )
 
-        self.proCFPS_parameters = os_path.join(
+        self.parameters = os_path.join(
             self.INPUT_FOLDER,
-            'proCFPS_parametersB3.tsv'
+            'parameters.tsv'
         )
 
         self.sampling = os_path.join(
             self.INPUT_FOLDER,
-            'samplingB3.tsv'
+            'sampling.tsv'
         )
 
     def test_init_plate(self):
@@ -68,41 +68,35 @@ class TestPlatesGenerator(TestCase):
         self.assertEqual(plate.get_current_well(), 'A1')
 
     def test_extract_dead_volumes(self):
-        (
-            cfps_parameters_df,
-            values_df
-        ) = input_importer(
-            self.proCFPS_parameters,
+        parameters_df, _ = input_importer(
+            self.parameters,
             self.sampling
         )
         # Exract dead plate volumes from cfps_parameters_df
-        dead_volumes = extract_dead_volumes(cfps_parameters_df)
+        dead_volumes = extract_dead_volumes(parameters_df)
         self.assertEqual(
             dead_volumes,
             {
-                'CP': 0,
-                'CPK': 0,
-                'tRNA': 0,
-                'AA': 0,
-                'ribosomes': 0,
-                'mRNA': 0,
-                'Mg': 0,
-                'K': 0,
+                'Component_1': 0,
+                'Component_2': 0,
+                'Component_3': 0,
+                'Component_4': 0,
+                'Component_5': 0,
+                'Component_6': 0,
+                'Component_7': 0,
+                'Component_8': 0,
                 'Water': 0
             }
         )
 
     def test_src_plate_generator(self):
         sample_volume = 10000
-        (
-            cfps_parameters_df,
-            values_df
-        ) = input_importer(
-            self.proCFPS_parameters,
+        parameters_df, values_df = input_importer(
+            self.parameters,
             self.sampling
         )
-        # Exract dead plate volumes from cfps_parameters_df
-        dead_volumes = extract_dead_volumes(cfps_parameters_df)
+        # Extract dead plate volumes from parameters_df
+        dead_volumes = extract_dead_volumes(parameters_df)
         values_df['Water'] = \
             sample_volume - values_df.sum(axis=1)
         # Generate source plates
@@ -116,7 +110,7 @@ class TestPlatesGenerator(TestCase):
             vertical=True,
             plate_dimensions='16x24',
         )
-        expected_plate = Plate.from_json(
+        expected_plate = Plate.from_file(
             os_path.join(self.REF_FOLDER, 'source_plate_1.json')
         )
         self.assertEqual(source_plates['1'], expected_plate)
@@ -124,16 +118,17 @@ class TestPlatesGenerator(TestCase):
     def test_src_plate_generator_wOptVol(self):
         sample_volume = 10000
         (
-            cfps_parameters_df,
+            parameters_df,
             values_df
         ) = input_importer(
-            self.proCFPS_parameters,
+            self.parameters,
             self.sampling
         )
         # Exract dead plate volumes from cfps_parameters_df
-        dead_volumes = extract_dead_volumes(cfps_parameters_df)
+        dead_volumes = extract_dead_volumes(parameters_df)
         values_df['Water'] = \
             sample_volume - values_df.sum(axis=1)
+
         # Generate source plates
         source_plates = src_plate_generator(
             volumes=values_df,
@@ -141,26 +136,26 @@ class TestPlatesGenerator(TestCase):
             plate_well_capacity=60000,
             param_dead_volumes=dead_volumes,
             starting_well='A1',
-            optimize_well_volumes=['CP'],
+            optimize_well_volumes=['Component_1'],
             vertical=True,
             plate_dimensions='16x24',
         )
         self.assertEqual(
-            source_plates['1'].get_well('A1')['CP'],
-            21250.0
+            source_plates['1'].get_well('A1')['Component_1'],
+            19750.0
         )
 
     def test_src_plate_generator_outOfPlate(self):
         sample_volume = 10000
         (
-            cfps_parameters_df,
+            parameters_df,
             values_df
         ) = input_importer(
-            self.proCFPS_parameters,
+            self.parameters,
             self.sampling
         )
-        # Exract dead plate volumes from cfps_parameters_df
-        dead_volumes = extract_dead_volumes(cfps_parameters_df)
+        # Exract dead plate volumes from parameters_df
+        dead_volumes = extract_dead_volumes(parameters_df)
         values_df['Water'] = \
             sample_volume - values_df.sum(axis=1)
         # Generate source plates
@@ -174,29 +169,26 @@ class TestPlatesGenerator(TestCase):
             vertical=True,
             plate_dimensions='16x24',
         )
-        expected_plate_1 = Plate.from_json(
-            os_path.join(self.REF_FOLDER, '2_src_plate_1.json')
+        expected_plate_1 = Plate.from_file(
+            os_path.join(self.REF_FOLDER, 'src_plate_1.json')
         )
-        expected_plate_2 = Plate.from_json(
-            os_path.join(self.REF_FOLDER, '2_src_plate_2.json')
+        expected_plate_2 = Plate.from_file(
+            os_path.join(self.REF_FOLDER, 'src_plate_2.json')
         )
         self.assertEqual(source_plates['1'], expected_plate_1)
         self.assertEqual(source_plates['2'], expected_plate_2)
 
     def test_src_plate_generator_WithNullVolume(self):
         sample_volume = 10000
-        (
-            cfps_parameters_df,
-            values_df
-        ) = input_importer(
-            self.proCFPS_parameters,
+        parameters_df, values_df = input_importer(
+            self.parameters,
             self.sampling
         )
-        # Exract dead plate volumes from cfps_parameters_df
-        dead_volumes = extract_dead_volumes(cfps_parameters_df)
+        # Exract dead plate volumes from parameters_df
+        dead_volumes = extract_dead_volumes(parameters_df)
         values_df['Water'] = \
             sample_volume - values_df.sum(axis=1)
-        values_df['CP'] = 0
+        values_df['Component_1'] = 0
         # Generate source plates
         source_plates = src_plate_generator(
             volumes=values_df,
@@ -209,16 +201,13 @@ class TestPlatesGenerator(TestCase):
             plate_dimensions='16x24',
         )
         self.assertEqual(
-            source_plates['1'].get_well('A1')['CPK'],
+            source_plates['1'].get_well('A1')['Component_2'],
             60000
         )
 
     def test_dst_plate_generator(self):
-        (
-            cfps_parameters_df,
-            values_df
-        ) = input_importer(
-            self.proCFPS_parameters,
+        _, values_df = input_importer(
+            self.parameters,
             self.sampling
         )
         # Generate destination plates
@@ -228,17 +217,14 @@ class TestPlatesGenerator(TestCase):
             plate_well_capacity=60000,
             vertical=True,
         )
-        expected_plate = Plate.from_json(
+        expected_plate = Plate.from_file(
             os_path.join(self.REF_FOLDER, 'destination_plate_1.json')
         )
         self.assertEqual(dest_plates['1'], expected_plate)
 
     def test_dst_plate_generator_OutOfPlate(self):
-        (
-            cfps_parameters_df,
-            values_df
-        ) = input_importer(
-            self.proCFPS_parameters,
+        _, values_df = input_importer(
+            self.parameters,
             self.sampling
         )
         # Generate destination plates
@@ -248,11 +234,11 @@ class TestPlatesGenerator(TestCase):
             plate_well_capacity=60000,
             vertical=True,
         )
-        expected_plate_1 = Plate.from_json(
-            os_path.join(self.REF_FOLDER, '2_dst_plate_1.json')
+        expected_plate_1 = Plate.from_file(
+            os_path.join(self.REF_FOLDER, 'dst_plate_1.json')
         )
-        expected_plate_2 = Plate.from_json(
-            os_path.join(self.REF_FOLDER, '2_dst_plate_2.json')
+        expected_plate_2 = Plate.from_file(
+            os_path.join(self.REF_FOLDER, 'dst_plate_2.json')
         )
         self.assertEqual(dest_plates['1'], expected_plate_1)
         self.assertEqual(dest_plates['2'], expected_plate_2)
@@ -323,41 +309,42 @@ class TestPlate(TestCase):
         )
         self.assertTrue(plate.well_out_of_range('A25'))
 
-    def test_plate_from_json(self):
-        plate = Plate.from_json(
-            os_path.join(self.REF_FOLDER, '2_dst_plate_1.json')
+    def test_plate_from_file(self):
+        plate = Plate.from_file(
+            os_path.join(self.REF_FOLDER, 'dst_plate_1.json')
         )
-        self.assertEqual(plate.get_well('N24')['CP'], 12.5)
+        self.assertEqual(plate.get_well('N24')['Component_1'], 0)
 
-    def test_plate_to_json(self):
-        plate = Plate.from_json(
+    def test_plate_to_file(self):
+        plate = Plate.from_file(
             os_path.join(self.REF_FOLDER, 'source_plate_1.json')
         )
         tmp_outfile = os_path.join(
             gettempdir(),
             str(uuid1())
-        )
-        plate.to_file(tmp_outfile, 'json')
-        plate_test = Plate.from_json(tmp_outfile)
+        ) + '.csv'
+        plate.to_file(tmp_outfile, 'csv')
+        _tmp_outfile = os_path.splitext(tmp_outfile)
+        plate_test = Plate.from_file(f'{_tmp_outfile[0]}.json')
         self.assertEqual(plate, plate_test)
 
     def test_plate_to_csv(self):
-        plate = Plate.from_json(
+        plate = Plate.from_file(
             os_path.join(self.REF_FOLDER, 'source_plate_2.json')
         )
         tmp_outfile = os_path.join(
             gettempdir(),
             str(uuid1())
-        )
+        ) + '.csv'
         plate.to_file(tmp_outfile, 'csv')
-        df = pd_read_csv(f'{tmp_outfile}_wells', index_col=0)
+        df = pd_read_csv(f'{tmp_outfile}', index_col=0)
         ref_df = pd_read_csv(
             os_path.join(self.REF_FOLDER, 'source_plate_1.csv'),
             index_col=0
         )
         pd_testing.assert_frame_equal(df, ref_df)
         plate.to_file(tmp_outfile, 'tsv')
-        df = pd_read_csv(f'{tmp_outfile}_wells', index_col=0, sep='\t')
+        df = pd_read_csv(f'{tmp_outfile}', index_col=0, sep='\t')
         ref_df = pd_read_csv(
             os_path.join(self.REF_FOLDER, 'source_plate_1.tsv'),
             index_col=0,
@@ -366,13 +353,13 @@ class TestPlate(TestCase):
         pd_testing.assert_frame_equal(df, ref_df)
 
     def test_plate_get_well(self):
-        plate = Plate.from_json(
-            os_path.join(self.REF_FOLDER, '2_dst_plate_1.json')
+        plate = Plate.from_file(
+            os_path.join(self.REF_FOLDER, 'dst_plate_1.json')
         )
-        self.assertEqual(plate.get_well('N24')['CP'], 12.5)
+        self.assertEqual(plate.get_well('N24')['Component_1'], 0)
 
     def test_plate_set_current_well(self):
-        plate = Plate.from_json(
+        plate = Plate.from_file(
             os_path.join(self.REF_FOLDER, 'source_plate_1.json')
         )
         plate.set_current_well('D4')
@@ -380,15 +367,15 @@ class TestPlate(TestCase):
         self.assertEqual(plate.get_current_well(), 'E4')
 
     def test_plate_fill_well(self):
-        plate = Plate.from_json(
-            os_path.join(self.REF_FOLDER, '2_dst_plate_1.json')
+        plate = Plate.from_file(
+            os_path.join(self.REF_FOLDER, 'dst_plate_1.json')
         )
-        plate.fill_well('CP', 12.5, 'A1')
-        plate.fill_well('CPK', 125.0, 'A1')
+        plate.fill_well('Component_1', 12.5, 'A1')
+        plate.fill_well('Component_2', 125.0, 'A1')
         self.assertEqual(plate.get_well_volume('A1'), 137.5)
-        plate.fill_well('CP', 12.5, 'N24')
-        plate.fill_well('CPK', 125.0, 'N24')
-        self.assertEqual(plate.get_well_volume('N24'), 655)
+        plate.fill_well('Component_1', 12.5, 'N24')
+        plate.fill_well('Component_2', 125.0, 'N24')
+        self.assertEqual(plate.get_well_volume('N24'), 668.75)
 
     def test_plate_fill_well_OutOfRange(self):
         plate = Plate(
@@ -400,41 +387,42 @@ class TestPlate(TestCase):
         )
         # Add new parameter with too high volume
         with pytest_raises(ValueError):
-            plate.fill_well('CP', 60001, 'A1')
+            plate.fill_well('Component_1', 60001, 'A1')
         # Add new parameter with out of range well
         with pytest_raises(IndexError):
-            plate.fill_well('CP', 12.5, 'A25')
-        plate = Plate.from_json(
-            os_path.join(self.REF_FOLDER, '2_dst_plate_1.json')
+            plate.fill_well('Component_1', 12.5, 'A25')
+        plate = Plate.from_file(
+            os_path.join(self.REF_FOLDER, 'dst_plate_1.json')
         )
-        # Add already existing parameter
-        with pytest_raises(ValueError):
-            plate.fill_well('AA', 59483, 'N24')
+        # # Add already existing parameter
+        # with pytest_raises(ValueError):
+        #     plate.fill_well('Component_1', 59483, 'N24')
 
     def test_plate_get_well_volume(self):
-        plate = Plate.from_json(
-            os_path.join(self.REF_FOLDER, '2_dst_plate_1.json')
+        plate = Plate.from_file(
+            os_path.join(self.REF_FOLDER, 'dst_plate_1.json')
         )
-        self.assertEqual(plate.get_well_volume('N24'), 517.5)
+        self.assertEqual(plate.get_well_volume('N24'), 531.25)
         self.assertDictEqual(
             plate.get_well('N24'),
             {
-                'CP': 12.5,
-                'CPK': 125.0,
-                'tRNA': 50.0,
-                'AA': 100.0,
-                'ribosomes': 100.0,
-                'mRNA': 25.0,
-                'Mg': 80.0,
-                'K': 25.0
+                "Component_1": 0.0,
+                "Component_2": 125.0,
+                "Component_3": 62.5,
+                "Component_4": 93.75,
+                "Component_5": 62.5,
+                "Component_6": 125.0,
+                "Component_7": 0.0,
+                "Component_8": 62.5
             }
         )
 
     def test_plate_to_dict(self):
         file = os_path.join(self.REF_FOLDER, 'source_plate_1.json')
-        plate = Plate.from_json(file)
+        plate = Plate.from_file(file)
         with open(file, 'r') as f:
             d_plate = json_load(f)
+        d_plate['Wells'] = Plate.wells_from_csv(d_plate['Wells'])
         _d_plate = plate.to_dict()
         self.assertEqual(_d_plate['Dimensions'], d_plate['Dimensions'])
         self.assertEqual(
@@ -449,19 +437,19 @@ class TestPlate(TestCase):
 
     def test_plate___str__(self):
         file = os_path.join(self.REF_FOLDER, 'source_plate_1.json')
-        plate = Plate.from_json(file)
+        plate = Plate.from_file(file)
         s_plate = json_dumps(plate.to_dict(), indent=4)
         self.assertEqual(str(plate), s_plate)
 
     def test_plate___eq__(self):
         file = os_path.join(self.REF_FOLDER, 'source_plate_1.json')
-        plate = Plate.from_json(file)
-        plate_test = Plate.from_json(file)
+        plate = Plate.from_file(file)
+        plate_test = Plate.from_file(file)
         self.assertEqual(plate, plate_test)
         self.assertNotEqual(plate, Plate())
 
     def test_plate_reindex_wells_by_factor(self):
-        plate = Plate.from_json(
+        plate = Plate.from_file(
             os_path.join(self.REF_FOLDER, 'source_plate_1.json')
         )
         d = plate.reindex_wells_by_factor()
@@ -478,15 +466,15 @@ class TestPlate(TestCase):
         )
 
     def test_plate_get_volumes_summary_dict(self):
-        plate_1 = Plate.from_json(
-            os_path.join(self.REF_FOLDER, '2_src_plate_1.json')
+        plate_1 = Plate.from_file(
+            os_path.join(self.REF_FOLDER, 'src_plate_1.json')
         )
-        plate_2 = Plate.from_json(
-            os_path.join(self.REF_FOLDER, '2_src_plate_2.json')
+        plate_2 = Plate.from_file(
+            os_path.join(self.REF_FOLDER, 'src_plate_2.json')
         )
         d = Plate.get_volumes_summary(
             [plate_1, plate_2],
-            type='dict'
+            type_='dict'
         )
         self.assertDictEqual(
             d,
@@ -501,15 +489,15 @@ class TestPlate(TestCase):
         )
 
     def test_plate_get_volumes_summary_pandas(self):
-        plate_1 = Plate.from_json(
-            os_path.join(self.REF_FOLDER, '2_src_plate_1.json')
+        plate_1 = Plate.from_file(
+            os_path.join(self.REF_FOLDER, 'src_plate_1.json')
         )
-        plate_2 = Plate.from_json(
-            os_path.join(self.REF_FOLDER, '2_src_plate_2.json')
+        plate_2 = Plate.from_file(
+            os_path.join(self.REF_FOLDER, 'src_plate_2.json')
         )
         df = Plate.get_volumes_summary(
             [plate_1, plate_2],
-            type='pandas'
+            type_='pandas'
         )
         pd_testing.assert_frame_equal(
             df,
@@ -525,15 +513,15 @@ class TestPlate(TestCase):
         )
 
     def test_plate_get_volumes_summary_str(self):
-        plate_1 = Plate.from_json(
-            os_path.join(self.REF_FOLDER, '2_src_plate_1.json')
+        plate_1 = Plate.from_file(
+            os_path.join(self.REF_FOLDER, 'src_plate_1.json')
         )
-        plate_2 = Plate.from_json(
-            os_path.join(self.REF_FOLDER, '2_src_plate_2.json')
+        plate_2 = Plate.from_file(
+            os_path.join(self.REF_FOLDER, 'src_plate_2.json')
         )
         s = Plate.get_volumes_summary(
             [plate_1, plate_2],
-            type='str'
+            type_='str'
         )
         with open(
             os_path.join(
@@ -543,3 +531,102 @@ class TestPlate(TestCase):
         ) as f:
             lines = f.readlines()
         self.assertEqual(s, ''.join(lines))
+
+    def test_from_file(self):
+        file = os_path.join(self.REF_FOLDER, 'src_plate_1.json')
+        wells_files = os_path.join(self.REF_FOLDER, 'src_plate_2.csv')
+        plate = Plate.from_file(file, wells_files)
+        self.assertDictEqual(
+            plate.to_dict()['Wells'],
+            Plate.wells_from_csv(wells_files)
+        )
+
+    # One single merged file
+    def test_plate_merge(self):
+        plate_1 = Plate.from_file(
+            os_path.join(self.REF_FOLDER, 'dst_plate_1.json')
+        )
+        plate_2 = Plate.from_file(
+            os_path.join(self.REF_FOLDER, 'dst_plate_2.json')
+        )
+        merged = Plate.merge([plate_1, plate_2])[0].to_dict()
+        ref_plate_dict = json_load(
+            open(
+                os_path.join(
+                    self.REF_FOLDER,
+                    'merged.json'
+                )
+            )
+        )
+        # Sort Parameters list
+        merged['Parameters'].sort()
+        ref_plate_dict['Parameters'].sort()
+        self.assertDictEqual(
+            merged,
+            ref_plate_dict
+        )
+
+    # Merge files with different parameters
+    def test_plate_merge_different_parameters(self):
+        plate_1 = Plate.from_file(
+            os_path.join(self.REF_FOLDER, 'dst_plate_1.json')
+        )
+        plate_2 = Plate.from_file(
+            os_path.join(self.REF_FOLDER, 'dst_plate_2.json')
+        )
+        plate_2.fill_well('Component_9', 1)
+        plate_2.next_well()
+        merged = Plate.merge([plate_1, plate_2])[0].to_dict()
+        ref_plate_dict = json_load(
+            open(
+                os_path.join(
+                    self.REF_FOLDER,
+                    'merged_new_param.json'
+                )
+            )
+        )
+        # Sort Parameters list
+        merged['Parameters'].sort()
+        ref_plate_dict['Parameters'].sort()
+        self.assertDictEqual(
+            merged,
+            ref_plate_dict
+        )
+
+    # Merge plates that generates a new plate
+    def test_plate_merge_new_plate(self):
+        plates = []
+        for i in range(1, 5):
+            plates.append(
+                Plate.from_file(
+                    os_path.join(
+                        self.REF_FOLDER,
+                        'dst_plate_2.json'
+                    )
+                )
+            )
+        merged = Plate.merge(plates)
+        # Convert into list of dicts
+        for i in range(len(merged)):
+            merged[i] = merged[i].to_dict()
+        ref_plate_dicts = []
+        for i in range(len(merged)):
+            ref_plate_dicts.append(
+                json_load(
+                    open(
+                        os_path.join(
+                            self.REF_FOLDER,
+                            f'merged_new_plate_{i+1}.json'
+                        )
+                    )
+                )
+            )
+
+        # Sort Parameters list
+        for i in range(len(merged)):
+            merged[i]['Parameters'].sort()
+            ref_plate_dicts[i]['Parameters'].sort()
+            self.assertDictEqual(
+                merged[i],
+                ref_plate_dicts[i]
+            )

@@ -32,7 +32,7 @@ class Test(TestCase):
         )
         self.proCFPS_parameters = os_path.join(
             self.INPUT_FOLDER,
-            'proCFPS_parameters.tsv'
+            'parameters.tsv'
         )
         self.sampling_concentrations = os_path.join(
             self.INPUT_FOLDER,
@@ -54,7 +54,8 @@ class Test(TestCase):
         volumes_df = concentrations_to_volumes(
             cfps_parameters_df,
             concentrations_df,
-            1000
+            1000,
+            2.5
         )
         expected_df = pd_read_csv(self.sampling_volumes, sep='\t')
         assert_frame_equal(
