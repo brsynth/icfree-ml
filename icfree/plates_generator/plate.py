@@ -8,6 +8,7 @@ from typing import (
     List,
     Type
 )
+from copy import deepcopy
 from logging import (
     Logger,
     getLogger
@@ -71,6 +72,9 @@ class Plate:
 
     def __str__(self) -> str:
         return json_dumps(self.to_dict(), indent=4)
+    
+    def __repr__(self) -> str:
+        return self.__str__()
 
     def __eq__(self, other: Type['Plate']) -> bool:
         return (
@@ -81,6 +85,44 @@ class Plate:
             and self.get_nb_columns() == other.get_nb_columns()
             # and self.get_nb_empty_wells() == other.get_nb_empty_wells()
         )
+    
+    @staticmethod
+    def merge(plates: List[Type['Plate']], model: 'Plate' = None) -> List[Type['Plate']]:
+        '''Merge wells from list of plates to a new plate respecting the model'''
+
+        if len(plates) <= 0:
+            return []
+
+        if not model:
+            model = plates[0]
+
+        res_plates = [
+            Plate(
+                dimensions=model.get_dimensions(),
+                dead_volume=model.get_dead_volume(),
+                well_capacity=model.get_well_capacity(),
+                vertical=model.get_vertical()
+            )
+        ]
+        # Add the wells of the following plates to the first one
+        for plate in plates:
+            for well_d in plate.get_wells().values():
+                # Fill the well with all param volumes
+                for param, volume in well_d.items():
+                    res_plates[-1].fill_well(param, volume)
+                try:
+                    res_plates[-1].next_well()
+                except ValueError:  # Out of plate
+                    res_plates.append(
+                        Plate(
+                            dimensions=model.get_dimensions(),
+                            dead_volume=model.get_dead_volume(),
+                            well_capacity=model.get_well_capacity(),
+                            vertical=model.get_vertical()
+                        )
+                    )
+
+        return res_plates
 
     def to_dict(self) -> Dict:
         '''Return a dict representation of the plate'''
@@ -179,6 +221,10 @@ class Plate:
 
         return plate
 
+    def get_vertical(self) -> bool:
+        '''Return the vertical'''
+        return self.__vertical
+
     def get_dimensions(self) -> str:
         '''Return the plate dimensions'''
         return f'{self.get_nb_rows()}x{self.get_nb_cols()}'
@@ -256,6 +302,10 @@ class Plate:
     def get_nb_wells(self) -> int:
         '''Return the number of wells'''
         return self.get_nb_rows() * self.get_nb_columns()
+    
+    def get_nb_filled_wells(self) -> int:
+        '''Return the number of filled wells'''
+        return len(self.get_list_of_wells())
 
     # def get_nb_empty_wells(self) -> int:
     #     return self.__nb_empty_wells
@@ -482,8 +532,8 @@ class Plate:
             total_vol = volume
         # The total volume is greater than the well capacity
         if total_vol > self.get_well_capacity():
-            msg = f'The volume {volume} is greater than ' \
-                f'the well capacity {self.get_well_capacity()}.'
+            msg = f'The volume {total_vol} is greater than ' \
+                f'the well ({well}) capacity {self.get_well_capacity()}.'
             raise ValueError(msg)
             # self.__logger.warning(
             #     f'The volume {volume} is greater than '

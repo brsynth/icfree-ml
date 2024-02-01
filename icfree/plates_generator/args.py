@@ -14,7 +14,7 @@ DEFAULT_ARGS = {
     'DEST_PLATE_DEAD_VOLUME': 15000,
     'DEST_STARTING_WELL': 'A1',
     'SRC_STARTING_WELL': 'A1',
-    'NPLICATE': 3,
+    'NPLICATES': 1,
     'KEEP_NIL_VOL': False,
     'SOURCE_PLATE_WELL_CAPACITY': 60000,
     'DEST_PLATE_WELL_CAPACITY': 60000,
@@ -112,11 +112,11 @@ def add_arguments(parser):
     )
 
     parser.add_argument(
-        '--nplicate',
+        '--nplicates',
         type=int,
-        default=DEFAULT_ARGS['NPLICATE'],
+        default=DEFAULT_ARGS['NPLICATES'],
         help=('Numbers of copies of volume sets'
-              f' (default: {DEFAULT_ARGS["NPLICATE"]})')
+              f' (default: {DEFAULT_ARGS["NPLICATES"]})')
     )
 
     parser.add_argument(

@@ -101,8 +101,64 @@ def dst_plate_generator(
     starting_well: str = DEFAULT_ARGS['DEST_STARTING_WELL'],
     plate_well_capacity: float = DEFAULT_ARGS['SOURCE_PLATE_WELL_CAPACITY'],
     vertical: bool = True,
+    nplicates: int = DEFAULT_ARGS['NPLICATES'],
     logger: Logger = getLogger(__name__)
-) -> Dict:
+) -> List:
+    """
+    Generate destination plates dataframe
+
+    Parameters
+    ----------
+    volumes: DataFrame
+        DataFrames with samples
+    plt_dim: str
+        Plate dimensions, by default '16x24'
+    starting_well : str
+        Starter well to begin filling the 384 well-plate. Defaults to 'A1'
+    plate_well_capacity: float
+        Plate well capacity, by default 60000
+    vertical: bool
+        - True: plate is filled column by column from top to bottom
+        - False: plate is filled row by row from left to right
+    nplicates: int
+        Number of plates to generate, by default 1
+    logger: Logger
+        Logger
+
+    Returns
+    -------
+    plates: List
+        List with destination plates dataframes
+    """
+
+    plates = []
+
+    for i in range(nplicates):
+        # Generate destination plate(s)
+        plates += __dst_plate_generator(
+            volumes=volumes,
+            plt_dim=plt_dim,
+            starting_well=starting_well,
+            plate_well_capacity=plate_well_capacity,
+            vertical=vertical,
+            logger=logger
+        )
+
+    if nplicates > 1:
+        # Merge plates
+        return Plate.merge(plates)
+
+    return plates
+
+
+def __dst_plate_generator(
+    volumes: DataFrame,
+    plt_dim: str = DEFAULT_ARGS['PLATE_DIMENSIONS'],
+    starting_well: str = DEFAULT_ARGS['DEST_STARTING_WELL'],
+    plate_well_capacity: float = DEFAULT_ARGS['SOURCE_PLATE_WELL_CAPACITY'],
+    vertical: bool = True,
+    logger: Logger = getLogger(__name__)
+) -> List:
     """
     Generate destination plates dataframe
 
@@ -124,13 +180,13 @@ def dst_plate_generator(
 
     Returns
     -------
-    plates: Dict
-        Dict with destination plates dataframes
+    plates: List
+        List with destination plates dataframes
     """
     # No deadVolume for destination plates
     plate_dead_volume = 0
-    plt_idx = 1
-    plates = {}
+    # plt_idx = 1
+    plates = []
     plate = init_plate(
         starting_well=starting_well,
         dead_volume=plate_dead_volume,
@@ -152,8 +208,9 @@ def dst_plate_generator(
             plate.next_well()
         except ValueError:  # Out of plate
             # Store current plate
-            plates[str(plt_idx)] = deepcopy(plate)
-            plt_idx += 1
+            # plates[str(plt_idx)] = deepcopy(plate)
+            plates.append(deepcopy(plate))
+            # plt_idx += 1
             # Create new plate
             logger.warning('A new destination plate is created')
             plate = Plate(
@@ -165,7 +222,8 @@ def dst_plate_generator(
             )
 
     # Store last plate
-    plates[str(plt_idx)] = deepcopy(plate)
+    # plates[str(plt_idx)] = deepcopy(plate)
+    plates.append(deepcopy(plate))
 
     return plates
 
