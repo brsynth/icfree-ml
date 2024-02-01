@@ -220,7 +220,7 @@ class TestPlatesGenerator(TestCase):
         expected_plate = Plate.from_file(
             os_path.join(self.REF_FOLDER, 'destination_plate_1.json')
         )
-        self.assertEqual(dest_plates['1'], expected_plate)
+        self.assertEqual(dest_plates[0], expected_plate)
 
     def test_dst_plate_generator_OutOfPlate(self):
         _, values_df = input_importer(
@@ -240,8 +240,8 @@ class TestPlatesGenerator(TestCase):
         expected_plate_2 = Plate.from_file(
             os_path.join(self.REF_FOLDER, 'dst_plate_2.json')
         )
-        self.assertEqual(dest_plates['1'], expected_plate_1)
-        self.assertEqual(dest_plates['2'], expected_plate_2)
+        self.assertEqual(dest_plates[0], expected_plate_1)
+        self.assertEqual(dest_plates[1], expected_plate_2)
 
 
 class TestPlate(TestCase):
