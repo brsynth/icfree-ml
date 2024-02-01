@@ -540,3 +540,93 @@ class TestPlate(TestCase):
             plate.to_dict()['Wells'],
             Plate.wells_from_csv(wells_files)
         )
+
+    # One single merged file
+    def test_plate_merge(self):
+        plate_1 = Plate.from_file(
+            os_path.join(self.REF_FOLDER, 'dst_plate_1.json')
+        )
+        plate_2 = Plate.from_file(
+            os_path.join(self.REF_FOLDER, 'dst_plate_2.json')
+        )
+        merged = Plate.merge([plate_1, plate_2])[0].to_dict()
+        ref_plate_dict = json_load(
+            open(
+                os_path.join(
+                    self.REF_FOLDER,
+                    'merged.json'
+                )
+            )
+        )
+        # Sort Parameters list
+        merged['Parameters'].sort()
+        ref_plate_dict['Parameters'].sort()
+        self.assertDictEqual(
+            merged,
+            ref_plate_dict
+        )
+
+    # Merge files with different parameters
+    def test_plate_merge_different_parameters(self):
+        plate_1 = Plate.from_file(
+            os_path.join(self.REF_FOLDER, 'dst_plate_1.json')
+        )
+        plate_2 = Plate.from_file(
+            os_path.join(self.REF_FOLDER, 'dst_plate_2.json')
+        )
+        plate_2.fill_well('Component_9', 1)
+        plate_2.next_well()
+        merged = Plate.merge([plate_1, plate_2])[0].to_dict()
+        ref_plate_dict = json_load(
+            open(
+                os_path.join(
+                    self.REF_FOLDER,
+                    'merged_new_param.json'
+                )
+            )
+        )
+        # Sort Parameters list
+        merged['Parameters'].sort()
+        ref_plate_dict['Parameters'].sort()
+        self.assertDictEqual(
+            merged,
+            ref_plate_dict
+        )
+
+    # Merge plates that generates a new plate
+    def test_plate_merge_new_plate(self):
+        plates = []
+        for i in range(1, 5):
+            plates.append(
+                Plate.from_file(
+                    os_path.join(
+                        self.REF_FOLDER,
+                        'dst_plate_2.json'
+                    )
+                )
+            )
+        merged = Plate.merge(plates)
+        # Convert into list of dicts
+        for i in range(len(merged)):
+            merged[i] = merged[i].to_dict()
+        ref_plate_dicts = []
+        for i in range(len(merged)):
+            ref_plate_dicts.append(
+                json_load(
+                    open(
+                        os_path.join(
+                            self.REF_FOLDER,
+                            f'merged_new_plate_{i+1}.json'
+                        )
+                    )
+                )
+            )
+
+        # Sort Parameters list
+        for i in range(len(merged)):
+            merged[i]['Parameters'].sort()
+            ref_plate_dicts[i]['Parameters'].sort()
+            self.assertDictEqual(
+                merged[i],
+                ref_plate_dicts[i]
+            )
