@@ -8,7 +8,6 @@ from typing import (
     List,
     Type
 )
-from copy import deepcopy
 from logging import (
     Logger,
     getLogger
@@ -72,7 +71,7 @@ class Plate:
 
     def __str__(self) -> str:
         return json_dumps(self.to_dict(), indent=4)
-    
+
     def __repr__(self) -> str:
         return self.__str__()
 
@@ -85,10 +84,14 @@ class Plate:
             and self.get_nb_columns() == other.get_nb_columns()
             # and self.get_nb_empty_wells() == other.get_nb_empty_wells()
         )
-    
+
     @staticmethod
-    def merge(plates: List[Type['Plate']], model: 'Plate' = None) -> List[Type['Plate']]:
-        '''Merge wells from list of plates to a new plate respecting the model'''
+    def merge(
+        plates: List[Type['Plate']],
+        model: 'Plate' = None
+    ) -> List[Type['Plate']]:
+        '''Merge wells from list of plates to a new plate
+        respecting the model'''
 
         if len(plates) <= 0:
             return []
@@ -302,7 +305,7 @@ class Plate:
     def get_nb_wells(self) -> int:
         '''Return the number of wells'''
         return self.get_nb_rows() * self.get_nb_columns()
-    
+
     def get_nb_filled_wells(self) -> int:
         '''Return the number of filled wells'''
         return len(self.get_list_of_wells())
