@@ -610,7 +610,7 @@ class Plate:
     @staticmethod
     def get_volumes_summary(
         plates: List['Plate'],
-        type_: str,
+        type_: str = 'dict',
         logger: Logger = getLogger(__name__)
     ) -> Dict or DataFrame or str:
         """Get a summary of the volumes per factor.

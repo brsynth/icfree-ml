@@ -229,7 +229,8 @@ def __dst_plate_generator(
 
 
 def src_plate_generator(
-    volumes: DataFrame,
+    # volumes: DataFrame,
+    dest_plates: List,
     param_dead_volumes: Dict,
     plate_dead_volume: int = DEFAULT_ARGS['SOURCE_PLATE_DEAD_VOLUME'],
     plate_well_capacity: float = DEFAULT_ARGS['SOURCE_PLATE_WELL_CAPACITY'],
@@ -238,14 +239,16 @@ def src_plate_generator(
     vertical: bool = True,
     plate_dimensions: str = DEFAULT_ARGS['PLATE_DIMENSIONS'],
     logger: Logger = getLogger(__name__)
-) -> Dict:
+) -> List:
     """
     Generate source plate dataframe
 
     Parameters
     ----------
-    volumes: DataFrame
-        DataFrames with factors
+    # volumes: DataFrame
+    #     DataFrames with factors
+    dest_plates: List
+        List of destination plates
     param_dead_volumes: Dict
         deadVolumes of parameters
     plate_dead_volume: int
@@ -267,10 +270,11 @@ def src_plate_generator(
 
     Returns
     -------
-    plate: Dict
-        Dict with source plate dataframe
+    plate: List
+        List with source plate dataframe
     """
-    logger.debug(f'volumes:\n{volumes}')
+    # logger.debug(f'volumes:\n{volumes}')
+    logger.debug(f'dest_plates:\n{dest_plates}')
     logger.debug(f'param_dead_volumes: {param_dead_volumes}')
     logger.debug(f'plate_dead_volume: {plate_dead_volume}')
     logger.debug(f'plate_well_capacity: {plate_well_capacity}')
@@ -279,7 +283,7 @@ def src_plate_generator(
     logger.debug(f'vertical: {vertical}')
     logger.debug(f'plate_dimensions: {plate_dimensions}')
 
-    plates = {}
+    plates = []
     nb_plates = 1
     plate = init_plate(
         starting_well=starting_well,
@@ -291,7 +295,9 @@ def src_plate_generator(
     )
 
     # Sum volumes for each factor
-    vol_sums = volumes.sum(axis=0)
+    # vol_sums = volumes.sum(axis=0)
+    vol_sums = Plate.get_volumes_summary(dest_plates)
+    logger.debug(f'vol_sums: {vol_sums}')
 
     # Set number of wells needed
     for factor in param_dead_volumes:
@@ -347,7 +353,8 @@ def src_plate_generator(
                 plate.next_well()
             except ValueError:  # Out of plate
                 # Store current plate
-                plates[f'{nb_plates}'] = deepcopy(plate)
+                # plates[f'{nb_plates}'] = deepcopy(plate)
+                plates.append(deepcopy(plate))
                 nb_plates += 1
                 # Create new plate
                 logger.warning('A new source plate is created')
@@ -359,9 +366,12 @@ def src_plate_generator(
                     logger=logger
                 )
 
-    plates[f'{nb_plates}'] = deepcopy(plate)
+    # plates[f'{nb_plates}'] = deepcopy(plate)
+    plates.append(deepcopy(plate))
 
-    for plate_id, plate in plates.items():
-        logger.debug(f'PLATE_ID: {plate_id}\n{plate}')
+    # for plate_id, plate in plates.items():
+    #     logger.debug(f'PLATE_ID: {plate_id}\n{plate}')
+    for plate in plates:
+        logger.debug(f'{plate}')
 
     return plates

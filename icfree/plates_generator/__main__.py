@@ -88,10 +88,21 @@ def main():
         logger=logger
     )
 
+    # Generate destination plates
+    dest_plates = dst_plate_generator(
+        volumes=values_df,
+        starting_well=args.dest_starting_well,
+        plate_well_capacity=args.dest_plate_well_capacity,
+        vertical=True,
+        nplicates=args.nplicates,
+        logger=logger
+    )
+
     # Generate source plates
     try:
         source_plates = src_plate_generator(
-            volumes=values_df,
+            # volumes=values_df,
+            dest_plates=dest_plates,
             plate_dead_volume=args.source_plate_dead_volume,
             plate_well_capacity=args.source_plate_well_capacity,
             param_dead_volumes=dead_volumes,
@@ -108,22 +119,13 @@ def main():
         )
         return -1
 
-    # Generate destination plates
-    dest_plates = dst_plate_generator(
-        volumes=values_df,
-        starting_well=args.dest_starting_well,
-        plate_well_capacity=args.dest_plate_well_capacity,
-        vertical=True,
-        nplicates=args.nplicates,
-        logger=logger
-    )
-
     # Save source plates
     # Create output folder if it does not exist
     if not os_path.exists(args.output_folder):
         os_makedirs(args.output_folder)
-    for plt_name, plate in source_plates.items():
-        plate.to_file(
+    for i in range(len(source_plates)):
+        plt_name = f'{i+1}'
+        source_plates[i].to_file(
             os_path.join(
                 args.output_folder,
                 f'source_plate_{plt_name}.{args.output_format}'
@@ -134,7 +136,7 @@ def main():
     # Save destination plates
     for i in range(len(dest_plates)):
         plt_name = f'{i+1}'
-        plate.to_file(
+        dest_plates[i].to_file(
             os_path.join(
                 args.output_folder,
                 f'destination_plate_{plt_name}.{args.output_format}'
@@ -144,7 +146,7 @@ def main():
 
     # Save volumes summary
     volumes_summary = Plate.get_volumes_summary(
-        list(source_plates.values()),
+        source_plates,
         'pandas',
         logger=logger
     )
