@@ -99,9 +99,18 @@ class TestPlatesGenerator(TestCase):
         dead_volumes = extract_dead_volumes(parameters_df)
         values_df['Water'] = \
             sample_volume - values_df.sum(axis=1)
+
+        # Generate dest plates
+        dest_plates = dst_plate_generator(
+            volumes=values_df,
+            starting_well='A1',
+            plate_well_capacity=60000,
+            vertical=True,
+        )
+
         # Generate source plates
         source_plates = src_plate_generator(
-            volumes=values_df,
+            dest_plates=dest_plates,
             plate_dead_volume=15000,
             plate_well_capacity=60000,
             param_dead_volumes=dead_volumes,
@@ -113,7 +122,7 @@ class TestPlatesGenerator(TestCase):
         expected_plate = Plate.from_file(
             os_path.join(self.REF_FOLDER, 'source_plate_1.json')
         )
-        self.assertEqual(source_plates['1'], expected_plate)
+        self.assertEqual(source_plates[0], expected_plate)
 
     def test_src_plate_generator_wOptVol(self):
         sample_volume = 10000
@@ -128,10 +137,18 @@ class TestPlatesGenerator(TestCase):
         dead_volumes = extract_dead_volumes(parameters_df)
         values_df['Water'] = \
             sample_volume - values_df.sum(axis=1)
+        
+        # Generate dest plates
+        dest_plates = dst_plate_generator(
+            volumes=values_df,
+            starting_well='A1',
+            plate_well_capacity=60000,
+            vertical=True,
+        )
 
         # Generate source plates
         source_plates = src_plate_generator(
-            volumes=values_df,
+            dest_plates=dest_plates,
             plate_dead_volume=15000,
             plate_well_capacity=60000,
             param_dead_volumes=dead_volumes,
@@ -141,7 +158,7 @@ class TestPlatesGenerator(TestCase):
             plate_dimensions='16x24',
         )
         self.assertEqual(
-            source_plates['1'].get_well('A1')['Component_1'],
+            source_plates[0].get_well('A1')['Component_1'],
             19750.0
         )
 
@@ -158,9 +175,18 @@ class TestPlatesGenerator(TestCase):
         dead_volumes = extract_dead_volumes(parameters_df)
         values_df['Water'] = \
             sample_volume - values_df.sum(axis=1)
+
+        # Generate dest plates
+        dest_plates = dst_plate_generator(
+            volumes=values_df,
+            starting_well='A1',
+            plate_well_capacity=60000,
+            vertical=True,
+        )
+
         # Generate source plates
         source_plates = src_plate_generator(
-            volumes=values_df,
+            dest_plates=dest_plates,
             plate_dead_volume=15000,
             plate_well_capacity=60000,
             param_dead_volumes=dead_volumes,
@@ -175,8 +201,8 @@ class TestPlatesGenerator(TestCase):
         expected_plate_2 = Plate.from_file(
             os_path.join(self.REF_FOLDER, 'src_plate_2.json')
         )
-        self.assertEqual(source_plates['1'], expected_plate_1)
-        self.assertEqual(source_plates['2'], expected_plate_2)
+        self.assertEqual(source_plates[0], expected_plate_1)
+        self.assertEqual(source_plates[1], expected_plate_2)
 
     def test_src_plate_generator_WithNullVolume(self):
         sample_volume = 10000
@@ -189,9 +215,18 @@ class TestPlatesGenerator(TestCase):
         values_df['Water'] = \
             sample_volume - values_df.sum(axis=1)
         values_df['Component_1'] = 0
+
+        # Generate dest plates
+        dest_plates = dst_plate_generator(
+            volumes=values_df,
+            starting_well='A1',
+            plate_well_capacity=60000,
+            vertical=True,
+        )
+
         # Generate source plates
         source_plates = src_plate_generator(
-            volumes=values_df,
+            dest_plates=dest_plates,
             plate_dead_volume=15000,
             plate_well_capacity=60000,
             param_dead_volumes=dead_volumes,
@@ -201,7 +236,7 @@ class TestPlatesGenerator(TestCase):
             plate_dimensions='16x24',
         )
         self.assertEqual(
-            source_plates['1'].get_well('A1')['Component_2'],
+            source_plates[0].get_well('A1')['Component_2'],
             60000
         )
 
