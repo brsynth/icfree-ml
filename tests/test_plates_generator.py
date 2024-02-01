@@ -137,7 +137,7 @@ class TestPlatesGenerator(TestCase):
         dead_volumes = extract_dead_volumes(parameters_df)
         values_df['Water'] = \
             sample_volume - values_df.sum(axis=1)
-        
+
         # Generate dest plates
         dest_plates = dst_plate_generator(
             volumes=values_df,
