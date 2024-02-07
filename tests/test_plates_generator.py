@@ -25,8 +25,10 @@ from icfree.plates_generator.plates_generator import (
     init_plate,
     dst_plate_generator,
     src_plate_generator,
-    extract_dead_volumes
+    extract_dead_volumes,
+    split
 )
+from icfree.plates_generator.args import DEFAULT_ARGS
 from icfree.plates_generator.__main__ import input_importer
 from icfree.plates_generator.plate import Plate
 
@@ -109,7 +111,7 @@ class TestPlatesGenerator(TestCase):
         )
 
         # Generate source plates
-        source_plates = src_plate_generator(
+        source_plates, _ = src_plate_generator(
             dest_plates=dest_plates,
             plate_dead_volume=15000,
             well_capacity=60000,
@@ -147,7 +149,7 @@ class TestPlatesGenerator(TestCase):
         )
 
         # Generate source plates
-        source_plates = src_plate_generator(
+        source_plates, _ = src_plate_generator(
             dest_plates=dest_plates,
             plate_dead_volume=15000,
             well_capacity=60000,
@@ -157,6 +159,7 @@ class TestPlatesGenerator(TestCase):
             vertical=True,
             dimensions='16x24',
         )
+
         self.assertEqual(
             source_plates[0].get_well('A1')['Component_1'],
             19750.0
@@ -185,13 +188,13 @@ class TestPlatesGenerator(TestCase):
         )
 
         # Generate source plates
-        source_plates = src_plate_generator(
+        source_plates, _ = src_plate_generator(
             dest_plates=dest_plates,
             plate_dead_volume=15000,
             well_capacity=60000,
             param_dead_volumes=dead_volumes,
             start_well='N24',
-            opt_well_vol=[],
+            opt_well_vol=DEFAULT_ARGS['OPTIMIZE_WELL_VOLUMES'],
             vertical=True,
             dimensions='16x24',
         )
@@ -201,6 +204,7 @@ class TestPlatesGenerator(TestCase):
         expected_plate_2 = Plate.from_file(
             os_path.join(self.REF_FOLDER, 'src_plate_2.json')
         )
+
         self.assertEqual(source_plates[0], expected_plate_1)
         self.assertEqual(source_plates[1], expected_plate_2)
 
@@ -225,7 +229,7 @@ class TestPlatesGenerator(TestCase):
         )
 
         # Generate source plates
-        source_plates = src_plate_generator(
+        source_plates, _ = src_plate_generator(
             dest_plates=dest_plates,
             plate_dead_volume=15000,
             well_capacity=60000,
@@ -277,6 +281,25 @@ class TestPlatesGenerator(TestCase):
         )
         self.assertEqual(dest_plates[0], expected_plate_1)
         self.assertEqual(dest_plates[1], expected_plate_2)
+
+    def test_volume_below_minimum(self):
+        self.assertEqual(split(vol=10, max=1000, min=20), {'nb_bins': 0, 'remainder': 10})
+
+    def test_volume_within_max(self):
+        self.assertEqual(split(vol=750, max=1000, min=20), {'nb_bins': 0, 'remainder': 750})
+
+    def test_volume_exceeds_max_once(self):
+        self.assertEqual(split(vol=1750, max=1000, min=20), {'nb_bins': 1, 'remainder': 750})
+
+    def test_volume_exceeds_max_with_small_remainder(self):
+        self.assertEqual(split(vol=1020, max=1000, min=20), {'nb_bins': 1, 'remainder': 20})
+
+    def test_volume_double_max(self):
+        print(split(vol=2000, max=1000, min=20))
+        self.assertEqual(split(vol=2000, max=1000, min=20), {'nb_bins': 2, 'remainder': 0})
+
+    def test_volume_double_max_with_remainder(self):
+        self.assertEqual(split(vol=2040, max=1000, min=20), {'nb_bins': 2, 'remainder': 40})
 
 
 class TestPlate(TestCase):

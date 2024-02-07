@@ -139,6 +139,10 @@ class Plate:
             'Wells': self.get_wells()
         }
 
+    def to_df(self) -> DataFrame:
+        '''Return a DataFrame representation of the plate'''
+        return DataFrame(self.get_wells()).transpose()
+
     def to_file(self, path: str, format_: str) -> None:
         '''Save plate to file'''
         if format_ == 'csv':
@@ -576,7 +580,7 @@ class Plate:
         return plate_by_factor
 
     @staticmethod
-    def __get_volumes_per_factor(plates: List['Plate']) -> Dict:
+    def get_volumes_per_factor(plates: List['Plate']) -> Dict:
         """Get the volumes per factor.
 
         Parameters
@@ -629,7 +633,7 @@ class Plate:
         Dict or DataFrame or str
             Summary of the volumes per factor
         """
-        volumes = Plate.__get_volumes_per_factor(plates)
+        volumes = Plate.get_volumes_per_factor(plates)
         if type_ == 'dict':
             return volumes
         elif type_ == 'pandas':
@@ -639,3 +643,19 @@ class Plate:
             return vol_summary
         else:  # 'str'
             return str(volumes)
+
+    def get_net_volumes(self) -> Dict:
+        """Get the net volumes (i.e. without plate dead_volume).
+
+        Returns
+        -------
+        Dict
+            Net volumes
+        """
+        net_volumes = {}
+        for well, well_d in self.get_wells().items():
+            net_volumes[well] = {
+                k: v - self.get_dead_volume()
+                for k, v in well_d.items()
+            }
+        return net_volumes

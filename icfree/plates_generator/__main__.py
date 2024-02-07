@@ -17,9 +17,13 @@ from brs_utils import (
 from .plates_generator import (
     extract_dead_volumes,
     src_plate_generator,
-    dst_plate_generator
+    dst_plate_generator,
+    dst_plate_split_volumes
 )
-from .args import build_args_parser
+from .args import (
+    build_args_parser,
+    DEFAULT_ARGS
+)
 from .plate import Plate
 from icfree.utils import save_df
 from icfree.converter.__main__ import input_importer
@@ -82,7 +86,7 @@ def main():
     values_df['Water'] = \
         args.sample_volume - values_df.sum(axis=1)
 
-    # Exract dead plate volumes from cfps_parameters_df
+    # Exract dead plate volumes from parameters_df
     dead_volumes = extract_dead_volumes(
         parameters_df,
         logger=logger
@@ -93,6 +97,7 @@ def main():
         volumes=values_df,
         start_well=args.dst_start_well,
         well_capacity=args.dst_plt_well_capacity,
+        plate_dead_volume=args.dst_plt_dead_volume,
         vertical=True,
         nplicates=args.nplicates,
         dimensions=args.dst_plt_dim,
@@ -101,8 +106,14 @@ def main():
 
     # Generate source plates
     try:
-        source_plates = src_plate_generator(
-            # volumes=values_df,
+        # Handle optional well volumes
+        if args.opt_well_vol == []:
+            args.opt_well_vol = ['all']
+        upper_volumes, lower_volumes = handle_component_splitting(
+            args=args,
+            components=values_df.columns
+        )
+        source_plates, split_comp = src_plate_generator(
             dest_plates=dest_plates,
             plate_dead_volume=args.src_plt_dead_volume,
             well_capacity=args.src_plt_well_capacity,
@@ -111,6 +122,14 @@ def main():
             opt_well_vol=args.opt_well_vol,
             vertical=True,
             dimensions=args.src_plt_dim,
+            upper_volumes=upper_volumes,
+            lower_volumes=lower_volumes,
+            logger=logger
+        )
+
+        dest_plates = dst_plate_split_volumes(
+            dest_plates=dest_plates,
+            split_comp=split_comp,
             logger=logger
         )
     except IndexError as e:
@@ -158,6 +177,60 @@ def main():
         index=True,
         logger=logger
     )
+
+
+def handle_component_splitting(
+    args,
+    components: list,
+):
+    """
+    Handle component splitting
+
+    Parameters
+    ----------
+    args : list
+        List of args
+    components : list
+        List of components
+
+    Returns
+    -------
+    upper_volumes : list
+        List of upper volumes
+    lower_volumes : list
+        List of lower volumes
+    """
+
+    # Handle component splitting
+    # src_plt_split_upper_volumes
+    spsuv_d = {}
+    spsuv = args.src_plt_split_upper_vol
+    # src_plt_split_lower_volumes
+    spslv_d = {}
+    spslv = args.src_plt_split_lower_vol
+    # src_plt_split_component
+    spsc = args.src_plt_split_component
+    # Fill component limits only if the upper limit
+    # has been specified by the user
+    if spsuv != DEFAULT_ARGS['SRC_PLT_SPLIT_UPPER_VOL']:
+        if spsc == DEFAULT_ARGS['SRC_PLT_SPLIT_COMPONENT']:
+            # Copy bounds to all components
+            for component in components:
+                spsuv_d[component] = spsuv
+                spslv_d[component] = spslv
+        else:
+            # If one of spsuv and spslv
+            # has one single value, then extend to the number of components
+            if len(spsuv) == 1:
+                spsuv = [spsuv[0]] * len(spsc)
+            if len(spslv) == 1:
+                spslv = [spslv[0]] * len(spsc)
+            # Copy bounds to specified components
+            for i in range(len(spsc)):
+                spsuv_d[spsc[i]] = spsuv[i]
+                spslv_d[spsc[i]] = spslv[i]
+
+    return spsuv_d, spslv_d
 
 
 if __name__ == "__main__":
