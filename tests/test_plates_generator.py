@@ -283,23 +283,40 @@ class TestPlatesGenerator(TestCase):
         self.assertEqual(dest_plates[1], expected_plate_2)
 
     def test_volume_below_minimum(self):
-        self.assertEqual(split(vol=10, max=1000, min=20), {'nb_bins': 0, 'remainder': 10})
+        self.assertEqual(
+            split(vol=10, max=1000, min=20),
+            {'nb_bins': 0, 'remainder': 10}
+        )
 
     def test_volume_within_max(self):
-        self.assertEqual(split(vol=750, max=1000, min=20), {'nb_bins': 0, 'remainder': 750})
+        self.assertEqual(
+            split(vol=750, max=1000, min=20),
+            {'nb_bins': 0, 'remainder': 750}
+        )
 
     def test_volume_exceeds_max_once(self):
-        self.assertEqual(split(vol=1750, max=1000, min=20), {'nb_bins': 1, 'remainder': 750})
+        self.assertEqual(
+            split(vol=1750, max=1000, min=20),
+            {'nb_bins': 1, 'remainder': 750}
+        )
 
     def test_volume_exceeds_max_with_small_remainder(self):
-        self.assertEqual(split(vol=1020, max=1000, min=20), {'nb_bins': 1, 'remainder': 20})
+        self.assertEqual(
+            split(vol=1020, max=1000, min=20),
+            {'nb_bins': 1, 'remainder': 20}
+        )
 
     def test_volume_double_max(self):
-        print(split(vol=2000, max=1000, min=20))
-        self.assertEqual(split(vol=2000, max=1000, min=20), {'nb_bins': 2, 'remainder': 0})
+        self.assertEqual(
+            split(vol=2000, max=1000, min=20),
+            {'nb_bins': 2, 'remainder': 0}
+        )
 
     def test_volume_double_max_with_remainder(self):
-        self.assertEqual(split(vol=2040, max=1000, min=20), {'nb_bins': 2, 'remainder': 40})
+        self.assertEqual(
+            split(vol=2040, max=1000, min=20),
+            {'nb_bins': 2, 'remainder': 40}
+        )
 
 
 class TestPlate(TestCase):
