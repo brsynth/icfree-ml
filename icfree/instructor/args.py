@@ -13,7 +13,8 @@ DEFAULT_ARGS = {
     'SRC_PLATE_TYPE': '384PP_AQ_GP3',
     'SPLIT_COMPONENTS': [''],
     'SPLIT_UPPER_VOL': [0],
-    'SPLIT_LOWER_VOL': [0]
+    'SPLIT_LOWER_VOL': [0],
+    'SPLIT_OUTFILE_COMPONENTS': [''],
 }
 
 
@@ -87,8 +88,22 @@ def add_arguments(parser):
         help=(
             'Source plate type (for ECHO robot). If number of args is odd, '
             'the first arg is the plate type by default. '
-            'Then, each pair of args is a sample ID and a plate type.'
+            'Then, each pair of args is a sample ID and a plate type'
+            ' (e.g. -spt COMPONENT_1 PLATE_TYPE).'
             f' (default: {DEFAULT_ARGS["SRC_PLATE_TYPE"]})'
+        )
+    )
+
+    parser.add_argument(
+        '-soc', '--split-outfile-components',
+        nargs='*',
+        type=str,
+        default=DEFAULT_ARGS['SPLIT_OUTFILE_COMPONENTS'],
+        help=(
+            'List of components (separated by blanks) to write'
+            ' instructions in separate file(s). If empty, write'
+            ' each component in a separate file.'
+            f' (default: {DEFAULT_ARGS["SPLIT_OUTFILE_COMPONENTS"]})'
         )
     )
 

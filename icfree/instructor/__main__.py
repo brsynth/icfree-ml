@@ -20,7 +20,10 @@ from .instructor import (
     check_volumes,
     instructions_generator,
 )
-from .args import build_args_parser
+from .args import (
+    build_args_parser,
+    DEFAULT_ARGS
+)
 from icfree.utils import save_df
 from icfree.plates_generator.plate import Plate
 
@@ -149,6 +152,31 @@ def main():
         )
 
     # Save instructions
+    # If list of split_outfile_components is unchanged,
+    # save all instructions in a single file
+    if args.split_outfile_components == DEFAULT_ARGS['SPLIT_OUTFILE_COMPONENTS']:
+        pass
+    # If list of split_outfile_components is empty
+    # i.e. no components are listed but the optipn is activated,
+    # save each component in a separate file
+    else:
+        if args.split_outfile_components == []:
+            args.split_outfile_components = echo_instructions['Sample ID'].unique()
+        # save each listed component in a separate file
+        for component in args.split_outfile_components:
+            # Extract instructions where 'Sample ID' == component
+            echo_instructions_component = echo_instructions[
+                echo_instructions['Sample ID'] == component
+            ]
+            save_df(
+                df=echo_instructions_component,
+                outfile=f'instructions_{component}.csv',
+                output_folder=args.output_folder,
+                logger=logger
+            )
+            echo_instructions = echo_instructions[
+                echo_instructions['Sample ID'] != component
+            ]
     save_df(
         df=echo_instructions,
         outfile='instructions.csv',
