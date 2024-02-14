@@ -131,10 +131,18 @@ def main():
         logger=logger
     )
 
+    split_components = dict()
+    for i in range(len(args.split_components)):
+        split_components[args.split_components[i]] = {
+            'upper': args.split_upper_vol[i],
+            'lower': args.split_lower_vol[i]
+        }
+
     # Generate instructions
     echo_instructions = instructions_generator(
             source_plates=source_plates,
             dest_plates=dest_plates,
+            split_components=split_components,
             robot=args.robot,
             src_plate_type=args.src_plate_type,
             logger=logger

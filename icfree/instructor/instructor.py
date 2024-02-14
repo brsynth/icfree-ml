@@ -128,6 +128,7 @@ def check_volumes(
 def instructions_generator(
     source_plates: Dict,
     dest_plates: Dict,
+    split_components: Dict = {},
     robot: str = DEFAULT_ARGS['ROBOT'],
     src_plate_type: str = DEFAULT_ARGS['SRC_PLATE_TYPE'],
     logger: Logger = getLogger(__name__)
@@ -141,6 +142,8 @@ def instructions_generator(
         Source plates distribution
     dest_plates: Dict
         Destination plates distribution
+    split_components: Dict
+        Volume bounds for picking components in the source plates
     robot: str
         Robot name
     src_plate_type: str
@@ -154,6 +157,7 @@ def instructions_generator(
     return globals()[f'{robot.lower()}_instructions_generator'](
         source_plates,
         dest_plates,
+        split_components,
         src_plate_type,
         logger=logger
     )
@@ -162,6 +166,7 @@ def instructions_generator(
 def echo_instructions_generator(
     source_plates: Dict,
     dest_plates: Dict,
+    split_components: Dict = {},
     src_plate_type: str = DEFAULT_ARGS['SRC_PLATE_TYPE'],
     logger: Logger = getLogger(__name__)
 ) -> DataFrame:
@@ -174,6 +179,8 @@ def echo_instructions_generator(
         Source plates distribution
     dest_plates: Dict
         Destination plates distribution
+    split_components: Dict
+        Volume bounds for picking components in the source plates
     src_plate_type: str
         Source plate type
 
@@ -185,33 +192,12 @@ def echo_instructions_generator(
     logger.debug('Generating Echo® instructions')
     logger.debug(f'Source plates: {source_plates}')
     logger.debug(f'Destination plates: {dest_plates}')
+    logger.debug(f'Split components: {split_components}')
     logger.debug(f'Source plate type: {src_plate_type}')
 
     # Reindex plates by factors ID
-    # SRC
-    src_plates_by_factor = {}
-    for i, src_plt in enumerate(source_plates.values()):
-        for well_id, well in src_plt.get_wells().items():
-            for factor in well.keys():
-                if factor not in src_plates_by_factor:
-                    src_plates_by_factor[factor] = {
-                        'wells': list(),
-                        'volumes': list()
-                    }
-                src_plates_by_factor[factor]['plt_id'] = i+1
-                src_plates_by_factor[factor]['wells'].append(well_id)
-                src_plates_by_factor[factor]['volumes'].append(well[factor])
-    # DST
-    dst_plates_by_factor = {}
-    for i, dst_plt in enumerate(dest_plates.values()):
-        for well_id, well in dst_plt.get_wells().items():
-            for factor, vol in well.items():
-                if factor not in dst_plates_by_factor:
-                    dst_plates_by_factor[factor] = {
-                        'wells': dict()
-                    }
-                dst_plates_by_factor[factor]['plt_id'] = i+1
-                dst_plates_by_factor[factor]['wells'][well_id] = vol
+    src_plates_by_factor = reindex_plates_by_factor(source_plates, logger)
+    dst_plates_by_factor = reindex_plates_by_factor(dest_plates, logger)
 
     # Build the instructions
     instructions = DataFrame(
@@ -245,26 +231,91 @@ def echo_instructions_generator(
     # Generate instructions
     for factor in dst_plates_by_factor:
         src_plt_id = src_plates_by_factor[factor]['plt_id']
-        src_wells = src_plates_by_factor[factor]['wells']
         src_plt_type = src_plates_by_factor[factor]['plt_type']
-        if len(src_wells) > 1:
-            # first_well = src_plates_by_factor[factor]["wells"][0]
-            src_well_ids = \
-                f'{{{";".join(src_plates_by_factor[factor]["wells"])}}}'
-            # src_well_ids = \
-            #     f'{{{first_well}:{last_well}}}'
-        else:
-            src_well_ids = src_plates_by_factor[factor]['wells'][0]
+        src_well_ids = \
+            f'{{{";".join(src_plates_by_factor[factor]["wells"].keys())}}}'
         dst_plt_id = dst_plates_by_factor[factor]['plt_id']
         for dst_well in dst_plates_by_factor[factor]['wells'].items():
             dst_well_id = dst_well[0]
             dst_well_vol = dst_well[1]
-            instructions.loc[len(instructions.index)] = [
-                f'Source[{src_plt_id}]', src_plt_type, src_well_ids,
-                f'Destination[{dst_plt_id}]', dst_well_id, dst_well_vol,
-                factor
-            ]
+            # If the volume to drop in the destination well is greater than
+            # the upper bound (given by ), split the volume in several instructions
+            if factor in split_components and \
+            dst_well_vol > split_components[factor]['upper']:
+                logger.debug(
+                    f'Volume to drop in {dst_well_id} > '
+                    f'{split_components[factor]["upper"]} nL'
+                )
+                # Get the number of times the volume has to be split
+                n_splits = int(dst_well_vol / split_components[factor]['upper'])
+                # Get the volume to drop in the last instruction
+                last_vol = dst_well_vol % split_components[factor]['upper']
+                # Get the volume to drop in each instruction
+                split_vol = split_components[factor]['upper']
+                for _ in range(n_splits):
+                    instructions.loc[len(instructions.index)] = [
+                        f'Source[{src_plt_id}]', src_plt_type, src_well_ids,
+                        f'Destination[{dst_plt_id}]', dst_well_id, split_vol,
+                        factor
+                    ]
+                # Add the last instruction
+                # If the last volume is less than the lower bound, add it to the
+                # last instruction
+                if last_vol < split_components[factor]['lower']:
+                    split_vol += last_vol
+                    instructions.loc[len(instructions.index)-1] = [
+                        f'Source[{src_plt_id}]', src_plt_type, src_well_ids,
+                        f'Destination[{dst_plt_id}]', dst_well_id, split_vol,
+                        factor
+                    ]
+                else:
+                    instructions.loc[len(instructions.index)] = [
+                        f'Source[{src_plt_id}]', src_plt_type, src_well_ids,
+                        f'Destination[{dst_plt_id}]', dst_well_id, last_vol,
+                        factor
+                    ]
+            else:
+                instructions.loc[len(instructions.index)] = [
+                    f'Source[{src_plt_id}]', src_plt_type, src_well_ids,
+                    f'Destination[{dst_plt_id}]', dst_well_id, dst_well_vol,
+                    factor
+                ]
 
     logger.debug(f'INSTRUCTIONS:\n{instructions}')
 
     return instructions
+
+
+def reindex_plates_by_factor(
+    plates: Dict,
+    logger: Logger = getLogger(__name__)
+) -> Dict:
+    """
+    Reindex plates by factor ID
+
+    Parameters
+    ----------
+    plates: Dict
+        Plates to reindex
+
+    Returns
+    -------
+    plates_by_factor: Dict
+        Plates reindexed by factor ID
+    """
+
+    plates_by_factor = {}
+
+    for i, src_plt in enumerate(plates.values()):
+        for well_id, well in src_plt.get_wells().items():
+            for factor in well.keys():
+                if factor not in plates_by_factor:
+                    plates_by_factor[factor] = {
+                        'plt_id': i+1,
+                        'wells': {}
+                    }
+                plates_by_factor[factor]['wells'][well_id] = well[factor]
+
+    logger.debug(f'Plates by factor: {plates_by_factor}')
+
+    return plates_by_factor

@@ -10,7 +10,10 @@ from icfree._version import __version__
 DEFAULT_ARGS = {
     'OUTPUT_FOLDER': os_getcwd(),
     'ROBOT': 'echo',
-    'SRC_PLATE_TYPE': '384PP_AQ_GP3'
+    'SRC_PLATE_TYPE': '384PP_AQ_GP3',
+    'SPLIT_COMPONENTS': [''],
+    'SPLIT_UPPER_VOL': [0],
+    'SPLIT_LOWER_VOL': [0]
 }
 
 
@@ -86,6 +89,45 @@ def add_arguments(parser):
             'the first arg is the plate type by default. '
             'Then, each pair of args is a sample ID and a plate type.'
             f' (default: {DEFAULT_ARGS["SRC_PLATE_TYPE"]})'
+        )
+    )
+
+    parser.add_argument(
+        '-sc', '--split-components',
+        nargs='+',
+        type=str,
+        default=DEFAULT_ARGS['SPLIT_COMPONENTS'],
+        help=(
+            'List of components (separated by blanks) to apply'
+            ' pick limits given by \'--split-upper-vol\''
+            ' and \'--split-lower-vol\' options.'
+            f' (default: {DEFAULT_ARGS["SPLIT_COMPONENTS"]})'
+        )
+    )
+    parser.add_argument(
+        '-suv', '--split-upper-vol',
+        nargs='+',
+        type=int,
+        default=DEFAULT_ARGS['SPLIT_UPPER_VOL'],
+        help=(
+            'List of maximum volumes (nL) (separated by blanks)'
+            ' of components to pick in the source plate wells, applied'
+            ' to the components given by \'--split-upper-vol\''
+            ' option. Applied to all if one single value is specified.'
+            f' (default: {DEFAULT_ARGS["SPLIT_UPPER_VOL"]})'
+        )
+    )
+    parser.add_argument(
+        '-slv', '--split-lower-vol',
+        nargs='+',
+        type=int,
+        default=DEFAULT_ARGS['SPLIT_LOWER_VOL'],
+        help=(
+            'List of minimum volumes (nL) (separated by blanks) of components'
+            ' to pick in the source plate wells, applied to the components'
+            ' given by \'--split-upper-vol\' option.'
+            ' Applied to all if one single value is specified.'
+            f' (default: {DEFAULT_ARGS["SPLIT_LOWER_VOL"]})'
         )
     )
 
