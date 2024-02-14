@@ -113,7 +113,7 @@ def main():
             args=args,
             components=values_df.columns
         )
-        source_plates, split_comp = src_plate_generator(
+        source_plates = src_plate_generator(
             dest_plates=dest_plates,
             plate_dead_volume=args.src_plt_dead_volume,
             well_capacity=args.src_plt_well_capacity,
@@ -127,11 +127,11 @@ def main():
             logger=logger
         )
 
-        dest_plates = dst_plate_split_volumes(
-            dest_plates=dest_plates,
-            split_comp=split_comp,
-            logger=logger
-        )
+        # dest_plates = dst_plate_split_volumes(
+        #     dest_plates=dest_plates,
+        #     split_comp=split_comp,
+        #     logger=logger
+        # )
     except IndexError as e:
         logger.error(e)
         logger.error(

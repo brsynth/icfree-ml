@@ -310,27 +310,31 @@ def src_plate_generator(
     logger.debug(f'vol_sums: {vol_sums}')
 
     # Split components according to lower_volumes and upper_volumes
-    split_comp = {}
-    for component in upper_volumes.keys():
-        spread = split(
-            vol_sums[component],
-            upper_volumes[component],
-            lower_volumes[component]
-        )
-        # Remove the original entry if it has been split into multiple parts
-        if spread['nb_bins'] > 0:
-            del vol_sums[component]
-            # Split the volume into the number of bins + remainder
-            for i in range(spread['nb_bins']):
-                vol_sums[f'{component}_{i+1}'] = upper_volumes[component]
-            if spread['remainder'] > 0:
-                index = f'{component}_{spread["nb_bins"]+1}'
-                vol_sums[index] = spread['remainder']
-            split_comp[component] = spread
-            split_comp[component]['upper_vol'] = upper_volumes[component]
-            split_comp[component]['lower_vol'] = lower_volumes[component]
-        elif spread['remainder'] > 0:
-            vol_sums[component] = spread['remainder']
+    # split_comp = {}
+    # for component in upper_volumes.keys():
+    #     # Get max value of the component over all dest plates
+    #     max_vol = max(
+    #         [plate.get_max_volume(component) for plate in dest_plates]
+    #     )
+    #     spread = split(
+    #         max_vol,
+    #         upper_volumes[component],
+    #         lower_volumes[component]
+    #     )
+    #     # Remove the original entry if it has been split into multiple parts
+    #     if spread['nb_bins'] > 0:
+    #         del vol_sums[component]
+    #         # Split the volume into the number of bins + remainder
+    #         for i in range(spread['nb_bins']):
+    #             vol_sums[f'{component}_{i+1}'] = upper_volumes[component]
+    #         if spread['remainder'] > 0:
+    #             index = f'{component}_{spread["nb_bins"]+1}'
+    #             vol_sums[index] = spread['remainder']
+    #         split_comp[component] = spread
+    #         split_comp[component]['upper_vol'] = upper_volumes[component]
+    #         split_comp[component]['lower_vol'] = lower_volumes[component]
+    #     elif spread['remainder'] > 0:
+    #         vol_sums[component] = spread['remainder']
 
     # Extend 'param_dead_volumes' and 'opt_well_vol'
     # with new parameters in 'vol_sums'.
@@ -338,15 +342,15 @@ def src_plate_generator(
     # set the deadVolume to the one of
     # the original parameter (e.g. 'Component_1').
     # Not needed to remove the original component, it will never been called
-    for param in vol_sums.keys():
-        _name = param.split('_')[0]
-        if param not in param_dead_volumes:
-            param_dead_volumes[param] = param_dead_volumes[_name]
-        # Check if the original component
-        # is in the list of components to optimize volumes for
-        if _name in opt_well_vol:
-            # If so, add the new component to the list
-            opt_well_vol.append(param)
+    # for param in vol_sums.keys():
+    #     _name = param.split('_')[0]
+    #     if param not in param_dead_volumes:
+    #         param_dead_volumes[param] = param_dead_volumes[_name]
+    #     # Check if the original component
+    #     # is in the list of components to optimize volumes for
+    #     if _name in opt_well_vol:
+    #         # If so, add the new component to the list
+    #         opt_well_vol.append(param)
 
     # Set number of wells needed
     for param, volume in vol_sums.items():
@@ -393,7 +397,8 @@ def src_plate_generator(
     for plate in plates:
         logger.debug(f'{plate}')
 
-    return plates, split_comp
+    return plates
+#, split_comp
 
 
 def nb_wells_needed(

@@ -14,9 +14,6 @@ DEFAULT_ARGS = {
     'SRC_PLT_WELL_CAPACITY': 60000,
     'SRC_PLT_DIM': '16x24',
     'SRC_PLT_START_WELL': 'A1',
-    'SRC_PLT_SPLIT_COMPONENT': [''],
-    'SRC_PLT_SPLIT_UPPER_VOL': [0],
-    'SRC_PLT_SPLIT_LOWER_VOL': [0],
     'DST_PLT_DEAD_VOLUME': 15000,
     'DST_PLT_START_WELL': 'A1',
     'DST_PLT_WELL_CAPACITY': 60000,
@@ -84,44 +81,6 @@ def add_arguments(parser):
         default=DEFAULT_ARGS['SRC_PLT_WELL_CAPACITY'],
         help=('Maximum volume capacity of the source plate in nL'
               f' (default: {DEFAULT_ARGS["SRC_PLT_WELL_CAPACITY"]})')
-    )
-    src_plates_group.add_argument(
-        '-spsc', '--src-plt-split-component',
-        nargs='+',
-        type=str,
-        default=DEFAULT_ARGS['SRC_PLT_SPLIT_COMPONENT'],
-        help=(
-            'List of components (separated by blanks) to apply'
-            ' limits given by \'--src-plt-split-upper-vol\''
-            ' and \'--src-plt-split-lower-vol\' options.'
-            f' (default: {DEFAULT_ARGS["SRC_PLT_SPLIT_COMPONENT"]})'
-        )
-    )
-    src_plates_group.add_argument(
-        '-spsuv', '--src-plt-split-upper-vol',
-        nargs='+',
-        type=int,
-        default=DEFAULT_ARGS['SRC_PLT_SPLIT_UPPER_VOL'],
-        help=(
-            'List of maximum volumes (nL) (separated by blanks)'
-            ' of components in the source plate wells, applied'
-            ' to the components given by \'--src-plt-split-upper-vol\''
-            ' option. Applied to all if one single value is specified.'
-            f' (default: {DEFAULT_ARGS["SRC_PLT_SPLIT_UPPER_VOL"]})'
-        )
-    )
-    src_plates_group.add_argument(
-        '-spslv', '--src-plt-split-lower-vol',
-        nargs='+',
-        type=int,
-        default=DEFAULT_ARGS['SRC_PLT_SPLIT_LOWER_VOL'],
-        help=(
-            'List of minimum volumes (nL) (separated by blanks) of components'
-            ' in the source plate wells, applied to the components given by '
-            '\'--src-plt-split-upper-vol\' option.'
-            ' Applied to all if one single value is specified.'
-            f' (default: {DEFAULT_ARGS["SRC_PLT_SPLIT_LOWER_VOL"]})'
-        )
     )
 
     dst_plates_group = parser.add_argument_group("Destination Plates")

@@ -611,6 +611,31 @@ class Plate:
             c.update(vpf)
         return dict(c)
 
+    def get_max_volume(self, component) -> float:
+        """Get the maximum volume of the specified component
+        over all wells.
+
+        Parameters
+        ----------
+        component : str
+            Component
+
+        Returns
+        -------
+        float
+            Maximum volume of the specified component
+        """
+        if component in self.get_list_of_parameters():
+            return max(
+                [
+                    well[component]
+                    for well in self.get_wells().values()
+                    if component in well
+                ]
+            )
+        else:
+            self.__logger.error(f'Component {component} not found in this plate')
+
     @staticmethod
     def get_volumes_summary(
         plates: List['Plate'],
