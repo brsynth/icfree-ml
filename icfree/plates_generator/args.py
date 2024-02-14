@@ -19,6 +19,7 @@ DEFAULT_ARGS = {
     'DST_PLT_WELL_CAPACITY': 60000,
     'DST_PLT_DIM': '16x24',
     'NPLICATES': 1,
+    'NEW_COL_COMP': None,
     'KEEP_NIL_VOL': False,
     'OPTIMIZE_WELL_VOLUMES': ['none'],
     'OUTPUT_FORMAT': 'csv'
@@ -81,6 +82,15 @@ def add_arguments(parser):
         default=DEFAULT_ARGS['SRC_PLT_WELL_CAPACITY'],
         help=('Maximum volume capacity of the source plate in nL'
               f' (default: {DEFAULT_ARGS["SRC_PLT_WELL_CAPACITY"]})')
+    )
+    src_plates_group.add_argument(
+        '-ncc', '--new-col-comp',
+        nargs='*',
+        type=str,
+        default=DEFAULT_ARGS["NEW_COL_COMP"],
+        help=('Start wells at a new column for each listed component.'
+              ' If empty, start wells at a new column for each component. '
+              f' (default: {DEFAULT_ARGS["NEW_COL_COMP"]}).')
     )
 
     dst_plates_group = parser.add_argument_group("Destination Plates")

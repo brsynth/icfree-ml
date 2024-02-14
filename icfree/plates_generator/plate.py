@@ -1,5 +1,6 @@
 '''Plate class'''
 from os import path as os_path
+from re import findall as re_findall
 from string import (
     ascii_uppercase as str_ascii_uppercase
 )
@@ -70,10 +71,10 @@ class Plate:
         self.__logger.debug(self)
 
     def __str__(self) -> str:
-        return json_dumps(self.to_dict(), indent=4)
+        return json_dumps(self.to_dict(), indent=4) + str(self.to_df())
 
     def __repr__(self) -> str:
-        return self.__str__()
+        return "self.__str__()"
 
     def __eq__(self, other: Type['Plate']) -> bool:
         return (
@@ -142,6 +143,26 @@ class Plate:
     def to_df(self) -> DataFrame:
         '''Return a DataFrame representation of the plate'''
         return DataFrame(self.get_wells()).transpose()
+
+    def to_df_rc(self) -> DataFrame:
+        '''Return a DataFrame representation of the plate'''
+        grid = DataFrame(columns=self.get_cols(), index=self.get_rows())
+        # Write 'X' in each filled well
+        for well, _ in self.get_wells().items():
+            row = well[0]
+            col = well[1:]
+            grid.at[row, col] = 'X'
+        # Write '' in each empty well
+        for row in self.get_rows():
+            for col in self.get_cols():
+                if pd_isna(grid.at[row, col]):
+                    grid.at[row, col] = ''
+        # # Write '^' in the current well
+        # cur_well = self.get_current_well()
+        # row = cur_well[0]
+        # col = cur_well[1:]
+        # grid.at[row, col] = '^'
+        return grid
 
     def to_file(self, path: str, format_: str) -> None:
         '''Save plate to file'''
@@ -475,6 +496,7 @@ class Plate:
                 f'The index {index} is greater than ' \
                 f'the number of wells ({self.get_nb_wells()}).'
             # self.__logger.warning(msg)
+            # Raise an error to create a new plate from outside
             raise ValueError(msg)
         self.__cur_well_index = index
         # self.__logger.debug(
@@ -490,6 +512,28 @@ class Plate:
             Name of the current well
         """
         self.__set_current_well_by_index(self.__get_well_index(well))
+        self.__logger.debug(
+            f'The current well name is {self.get_current_well()} '
+        )
+
+    # Set the current well to a new column
+    def next_col(self) -> None:
+        """Set the current well to a new column.
+
+        Parameters
+        ----------
+        well : str
+            Name of the current well
+        """
+        cur_row = " ".join(re_findall("[a-zA-Z]+", self.get_current_well()))
+        # If not at the beginning of a column
+        if cur_row != self.get_rows()[0]:
+            # Go to the last well of the column
+            cur_col = " ".join(re_findall("[0-9]+", self.get_current_well()))
+            last_row_index = self.get_rows()[-1]
+            self.set_current_well(f'{last_row_index}{cur_col}')
+            # Do next_well()
+            self.next_well()
         self.__logger.debug(
             f'The current well name is {self.get_current_well()} '
         )

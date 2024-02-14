@@ -241,11 +241,12 @@ def src_plate_generator(
     plate_dead_volume: int = DEFAULT_ARGS['SRC_PLT_DEAD_VOLUME'],
     well_capacity: float = DEFAULT_ARGS['SRC_PLT_WELL_CAPACITY'],
     start_well: str = DEFAULT_ARGS['SRC_PLT_START_WELL'],
+    new_col_comp: str = DEFAULT_ARGS['NEW_COL_COMP'],
     opt_well_vol: List = DEFAULT_ARGS['OPTIMIZE_WELL_VOLUMES'],
     vertical: bool = True,
     dimensions: str = DEFAULT_ARGS['SRC_PLT_DIM'],
-    lower_volumes: Dict = {},
-    upper_volumes: Dict = {},
+    # lower_volumes: Dict = {},
+    # upper_volumes: Dict = {},
     logger: Logger = getLogger(__name__)
 ) -> List:
     """
@@ -263,6 +264,8 @@ def src_plate_generator(
         Source plate well capacity. Defaults to 60000 nL
     start_well : str
         Starter well to begin filling the 384 well-plate. Defaults to 'A1'
+    new_col_comp: str
+        Start component at a new column. Defaults to None
     opt_well_vol: List
         List of parameters to optimize. set to [] if none
     vertical: bool
@@ -271,10 +274,10 @@ def src_plate_generator(
     dimensions: str
         Dimensions of the plate given as a string with nb_rows
         and nb_cols separated by 'x'
-    lower_volumes: Dict
-        Minimum volume (nL) of each component in the source plate wells
-    upper_volumes: Dict
-        Maximum volume (nL) of each component in the source plate wells
+    # lower_volumes: Dict
+    #     Minimum volume (nL) of each component in the source plate wells
+    # upper_volumes: Dict
+    #     Maximum volume (nL) of each component in the source plate wells
     logger: Logger
         Logger
 
@@ -291,8 +294,9 @@ def src_plate_generator(
     logger.debug(f'optimize_well_volumes: {opt_well_vol}')
     logger.debug(f'vertical: {vertical}')
     logger.debug(f'plate_dimensions: {dimensions}')
-    logger.debug(f'lower_volumes: {lower_volumes}')
-    logger.debug(f'upper_volumes: {upper_volumes}')
+    logger.debug(f'new_col_comp: {new_col_comp}')
+    # logger.debug(f'lower_volumes: {lower_volumes}')
+    # logger.debug(f'upper_volumes: {upper_volumes}')
 
     plates = []
     nb_plates = 1
@@ -352,6 +356,9 @@ def src_plate_generator(
     #         # If so, add the new component to the list
     #         opt_well_vol.append(param)
 
+    if new_col_comp == []:
+        new_col_comp = vol_sums.keys()
+
     # Set number of wells needed
     for param, volume in vol_sums.items():
         logger.debug(f'param: {param}, volume: {volume}')
@@ -373,13 +380,18 @@ def src_plate_generator(
             logger=logger
         )
 
-        for _ in range(nb_wells):
-            plate.fill_well(param, volume_per_well)
-            try:
+        try:
+            # Start at a new column if requested
+            if new_col_comp and param in new_col_comp:
+                plate.next_col()
+
+            # Fill wells
+            for _ in range(nb_wells):
+                plate.fill_well(param, volume_per_well)
                 plate.next_well()
-            except ValueError:  # Out of plate
+
+        except ValueError:  # Out of plate
                 # Store current plate
-                # plates[f'{nb_plates}'] = deepcopy(plate)
                 plates.append(deepcopy(plate))
                 nb_plates += 1
                 # Create new plate
@@ -476,92 +488,92 @@ def nb_wells_needed(
     return nb_wells, volume_per_well
 
 
-def dst_plate_split_volumes(
-    dest_plates: List,
-    split_comp: Dict,
-    logger: Logger = getLogger(__name__)
-) -> List:
-    """
-    Split volumes of destination plates
+# def dst_plate_split_volumes(
+#     dest_plates: List,
+#     split_comp: Dict,
+#     logger: Logger = getLogger(__name__)
+# ) -> List:
+#     """
+#     Split volumes of destination plates
 
-    Parameters
-    ----------
-    dest_plates: List
-        List of destination plates
-    split_comp: Dict
-        Dict of splitted_comp with
-        number of splits and upper/lower volumes
-    logger: Logger
-        Logger
+#     Parameters
+#     ----------
+#     dest_plates: List
+#         List of destination plates
+#     split_comp: Dict
+#         Dict of splitted_comp with
+#         number of splits and upper/lower volumes
+#     logger: Logger
+#         Logger
 
-    Returns
-    -------
-    dest_plates: List
-        List of destination plates with split volumes
-    """
+#     Returns
+#     -------
+#     dest_plates: List
+#         List of destination plates with split volumes
+#     """
 
-    # For each component of each plate,
-    # split volumes according to split_comp
-    for plate in dest_plates:
-        for comp in plate.get_list_of_parameters():
-            if comp in split_comp:
-                # In each well, rename the original component
-                # by one of the splitted components
-                # and update the volume
-                i = 1
-                for well, content in plate.get_wells().items():
-                    i = i % split_comp[comp]['nb_bins']
-                    spread = split(
-                        content.pop(comp),  # removing the original component
-                        split_comp[comp]['upper_vol'],
-                        split_comp[comp]['lower_vol']
-                    )
-                    # Split the original component
-                    # into the nb of bins + remainder
-                    for _ in range(spread['nb_bins']):
-                        # Fill the bin with the max volume
-                        content[f'{comp}_{i}'] = split_comp[comp]['upper_vol']
-                        # Update the index,
-                        # it should never be greater than the number of splits
-                        i += 1
-                    # Fill the remainder with the remaining volume
-                    if spread['remainder'] > 0:
-                        content[f'{comp}_{i}'] = spread['remainder']
-                        i += 1
+#     # For each component of each plate,
+#     # split volumes according to split_comp
+#     for plate in dest_plates:
+#         for comp in plate.get_list_of_parameters():
+#             if comp in split_comp:
+#                 # In each well, rename the original component
+#                 # by one of the splitted components
+#                 # and update the volume
+#                 i = 1
+#                 for well, content in plate.get_wells().items():
+#                     i = i % split_comp[comp]['nb_bins']
+#                     spread = split(
+#                         content.pop(comp),  # removing the original component
+#                         split_comp[comp]['upper_vol'],
+#                         split_comp[comp]['lower_vol']
+#                     )
+#                     # Split the original component
+#                     # into the nb of bins + remainder
+#                     for _ in range(spread['nb_bins']):
+#                         # Fill the bin with the max volume
+#                         content[f'{comp}_{i}'] = split_comp[comp]['upper_vol']
+#                         # Update the index,
+#                         # it should never be greater than the number of splits
+#                         i += 1
+#                     # Fill the remainder with the remaining volume
+#                     if spread['remainder'] > 0:
+#                         content[f'{comp}_{i}'] = spread['remainder']
+#                         i += 1
 
-    return dest_plates
+#     return dest_plates
 
 
-def split(vol, max, min):
-    """
-    Split a volume into a number of bins and a remainder
+# def split(vol, max, min):
+#     """
+#     Split a volume into a number of bins and a remainder
 
-    Parameters
-    ----------
-    vol : float
-        Volume to split
-    max : float
-        Maximum volume per bin
-    min : float
-        Minimum volume per bin
+#     Parameters
+#     ----------
+#     vol : float
+#         Volume to split
+#     max : float
+#         Maximum volume per bin
+#     min : float
+#         Minimum volume per bin
 
-    Returns
-    -------
-    Dict
-        Number of bins fully filled + remainder
-    """
-    if vol < min:
-        # If the volume is less than the minimum, nothing can be filled.
-        return {'nb_bins': 0, 'remainder': vol}
-    elif vol < max:
-        # If the volume is less than the max, it all goes into the remainder.
-        return {'nb_bins': 0, 'remainder': vol}
-    else:
-        # Calculate the number of full bins and the remainder.
-        nb_bins = vol // max
-        remainder = vol - nb_bins * max
-        # Ensure remainder is not below the minimum unless it's zero.
-        if remainder < min and remainder != 0:
-            nb_bins -= 1
-            remainder += max
-        return {'nb_bins': int(nb_bins), 'remainder': remainder}
+#     Returns
+#     -------
+#     Dict
+#         Number of bins fully filled + remainder
+#     """
+#     if vol < min:
+#         # If the volume is less than the minimum, nothing can be filled.
+#         return {'nb_bins': 0, 'remainder': vol}
+#     elif vol < max:
+#         # If the volume is less than the max, it all goes into the remainder.
+#         return {'nb_bins': 0, 'remainder': vol}
+#     else:
+#         # Calculate the number of full bins and the remainder.
+#         nb_bins = vol // max
+#         remainder = vol - nb_bins * max
+#         # Ensure remainder is not below the minimum unless it's zero.
+#         if remainder < min and remainder != 0:
+#             nb_bins -= 1
+#             remainder += max
+#         return {'nb_bins': int(nb_bins), 'remainder': remainder}

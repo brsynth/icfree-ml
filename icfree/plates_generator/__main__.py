@@ -17,8 +17,7 @@ from brs_utils import (
 from .plates_generator import (
     extract_dead_volumes,
     src_plate_generator,
-    dst_plate_generator,
-    dst_plate_split_volumes
+    dst_plate_generator
 )
 from .args import (
     build_args_parser,
@@ -106,13 +105,13 @@ def main():
 
     # Generate source plates
     try:
-        # Handle optional well volumes
-        if args.opt_well_vol == []:
-            args.opt_well_vol = ['all']
-        upper_volumes, lower_volumes = handle_component_splitting(
-            args=args,
-            components=values_df.columns
-        )
+        # # Handle optional well volumes
+        # if args.opt_well_vol == []:
+        #     args.opt_well_vol = ['all']
+        # upper_volumes, lower_volumes = handle_component_splitting(
+        #     args=args,
+        #     components=values_df.columns
+        # )
         source_plates = src_plate_generator(
             dest_plates=dest_plates,
             plate_dead_volume=args.src_plt_dead_volume,
@@ -122,8 +121,9 @@ def main():
             opt_well_vol=args.opt_well_vol,
             vertical=True,
             dimensions=args.src_plt_dim,
-            upper_volumes=upper_volumes,
-            lower_volumes=lower_volumes,
+            new_col_comp=args.new_col_comp,
+            # upper_volumes=upper_volumes,
+            # lower_volumes=lower_volumes,
             logger=logger
         )
 
@@ -177,6 +177,22 @@ def main():
         index=True,
         logger=logger
     )
+
+    # Print out
+    if not args.silent:
+        # SRC PLT
+        print("SOURCE PLATES")
+        print("=============")
+        for plate in source_plates:
+            print(plate.to_df_rc())
+            print()
+        # DST PLT
+        print("DESTINATION PLATES")
+        print("==================")
+        for plate in dest_plates:
+            print(plate.to_df_rc())
+            print()
+
 
 
 def handle_component_splitting(
