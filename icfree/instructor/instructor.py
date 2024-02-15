@@ -232,8 +232,12 @@ def echo_instructions_generator(
     for factor in dst_plates_by_factor:
         src_plt_id = src_plates_by_factor[factor]['plt_id']
         src_plt_type = src_plates_by_factor[factor]['plt_type']
-        src_well_ids = \
-            f'{{{";".join(src_plates_by_factor[factor]["wells"].keys())}}}'
+        src_wells = src_plates_by_factor[factor]['wells']
+        if len(src_wells) > 1:
+            src_well_ids = \
+                f'{{{";".join(src_plates_by_factor[factor]["wells"].keys())}}}'
+        else:
+            src_well_ids = list(src_plates_by_factor[factor]['wells'].keys())[0]
         dst_plt_id = dst_plates_by_factor[factor]['plt_id']
         for dst_well in dst_plates_by_factor[factor]['wells'].items():
             dst_well_id = dst_well[0]
