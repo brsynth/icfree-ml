@@ -71,7 +71,7 @@ class Plate:
         self.__logger.debug(self)
 
     def __str__(self) -> str:
-        return json_dumps(self.to_dict(), indent=4) + str(self.to_df())
+        return json_dumps(self.to_dict(), indent=4)
 
     def __repr__(self) -> str:
         return "self.__str__()"
