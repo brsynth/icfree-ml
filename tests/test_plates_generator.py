@@ -25,8 +25,7 @@ from icfree.plates_generator.plates_generator import (
     init_plate,
     dst_plate_generator,
     src_plate_generator,
-    extract_dead_volumes,
-    split
+    extract_dead_volumes
 )
 from icfree.plates_generator.args import DEFAULT_ARGS
 from icfree.plates_generator.__main__ import input_importer
@@ -111,7 +110,7 @@ class TestPlatesGenerator(TestCase):
         )
 
         # Generate source plates
-        source_plates, _ = src_plate_generator(
+        source_plates = src_plate_generator(
             dest_plates=dest_plates,
             plate_dead_volume=15000,
             well_capacity=60000,
@@ -149,7 +148,7 @@ class TestPlatesGenerator(TestCase):
         )
 
         # Generate source plates
-        source_plates, _ = src_plate_generator(
+        source_plates = src_plate_generator(
             dest_plates=dest_plates,
             plate_dead_volume=15000,
             well_capacity=60000,
@@ -188,7 +187,7 @@ class TestPlatesGenerator(TestCase):
         )
 
         # Generate source plates
-        source_plates, _ = src_plate_generator(
+        source_plates = src_plate_generator(
             dest_plates=dest_plates,
             plate_dead_volume=15000,
             well_capacity=60000,
@@ -229,7 +228,7 @@ class TestPlatesGenerator(TestCase):
         )
 
         # Generate source plates
-        source_plates, _ = src_plate_generator(
+        source_plates = src_plate_generator(
             dest_plates=dest_plates,
             plate_dead_volume=15000,
             well_capacity=60000,
@@ -281,42 +280,6 @@ class TestPlatesGenerator(TestCase):
         )
         self.assertEqual(dest_plates[0], expected_plate_1)
         self.assertEqual(dest_plates[1], expected_plate_2)
-
-    def test_volume_below_minimum(self):
-        self.assertEqual(
-            split(vol=10, max=1000, min=20),
-            {'nb_bins': 0, 'remainder': 10}
-        )
-
-    def test_volume_within_max(self):
-        self.assertEqual(
-            split(vol=750, max=1000, min=20),
-            {'nb_bins': 0, 'remainder': 750}
-        )
-
-    def test_volume_exceeds_max_once(self):
-        self.assertEqual(
-            split(vol=1750, max=1000, min=20),
-            {'nb_bins': 1, 'remainder': 750}
-        )
-
-    def test_volume_exceeds_max_with_small_remainder(self):
-        self.assertEqual(
-            split(vol=1020, max=1000, min=20),
-            {'nb_bins': 1, 'remainder': 20}
-        )
-
-    def test_volume_double_max(self):
-        self.assertEqual(
-            split(vol=2000, max=1000, min=20),
-            {'nb_bins': 2, 'remainder': 0}
-        )
-
-    def test_volume_double_max_with_remainder(self):
-        self.assertEqual(
-            split(vol=2040, max=1000, min=20),
-            {'nb_bins': 2, 'remainder': 40}
-        )
 
 
 class TestPlate(TestCase):
@@ -721,5 +684,5 @@ class TestPlate(TestCase):
         )
         self.assertEqual(
             plate.get_max_volume('FOO'),
-            93.75
+            None
         )
