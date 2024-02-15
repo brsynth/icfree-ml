@@ -678,7 +678,9 @@ class Plate:
                 ]
             )
         else:
-            self.__logger.error(f'Component {component} not found in this plate')
+            self.__logger.error(
+                f'Component {component} not found in this plate'
+            )
 
     @staticmethod
     def get_volumes_summary(

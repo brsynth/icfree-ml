@@ -705,3 +705,21 @@ class TestPlate(TestCase):
                 merged[i],
                 ref_plate_dicts[i]
             )
+
+    def test_get_max_volume(self):
+        plate = Plate.from_file(
+            os_path.join(self.REF_FOLDER, 'dst_plate_1.json')
+        )
+        self.assertEqual(
+            plate.get_max_volume('Component_4'),
+            93.75
+        )
+
+    def test_get_max_volume_miss_comp(self):
+        plate = Plate.from_file(
+            os_path.join(self.REF_FOLDER, 'dst_plate_1.json')
+        )
+        self.assertEqual(
+            plate.get_max_volume('FOO'),
+            93.75
+        )

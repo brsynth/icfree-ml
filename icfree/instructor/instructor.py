@@ -238,16 +238,21 @@ def echo_instructions_generator(
         for dst_well in dst_plates_by_factor[factor]['wells'].items():
             dst_well_id = dst_well[0]
             dst_well_vol = dst_well[1]
-            # If the volume to drop in the destination well is greater than
-            # the upper bound (given by ), split the volume in several instructions
-            if factor in split_components and \
-            dst_well_vol > split_components[factor]['upper']:
+            # If the volume to drop in the destination well
+            # is greater than the upper bound (given by ),
+            # split the volume in several instructions
+            if (
+                factor in split_components and
+                dst_well_vol > split_components[factor]['upper']
+            ):
                 logger.debug(
                     f'Volume to drop in {dst_well_id} > '
                     f'{split_components[factor]["upper"]} nL'
                 )
                 # Get the number of times the volume has to be split
-                n_splits = int(dst_well_vol / split_components[factor]['upper'])
+                n_splits = int(
+                    dst_well_vol / split_components[factor]['upper']
+                )
                 # Get the volume to drop in the last instruction
                 last_vol = dst_well_vol % split_components[factor]['upper']
                 # Get the volume to drop in each instruction
@@ -259,8 +264,8 @@ def echo_instructions_generator(
                         factor
                     ]
                 # Add the last instruction
-                # If the last volume is less than the lower bound, add it to the
-                # last instruction
+                # If the last volume is less than the lower bound,
+                # add it to the last instruction
                 if last_vol < split_components[factor]['lower']:
                     split_vol += last_vol
                     instructions.loc[len(instructions.index)-1] = [

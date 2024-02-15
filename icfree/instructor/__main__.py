@@ -152,16 +152,16 @@ def main():
         )
 
     # Save instructions
-    # If list of split_outfile_components is unchanged,
-    # save all instructions in a single file
-    if args.split_outfile_components == DEFAULT_ARGS['SPLIT_OUTFILE_COMPONENTS']:
-        pass
-    # If list of split_outfile_components is empty
-    # i.e. no components are listed but the optipn is activated,
-    # save each component in a separate file
-    else:
+    if (
+        args.split_outfile_components !=
+        DEFAULT_ARGS['SPLIT_OUTFILE_COMPONENTS']
+    ):
+        # If list of split_outfile_components is empty
+        # i.e. no components are listed but the optipn is activated,
+        # save each component in a separate file
         if args.split_outfile_components == []:
-            args.split_outfile_components = echo_instructions['Sample ID'].unique()
+            args.split_outfile_components = \
+                echo_instructions['Sample ID'].unique()
         # save each listed component in a separate file
         for component in args.split_outfile_components:
             # Extract instructions where 'Sample ID' == component
@@ -177,6 +177,9 @@ def main():
             echo_instructions = echo_instructions[
                 echo_instructions['Sample ID'] != component
             ]
+    # For each remained components,
+    # or if list of split_outfile_components is unchanged,
+    # save all instructions in a single file
     save_df(
         df=echo_instructions,
         outfile='instructions.csv',

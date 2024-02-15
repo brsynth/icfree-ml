@@ -27,40 +27,6 @@ from .plate import Plate
 from icfree.utils import save_df
 from icfree.converter.__main__ import input_importer
 
-# def input_importer(
-#     cfps_parameters,
-#     volumes,
-#     logger: Logger = getLogger(__name__)
-# ):
-#     """
-#     Create volumes dataframes from tsv files
-
-#     Parameters
-#     ----------
-#     cfps_parameters : tsv file
-#         TSV of cfps parameters, status, maximum and stock concentrations
-#     volumes : tsv file
-#         Dataset with volumes values
-
-#     Returns
-#     -------
-#     cfps_parameters_df : DataFrame
-#         Dataframe with cfps_parameters data
-#     volumes_df : DataFrame
-#         Dataframe with volumes data
-#     """
-#     cfps_parameters_df = read_csv(
-#         cfps_parameters,
-#         sep='[,\t]',
-#         engine='python'
-#     )
-#     logger.debug(f'cfps_parameters_df: {cfps_parameters_df}')
-
-#     volumes_df = read_csv(volumes, sep='[,\t]', engine='python')
-#     logger.debug(f'volumes_df: {volumes_df}')
-
-#     return cfps_parameters_df, volumes_df
-
 
 def main():
     """
@@ -97,21 +63,18 @@ def main():
         start_well=args.dst_start_well,
         well_capacity=args.dst_plt_well_capacity,
         plate_dead_volume=args.dst_plt_dead_volume,
-        vertical=True,
+        vertical=DEFAULT_ARGS['VERTICAL'],
         nplicates=args.nplicates,
         dimensions=args.dst_plt_dim,
         logger=logger
     )
 
+    # Handle optional well volumes
+    if args.opt_well_vol == []:
+        args.opt_well_vol = ['all']
+
     # Generate source plates
     try:
-        # # Handle optional well volumes
-        # if args.opt_well_vol == []:
-        #     args.opt_well_vol = ['all']
-        # upper_volumes, lower_volumes = handle_component_splitting(
-        #     args=args,
-        #     components=values_df.columns
-        # )
         source_plates = src_plate_generator(
             dest_plates=dest_plates,
             plate_dead_volume=args.src_plt_dead_volume,
@@ -122,16 +85,9 @@ def main():
             vertical=True,
             dimensions=args.src_plt_dim,
             new_col_comp=args.new_col_comp,
-            # upper_volumes=upper_volumes,
-            # lower_volumes=lower_volumes,
             logger=logger
         )
 
-        # dest_plates = dst_plate_split_volumes(
-        #     dest_plates=dest_plates,
-        #     split_comp=split_comp,
-        #     logger=logger
-        # )
     except IndexError as e:
         logger.error(e)
         logger.error(
@@ -192,61 +148,6 @@ def main():
         for plate in dest_plates:
             print(plate.to_df_rc())
             print()
-
-
-
-def handle_component_splitting(
-    args,
-    components: list,
-):
-    """
-    Handle component splitting
-
-    Parameters
-    ----------
-    args : list
-        List of args
-    components : list
-        List of components
-
-    Returns
-    -------
-    upper_volumes : list
-        List of upper volumes
-    lower_volumes : list
-        List of lower volumes
-    """
-
-    # Handle component splitting
-    # src_plt_split_upper_volumes
-    spsuv_d = {}
-    spsuv = args.src_plt_split_upper_vol
-    # src_plt_split_lower_volumes
-    spslv_d = {}
-    spslv = args.src_plt_split_lower_vol
-    # src_plt_split_component
-    spsc = args.src_plt_split_component
-    # Fill component limits only if the upper limit
-    # has been specified by the user
-    if spsuv != DEFAULT_ARGS['SRC_PLT_SPLIT_UPPER_VOL']:
-        if spsc == DEFAULT_ARGS['SRC_PLT_SPLIT_COMPONENT']:
-            # Copy bounds to all components
-            for component in components:
-                spsuv_d[component] = spsuv
-                spslv_d[component] = spslv
-        else:
-            # If one of spsuv and spslv
-            # has one single value, then extend to the number of components
-            if len(spsuv) == 1:
-                spsuv = [spsuv[0]] * len(spsc)
-            if len(spslv) == 1:
-                spslv = [spslv[0]] * len(spsc)
-            # Copy bounds to specified components
-            for i in range(len(spsc)):
-                spsuv_d[spsc[i]] = spsuv[i]
-                spslv_d[spsc[i]] = spslv[i]
-
-    return spsuv_d, spslv_d
 
 
 if __name__ == "__main__":
