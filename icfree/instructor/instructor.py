@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # coding: utf-8
 from pandas import DataFrame
-from typing import Dict
+from typing import (
+    Dict,
+    List
+)
 from logging import (
     Logger,
     getLogger
@@ -199,19 +202,6 @@ def echo_instructions_generator(
     src_plates_by_factor = reindex_plates_by_factor(source_plates, logger)
     dst_plates_by_factor = reindex_plates_by_factor(dest_plates, logger)
 
-    # Build the instructions
-    instructions = DataFrame(
-        columns=[
-            'Source Plate Name',
-            'Source Plate Type',
-            'Source Well',
-            'Destination Plate Name',
-            'Destination Well',
-            'Transfer Volume',
-            'Sample ID'
-        ]
-    )
-
     # Get source plate type
     def_src_plate_type = DEFAULT_ARGS['SRC_PLATE_TYPE']
     if len(src_plate_type) % 2 == 1:
@@ -229,78 +219,130 @@ def echo_instructions_generator(
             src_plates_by_factor[factor]['plt_type'] = def_src_plate_type
 
     # Generate instructions
+    instructions = []
     for factor in dst_plates_by_factor:
+
         dst_plates = dst_plates_by_factor[factor]['spread']
         src_plates = src_plates_by_factor[factor]['spread']
-        for dst_plt_id, dst_plt_content in dst_plates.items():
-            # One component on one single src plate
-            src_plt_id = list(src_plates.keys())[0]
-            src_plt_type = src_plates_by_factor[factor]['plt_type']
-            src_wells = list(src_plates[src_plt_id].keys())
-            # Put {} around src_well_ids if there are more than one (ECHO)
-            if len(src_wells) > 1:
-                src_well_ids = \
-                    f'{{{";".join(src_wells)}}}'
-            else:
-                src_well_ids = src_wells[0]
-            for dst_well_id, dst_well_vol in dst_plt_content.items():
-                # If the volume to drop in the destination well
-                # is greater than the upper bound (given by ),
-                # split the volume in several instructions
-                if (
-                    factor in split_components and
-                    dst_well_vol > split_components[factor]['upper']
-                ):
-                    logger.debug(
-                        f'Volume to drop in {dst_well_id} > '
-                        f'{split_components[factor]["upper"]} nL'
-                    )
-                    # Get the number of times the volume has to be split
-                    n_splits = int(
-                        dst_well_vol / split_components[factor]['upper']
-                    )
-                    # Get the volume to drop in the last instruction
-                    last_vol = dst_well_vol % split_components[factor]['upper']
-                    # Get the volume to drop in each instruction
-                    split_vol = split_components[factor]['upper']
-                    for _ in range(n_splits):
-                        instructions.loc[len(instructions.index)] = [
-                            f'Source[{src_plt_id}]',
-                            src_plt_type, src_well_ids,
-                            f'Destination[{dst_plt_id}]',
-                            dst_well_id, split_vol,
-                            factor
-                        ]
-                    # Add the last instruction
-                    # If the last volume is less than the lower bound,
-                    # add it to the last instruction
-                    if last_vol < split_components[factor]['lower']:
-                        split_vol += last_vol
-                        instructions.loc[len(instructions.index)-1] = [
-                            f'Source[{src_plt_id}]',
-                            src_plt_type, src_well_ids,
-                            f'Destination[{dst_plt_id}]',
-                            dst_well_id, split_vol,
-                            factor
-                        ]
-                    else:
-                        instructions.loc[len(instructions.index)] = [
-                            f'Source[{src_plt_id}]',
-                            src_plt_type, src_well_ids,
-                            f'Destination[{dst_plt_id}]',
-                            dst_well_id, last_vol,
-                            factor
-                        ]
-                else:
-                    instructions.loc[len(instructions.index)] = [
+        instructions += gen_factor_instr(
+            factor,
+            src_plates,
+            src_plates_by_factor,
+            dst_plates,
+            split_components,
+            logger
+        )
+
+    return DataFrame(
+        instructions,
+        columns=[
+            'Source Plate Name',
+            'Source Plate Type',
+            'Source Well',
+            'Destination Plate Name',
+            'Destination Well',
+            'Transfer Volume',
+            'Sample ID'
+        ]
+    )
+
+
+def gen_factor_instr(
+    factor: str,
+    src_plates: Dict,
+    src_plates_by_factor: Dict,
+    dst_plates: Dict,
+    split_components: Dict,
+    logger: Logger = getLogger(__name__)
+) -> List:
+    """
+    Generate instructions for a given factor
+
+    Parameters
+    ----------
+    factor: str
+        Factor ID
+    src_plates: Dict
+        Source plates
+    src_plates_by_factor: Dict
+        Source plates reindexed by factor
+    dst_plates: Dict
+        Destination plates
+    split_components: Dict
+        Volume bounds for picking components in the source plates
+
+    Returns
+    -------
+    instructions: DataFrame
+        Instructions
+    """
+    logger.debug(f'Generating instructions for {factor}')
+    logger.debug(f'Source plates: {src_plates}')
+    logger.debug(f'Destination plates: {dst_plates}')
+    logger.debug(f'Split components: {split_components}')
+
+    # Init the instructions
+    instructions = []
+
+    for dst_plt_id, dst_plt_content in dst_plates.items():
+
+        # One component on one single src plate
+        src_plt_id = list(src_plates.keys())[0]
+        src_plt_type = src_plates_by_factor[factor]['plt_type']
+        src_wells = list(src_plates[src_plt_id].keys())
+        # Put {} around src_well_ids if there are more than one (ECHO)
+        if len(src_wells) > 1:
+            src_well_ids = \
+                f'{{{";".join(src_wells)}}}'
+        else:
+            src_well_ids = src_wells[0]
+
+        for dst_well_id, dst_well_vol in dst_plt_content.items():
+            # If the volume to drop in the destination well
+            # is greater than the upper bound (given by ),
+            # split the volume in several instructions
+            if (
+                factor in split_components and
+                dst_well_vol > split_components[factor]['upper']
+            ):
+                logger.debug(
+                    f'Volume to drop in {dst_well_id} > '
+                    f'{split_components[factor]["upper"]} nL'
+                )
+                # Get the number of times the volume has to be split
+                n_splits = int(
+                    dst_well_vol / split_components[factor]['upper']
+                )
+                # Get the volume to drop in the last instruction
+                last_vol = dst_well_vol % split_components[factor]['upper']
+                # Get the volume to drop in each instruction
+                split_vol = split_components[factor]['upper']
+                for _ in range(n_splits):
+                    instructions += [[
                         f'Source[{src_plt_id}]',
                         src_plt_type, src_well_ids,
                         f'Destination[{dst_plt_id}]',
-                        dst_well_id, dst_well_vol,
+                        dst_well_id, float(split_vol),
                         factor
-                    ]
+                    ]]
+                # Add the last instruction
+                # If the last volume is less than the lower bound,
+                # add it to the last instruction
+                if last_vol < split_components[factor]['lower']:
+                    dst_well_vol = split_vol + last_vol
+                    # remove last elt
+                    instructions = instructions[:-1]
+                else:
+                    dst_well_vol = last_vol
 
-    logger.debug(f'INSTRUCTIONS:\n{instructions}')
+            # Add the last instruction
+            instructions += [[
+                f'Source[{src_plt_id}]',
+                src_plt_type, src_well_ids,
+                f'Destination[{dst_plt_id}]',
+                dst_well_id, float(dst_well_vol),
+                factor
+            ]]
 
     return instructions
 

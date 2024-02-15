@@ -19,10 +19,7 @@ from .plates_generator import (
     src_plate_generator,
     dst_plate_generator
 )
-from .args import (
-    build_args_parser,
-    DEFAULT_ARGS
-)
+from .args import build_args_parser
 from .plate import Plate
 from icfree.utils import save_df
 from icfree.converter.__main__ import input_importer
@@ -63,7 +60,7 @@ def main():
         start_well=args.dst_start_well,
         well_capacity=args.dst_plt_well_capacity,
         plate_dead_volume=args.dst_plt_dead_volume,
-        vertical=DEFAULT_ARGS['VERTICAL'],
+        vertical=True,
         nplicates=args.nplicates,
         dimensions=args.dst_plt_dim,
         logger=logger
