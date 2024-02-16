@@ -68,23 +68,23 @@ def check_volumes(
                 f'One volume of {factor} = {vol} nL (< {lower_bound} nL). '
                 'Stock have to be more diluted.'
             )
-        # Check upper bound
-        # Warn if the value is > 1000 nL
-        v_max = volumes_df[factor].max()
-        if v_max > upper_bound:
-            logger.debug(f'{factor} volume is > {upper_bound} nL')
-            # if factor not in warning_volumes:
-            warning_volumes[factor] = {
-                'min': '',
-                'max': v_max,
-            }
-            # else:
-            #     warning_volumes[factor]['max'] = v_max
-            logger.warning(
-                f'One volume of {factor} = {v_max} nL (> {upper_bound} nL). '
-                'Stock have to be more concentrated or pipetting '
-                'has to be done manually.'
-            )
+        # # Check upper bound
+        # # Warn if the value is > 1000 nL
+        # v_max = volumes_df[factor].max()
+        # if v_max > upper_bound:
+        #     logger.debug(f'{factor} volume is > {upper_bound} nL')
+        #     # if factor not in warning_volumes:
+        #     warning_volumes[factor] = {
+        #         'min': '',
+        #         'max': v_max,
+        #     }
+        #     # else:
+        #     #     warning_volumes[factor]['max'] = v_max
+        #     logger.warning(
+        #         f'One volume of {factor} = {v_max} nL (> {upper_bound} nL). '
+        #         'Stock have to be more concentrated or pipetting '
+        #         'has to be done manually.'
+        #     )
 
     # Check if a factor stock is not concentrated enough,
     # WARNING: Vwater < 0 --> increase stock concentration
@@ -202,33 +202,22 @@ def echo_instructions_generator(
     src_plates_by_factor = reindex_plates_by_factor(source_plates, logger)
     dst_plates_by_factor = reindex_plates_by_factor(dest_plates, logger)
 
-    # Get source plate type
-    def_src_plate_type = DEFAULT_ARGS['SRC_PLATE_TYPE']
-    if len(src_plate_type) % 2 == 1:
-        def_src_plate_type = src_plate_type.pop(0)
-    # Put src_plate_type in a dict
-    src_plate_type_dict = {}
-    for i in range(0, len(src_plate_type), 2):
-        src_plate_type_dict[src_plate_type[i]] = src_plate_type[i+1]
-    # Set plate type for each parameter
-    for factor in src_plates_by_factor:
-        if factor in src_plate_type_dict:
-            src_plates_by_factor[factor]['plt_type'] = \
-                src_plate_type_dict[factor]
-        else:
-            src_plates_by_factor[factor]['plt_type'] = def_src_plate_type
+    # Set source plate type in src_plates_by_factor
+    set_src_plt_type(
+        plates_by_factor=src_plates_by_factor,
+        def_src_plt_type=DEFAULT_ARGS['SRC_PLATE_TYPE'],
+        src_plt_type=src_plate_type,
+        logger=logger
+    )
 
     # Generate instructions
     instructions = []
     for factor in dst_plates_by_factor:
-
-        dst_plates = dst_plates_by_factor[factor]['spread']
-        src_plates = src_plates_by_factor[factor]['spread']
         instructions += gen_factor_instr(
             factor,
-            src_plates,
-            src_plates_by_factor,
-            dst_plates,
+            src_plates_by_factor[factor]['spread'],
+            src_plates_by_factor[factor]['plt_type'],
+            dst_plates_by_factor[factor]['spread'],
             split_components,
             logger
         )
@@ -247,10 +236,51 @@ def echo_instructions_generator(
     )
 
 
+def set_src_plt_type(
+    plates_by_factor: Dict,
+    def_src_plt_type: str,
+    src_plt_type: str,
+    logger: Logger = getLogger(__name__)
+) -> Dict:
+    """
+    Set source plate type for each factor
+
+    Parameters
+    ----------
+    plates_by_factor: Dict
+        Source plates reindexed by factor
+    def_src_plt_type: str
+        Default source plate type
+    src_plt_type: str
+        Source plate type
+    logger: Logger
+        Logger
+
+    Returns
+    -------
+    plates_by_factor: Dict
+        Source plates reindexed by factor
+    """
+
+    if len(src_plt_type) % 2 == 1:
+        def_src_plt_type = src_plt_type.pop(0)
+    # Put src_plate_type in a dict
+    src_plate_type_dict = {}
+    for i in range(0, len(src_plt_type), 2):
+        src_plate_type_dict[src_plt_type[i]] = src_plt_type[i+1]
+    # Set plate type for each parameter
+    for factor in plates_by_factor:
+        if factor in src_plate_type_dict:
+            plates_by_factor[factor]['plt_type'] = \
+                src_plate_type_dict[factor]
+        else:
+            plates_by_factor[factor]['plt_type'] = def_src_plt_type
+
+
 def gen_factor_instr(
     factor: str,
     src_plates: Dict,
-    src_plates_by_factor: Dict,
+    plt_type: str,
     dst_plates: Dict,
     split_components: Dict,
     logger: Logger = getLogger(__name__)
@@ -288,7 +318,7 @@ def gen_factor_instr(
 
         # One component on one single src plate
         src_plt_id = list(src_plates.keys())[0]
-        src_plt_type = src_plates_by_factor[factor]['plt_type']
+        src_plt_type = plt_type
         src_wells = list(src_plates[src_plt_id].keys())
         # Put {} around src_well_ids if there are more than one (ECHO)
         if len(src_wells) > 1:
