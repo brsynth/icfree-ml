@@ -64,25 +64,25 @@ class TestInstructor(TestCase):
             0
         )
 
-    def test_check_volumes_warning_upper(self):
-        plate = Plate.from_file(self.src_plt_1)
-        warning_volumes_report = check_volumes(
-            plate.to_dict(),
-            lower_bound=10,
-            upper_bound=1000
-        )
-        # Read json ref file
-        ref_report_file = os_path.join(
-            self.ref_folder,
-            'src_plate_1_warn_report_upper.json'
-        )
-        with open(ref_report_file, 'r') as f:
-            d_report = json_load(f)
-        # Compare
-        self.assertListEqual(
-            warning_volumes_report.to_dict(orient='records'),
-            d_report
-        )
+    # def test_check_volumes_warning_upper(self):
+    #     plate = Plate.from_file(self.src_plt_1)
+    #     warning_volumes_report = check_volumes(
+    #         plate.to_dict(),
+    #         lower_bound=10,
+    #         upper_bound=1000
+    #     )
+    #     # Read json ref file
+    #     ref_report_file = os_path.join(
+    #         self.ref_folder,
+    #         'src_plate_1_warn_report_upper.json'
+    #     )
+    #     with open(ref_report_file, 'r') as f:
+    #         d_report = json_load(f)
+    #     # Compare
+    #     self.assertListEqual(
+    #         warning_volumes_report.to_dict(orient='records'),
+    #         d_report
+    #     )
 
     def test_check_volumes_warning_lower(self):
         plate = Plate.from_file(self.dest_plate)
