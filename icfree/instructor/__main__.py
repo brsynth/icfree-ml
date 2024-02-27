@@ -134,6 +134,22 @@ def main():
         logger=logger
     )
 
+    # List of parameters
+    list_of_params = []
+    for plt in source_plates.values():
+        list_of_params += plt.get_list_of_parameters()
+    list_of_params = list(set(list_of_params))
+    # If components to split are not given, split all components
+    if args.split_components == DEFAULT_ARGS['SPLIT_COMPONENTS']:
+        args.split_components = list_of_params
+    # If only one volume is given, use it for all components
+    if len(args.split_upper_vol) == 1:
+        args.split_upper_vol = \
+            [args.split_upper_vol[0]] * len(args.split_components)
+    if len(args.split_lower_vol) == 1:
+        args.split_lower_vol = \
+            [args.split_lower_vol[0]] * len(args.split_components)
+
     split_components = dict()
     for i in range(len(args.split_components)):
         split_components[args.split_components[i]] = {
