@@ -16,17 +16,20 @@ from .sampler import (
 __signature__ = f'{sys_modules[__name__].__package__} {__version__}'
 
 
-def main():
+def main(args):
 
     parser = build_args_parser(
         signature=__signature__,
         description='Sample values'
     )
 
-    args = parser.parse_args()
+    args = parser.parse_args(args)
 
-    print(__signature__)
-    print()
+    if not args.silent:
+        print(__signature__)
+        print()
+    else:
+        args.log = 'ERROR'
 
     # CREATE LOGGER
     logger = create_logger(parser.prog, args.log)
@@ -62,19 +65,19 @@ def main():
     except Exception as e:
         logger.error(f"An error occurred: {e}")
         exit()
-    # Rename the columns
-    samples_df.columns = data.columns
+
+    # Rename the columns of the samples
+    # with the component names of the original data
+    samples_df.columns = data['Component'].tolist()
 
     # Save the output
     if args.output_file == "":
-        with pd_option_context(
-            'display.max_rows', None, 'display.max_columns', None
-        ):
-            print(samples_df)
+        print(samples_df.to_csv(index=False))
     else:
         samples_df.to_csv(args.output_file, index=False)
         logger.info(f"File saved to {args.output_file}")
 
 
 if __name__ == "__main__":
-    main()
+    import sys
+    main(sys.argv[1:])
