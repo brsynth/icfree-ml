@@ -1,5 +1,4 @@
 from sys import modules as sys_modules
-from pandas import option_context as pd_option_context
 
 from brs_utils import (
     create_logger
