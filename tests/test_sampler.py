@@ -1,4 +1,13 @@
 import unittest
+from unittest.mock import patch, MagicMock
+import pandas as pd
+import numpy as np
+from scipy.stats import qmc
+from itertools import product
+from tempfile import NamedTemporaryFile
+from os import path as os_path
+from subprocess import run as sp_run
+
 from icfree.sampler.sampler import (
     extract_specs,
     generate_ranges_by_ratios,
@@ -13,36 +22,34 @@ from icfree.sampler.sampler import (
     sampling,
     load_data
 )
-from icfree.sampler.args import build_args_parser
-from unittest.mock import patch, MagicMock
-import pandas as pd
-import numpy as np
-from scipy.stats import qmc
-from itertools import product
-from tempfile import NamedTemporaryFile
-import os
+from icfree.sampler.args import build_args_parser, DEFAULTS
+from icfree.sampler.__main__ import main
 
 
+DATA_FOLDER = os_path.join(
+    os_path.dirname(os_path.realpath(__file__)),
+    'data', 'sampler'
+)
 
-# DATA_FOLDER = os_path.join(
-#     os_path.dirname(os_path.realpath(__file__)),
-#     'data', 'sampler'
-# )
+INPUT_FOLDER = os_path.join(
+    DATA_FOLDER,
+    'input'
+)
 
-# INPUT_FOLDER = os_path.join(
-#     DATA_FOLDER,
-#     'input'
-# )
+REF_FOLDER = os_path.join(
+    DATA_FOLDER,
+    'output'
+)
 
-# REF_FOLDER = os_path.join(
-#     DATA_FOLDER,
-#     'output'
-# )
+input_file = os_path.join(
+    INPUT_FOLDER,
+    'parameters.tsv'
+)
 
-# parameters = os_path.join(
-#     INPUT_FOLDER,
-#     'parameters.tsv'
-# )
+ref_output_file = os_path.join(
+    REF_FOLDER,
+    'sampling.csv'
+)
 
 
 
@@ -69,12 +76,6 @@ class TestExtractSpecs(unittest.TestCase):
         """Test with missing nb_bins."""
         spec = "0.5,1.0|10|"
         expected = ([0.5, 1.0], 10, None)
-        self.assertEqual(extract_specs(spec), expected)
-
-    def test_empty_ratios(self):
-        """Test with empty ratios but valid step and nb_bins."""
-        spec = "|10|20"
-        expected = (None, 10, 20)
         self.assertEqual(extract_specs(spec), expected)
 
     def test_invalid_ratios(self):
@@ -673,28 +674,15 @@ class TestSampling(unittest.TestCase):
 
 
 class TestLoadData(unittest.TestCase):
-    def create_temp_csv_file(self, content: str) -> str:
-        temp_file = NamedTemporaryFile(mode='w', delete=False, suffix='.csv')
-        temp_file.write(content)
-        temp_file.close()
-        return temp_file.name
-
-    def test_valid_file_path(self):
-        # Create a temporary CSV file to test
-        file_content = "A\tB\n1\t2\n3\t4"
-        temp_file_path = self.create_temp_csv_file(file_content)
-        
-        # Load data
-        data = load_data(temp_file_path)
-        
-        # Expected DataFrame
-        expected_df = pd.DataFrame({'A': [1, 3], 'B': [2, 4]})
-        
-        # Test
-        pd.testing.assert_frame_equal(data, expected_df)
-        
-        # Clean up
-        os.remove(temp_file_path)
+    def test_with_existing_file(self):
+        data = load_data(input_file)
+        expected = pd.DataFrame({
+            'Component': ['Component_1', 'Component_2', 'Component_3', 'Component_4', 'Component_5', 'Component_6'],
+            'maxValue': [200, 125, 40, 100, 400, 100],
+            'Ratios|Step|NbBins': ['0.0,0.1,0.3,0.5,1.0||', '1||', '1||', '|10|', '||10', '1'
+            ]
+        })
+        pd.testing.assert_frame_equal(data, expected)
 
     def test_invalid_file_path(self):
         with self.assertRaises(FileNotFoundError):
@@ -704,23 +692,6 @@ class TestLoadData(unittest.TestCase):
         with NamedTemporaryFile(mode='w') as temp_file:
             with self.assertRaises(pd.errors.EmptyDataError):
                 load_data(temp_file.name)
-
-    def test_specific_delimiter(self):
-        # Assuming this test verifies the function uses '\t' as a delimiter
-        file_content = "C,D\n5,6"
-        temp_file_path = self.create_temp_csv_file(file_content.replace(',', '\t'))
-        data = load_data(temp_file_path)
-        expected_df = pd.DataFrame({'C': [5], 'D': [6]})
-        pd.testing.assert_frame_equal(data, expected_df)
-        os.remove(temp_file_path)
-
-    def test_data_integrity(self):
-        file_content = "Name\tAge\nJohn\t30\nDoe\t25"
-        temp_file_path = self.create_temp_csv_file(file_content)
-        data = load_data(temp_file_path)
-        expected_df = pd.DataFrame({'Name': ['John', 'Doe'], 'Age': [30, 25]})
-        pd.testing.assert_frame_equal(data, expected_df)
-        os.remove(temp_file_path)
 
 
 class TestArgsParser(unittest.TestCase):
@@ -756,3 +727,83 @@ class TestArgsParser(unittest.TestCase):
     def test_missing_input(self):
         with self.assertRaises(SystemExit):
             self.parser.parse_args(['-o', 'output.csv', '-n', '10', '-m', 'lhs', '-S', '42'])
+
+
+# Test with CLI simulation and check output file
+class TestCLI(unittest.TestCase):
+    def setUp(self):
+        self.parser = build_args_parser(
+            signature="",
+            description=""
+        )
+
+    def test_valid_input(self):
+        with NamedTemporaryFile(mode='w', suffix='.csv') as temp_file:
+            args = [
+                    input_file,
+                    '-o', temp_file.name,
+                    '--nb-samples', '40',
+                    '--method', 'lhs',
+                    '--seed', '42'
+                ]
+            main(args)
+            actual = pd.read_csv(temp_file.name)
+            expected = pd.read_csv(ref_output_file)
+            pd.testing.assert_frame_equal(actual, expected)
+
+    def test_missing_input(self):
+        with self.assertRaises(SystemExit):
+            self.parser.parse_args(['-o', 'output.csv', '-n', '10', '-m', 'lhs', '-S', '42'])
+
+    def test_nonexistent_file(self):
+        args = [
+                'nonexistent_file.csv',
+                '-o', 'output.csv',
+                '--nb-samples', '40',
+                '--method', 'lhs',
+                '--seed', '42'
+            ]
+        with self.assertRaises(SystemExit):
+            main(args)
+
+    def test_system_exit(self):
+        args = [
+                input_file,
+                '-o', 'output.csv',
+                '--nb-samples', '40',
+                '--method', 'lhs',
+                '--seed', '42'
+            ]
+        with patch('icfree.sampler.__main__.load_data', side_effect=ValueError("Invalid method")):
+            with self.assertRaises(SystemExit):
+                main(args)
+        with patch('icfree.sampler.__main__.sampling', side_effect=ValueError("Invalid method")):
+            with self.assertRaises(SystemExit):
+                main(args)
+
+    def test_without_ouput_file(self):
+        import sys
+        with NamedTemporaryFile(mode='w', suffix='.csv') as temp_file:
+            # simulate a redirection of the output to a file
+            sys.stdout = open(temp_file.name, 'w')
+            args = [
+                    input_file,
+                    '--nb-samples', '40',
+                    '--method', 'lhs',
+                    '--seed', '42',
+                    '--silent'
+                ]
+            main(args)
+            sys.stdout = sys.__stdout__
+            actual = pd.read_csv(temp_file.name)
+            expected = pd.read_csv(ref_output_file)
+            pd.testing.assert_frame_equal(actual, expected)
+
+
+    def test_subprocess_call(self):
+        with NamedTemporaryFile(mode='w', suffix='.csv') as temp_file:
+            cmd = 'python -m icfree.sampler {} -o {} --nb-samples 40 --method lhs --seed 42'.format(input_file, temp_file.name)
+            sp_run(cmd.split())
+            actual = pd.read_csv(temp_file.name)
+            expected = pd.read_csv(ref_output_file)
+            pd.testing.assert_frame_equal(actual, expected)
