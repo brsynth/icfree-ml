@@ -26,6 +26,8 @@ def load_data(
     """
     logger.info("Loading data from file.")
     data = pd.read_csv(file_path, delimiter='\t')
+    # replace NaN in Ratios|Step|NbBins with empty string
+    data['Ratios|Step|NbBins'] = data['Ratios|Step|NbBins'].fillna('1||')
     return data
 
 
@@ -53,6 +55,9 @@ def extract_specs(
     if spec == "":
         return ratios, step, nb_bins
     values = spec.split('|')
+    # If values has one value, then it is ratios
+    if len(values) == 1:
+        values = [values[0], '', '']
     # Check values length, if not 3, raise an error
     if len(values) != 3:
         raise ValueError("Invalid specification string.")
