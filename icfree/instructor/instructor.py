@@ -1,423 +1,311 @@
-#!/usr/bin/env python
-# coding: utf-8
-from pandas import DataFrame
-from typing import (
-    Dict,
-    List
-)
+import pandas as pd
+from typing import List
 from logging import (
     Logger,
     getLogger
 )
 
-from .args import (
-    DEFAULT_ARGS
-)
+from .args import DEFAULT_ARGS
 
 
-def check_volumes(
-    plate: Dict,
-    lower_bound: float,
-    upper_bound: float,
+def parse_src_plate_type_option(
+    src_plate_type_option: str = DEFAULT_ARGS['SRC_PLATE_TYPE'],
     logger: Logger = getLogger(__name__)
-) -> DataFrame:
+) -> dict:
     """
-    Checks if volumes are between lower and upper bounds.
-    Checks if a factor stock concentration is low (Vwater < 0).
+    Parses the source plate type option and returns a dictionary of
+    component-to-plate-type mappings.
 
-    Parameters
-    ----------
-    volumes_df : DataFrame
-        Volumes to check
-    lower_bound: float
-        Lower bound
-    upper_bound: float
-        Upper bound
-    logger: Logger
-        Logger
+    Args:
+        src_plate_type_option (str): The source plate type option string in the
+        format "component_list:plate_type;component_list:plate_type;...".
+        logger (Logger): The logger object for logging messages.
 
-    Returns
-    -------
-    warning_volumes : DataFrame
-        Volumes outside of bounds
+    Returns:
+        dict: A dictionary mapping each component to
+        its corresponding plate type.
+
+    Example:
+        >>> parse_src_plate_type_option("ALL:384PP_AQ_GP3;A,B,C:384PP_AQ_GP4")
+        {'ALL': '384PP_AQ_GP3', 'A': '384PP_AQ_GP4', 'B': '384PP_AQ_GP4',
+        'C': '384PP_AQ_GP4'}
     """
-    # Put plate volumes into a DataFrame
-    volumes_df = DataFrame.from_dict(plate['Wells'], orient='index')
-    warning_volumes = dict()
-    logger.debug(volumes_df)
-    # WARNING: < 10 nL (ECHO min volume transfer limit) --> dilute stock
-    for factor in volumes_df.columns:
-        logger.debug(f'Checking {factor} volumes...')
-        # Check lower bound
-        for vol in volumes_df[factor].sort_values():
-            # Pass all 0 since it is a correct value
-            if vol != 0:
-                # Exit the loop at the first non-0 value
-                break
-        # Warn if the value is < 10 nL
-        if 0 < vol < lower_bound:
-            logger.debug(f'{factor} volume is < {lower_bound} nL')
-            # if factor not in warning_volumes:
-            warning_volumes[factor] = {
-                'min': vol,
-                'max': '',
-            }
-            # else:
-            #     warning_volumes[factor]['min'] = vol
-            logger.warning(
-                f'One volume of {factor} = {vol} nL (< {lower_bound} nL). '
-                'Stock have to be more diluted.'
-            )
-        # # Check upper bound
-        # # Warn if the value is > 1000 nL
-        # v_max = volumes_df[factor].max()
-        # if v_max > upper_bound:
-        #     logger.debug(f'{factor} volume is > {upper_bound} nL')
-        #     # if factor not in warning_volumes:
-        #     warning_volumes[factor] = {
-        #         'min': '',
-        #         'max': v_max,
-        #     }
-        #     # else:
-        #     #     warning_volumes[factor]['max'] = v_max
-        #     logger.warning(
-        #         f'One volume of {factor} = {v_max} nL (> {upper_bound} nL). '
-        #         'Stock have to be more concentrated or pipetting '
-        #         'has to be done manually.'
-        #     )
+    default_plate_type = "384PP_AQ_GP3"  # Default source plate type
+    plate_types = {"ALL": default_plate_type}  # Initialize with default
 
-    # Check if a factor stock is not concentrated enough,
-    # WARNING: Vwater < 0 --> increase stock concentration
-    if 'Water' in volumes_df:
-        vol_min_w = volumes_df['Water'].min()
-        if vol_min_w < 0:
-            # Get factor with max value in each line (sample) where Vwater < 0
-            under_conc_fac = list(set(
-                DataFrame(
-                    volumes_df.drop(
-                        volumes_df[volumes_df['Water'] >= 0].index
-                    ).astype('float64'),
-                    dtype='float64'
-                ).idxmax(axis=1)
-            ))
-            factor = 'Water'
-            # if factor not in warning_volumes:
-            warning_volumes[factor] = {
-                'min': vol_min_w,
-                'max': '',
-            }
-            # else:
-            #     warning_volumes[factor]['min'] = vol_min_w
-            for factor in under_conc_fac:
-                logger.warning(
-                    f'*** {factor}\nFactor seems to be under-concentrated '
-                    '(volume of added water < 0).\n'
-                )
-
-    # Convert Warning Report Dict to Dataframe
-    warning_volumes_df = DataFrame(
-        columns=['Parameter', 'Min', 'Max']
-    )
-    for param in warning_volumes:
-        warning_volumes_df.loc[len(warning_volumes_df.index)] = [
-            param,
-            warning_volumes[param]['min'],
-            warning_volumes[param]['max']
-        ]
-
-    return warning_volumes_df
+    if src_plate_type_option:
+        for spec in src_plate_type_option.split(';'):
+            comp_list, plate_type = spec.split(':')
+            if comp_list == "ALL":
+                # Set default plate type for all components
+                plate_types["ALL"] = plate_type
+            else:
+                for comp in comp_list.split(','):
+                    # Set plate type for specific component
+                    plate_types[comp] = plate_type
+    return plate_types
 
 
-def instructions_generator(
-    source_plates: Dict,
-    dest_plates: Dict,
-    split_components: Dict = {},
-    robot: str = DEFAULT_ARGS['ROBOT'],
-    src_plate_type: str = DEFAULT_ARGS['SRC_PLATE_TYPE'],
+def get_plate_index(
+    component: str,
+    plate_dfs: list,
     logger: Logger = getLogger(__name__)
-) -> DataFrame:
+) -> int:
     """
-    Generate and dispatch instructions on multiple plates
+    Get the plate index for the given component from the list of plate dataframes.
 
-    Parameters
-    ----------
-    source_plates: Dict
-        Source plates distribution
-    dest_plates: Dict
-        Destination plates distribution
-    split_components: Dict
-        Volume bounds for picking components in the source plates
-    robot: str
-        Robot name
-    src_plate_type: str
-        Source plate type (for ECHO only)
+    Args:
+        component (str): The component name.
+        plate_dfs (list): A list of plate dataframes.
+        logger (Logger): The logger object for logging messages. Defaults to getLogger(__name__).
 
-    Returns
-    -------
-    instructions: Dict
-        Dict with instructions dataframes
+    Returns:
+        int: The plate index for the given component.
     """
-    return globals()[f'{robot.lower()}_instructions_generator'](
-        source_plates,
-        dest_plates,
-        split_components,
-        src_plate_type,
-        logger=logger
-    )
+    logger.info("Getting plate index for component...")
+    for i in range(len(plate_dfs)):
+        if component in plate_dfs[i].columns:
+            return i
+    logger.warning(f"Component '{component}' not found in any plate dataframe.")
+    return -1
 
 
-def echo_instructions_generator(
-    source_plates: Dict,
-    dest_plates: Dict,
-    split_components: Dict = {},
-    src_plate_type: str = DEFAULT_ARGS['SRC_PLATE_TYPE'],
+def generate_instructions(
+    source_dfs: list,
+    destination_dfs: list,
+    plate_types: dict,
+    split_upper_vol: int = DEFAULT_ARGS['SPLIT_UPPER_VOL'],
+    split_lower_vol: int = DEFAULT_ARGS['SPLIT_LOWER_VOL'],
     logger: Logger = getLogger(__name__)
-) -> DataFrame:
+) -> list:
     """
-    Generate and dispatch Echo® instructions on multiple plates
+    Generate instructions for transferring components from source_dfs to
+    destination_dfs.
 
-    Parameters
-    ----------
-    source_plates: Dict
-        Source plates distribution
-    dest_plates: Dict
-        Destination plates distribution
-    split_components: Dict
-        Volume bounds for picking components in the source plates
-    src_plate_type: str
-        Source plate type
+    Args:
+        source_dfs (list): A list of source dataframes containing the components
+        and well information.
+        destination_dfs (list): A list of destination dataframes containing the
+        well information.
+        plate_types (dict): A dictionary mapping components to their respective
+        plate types.
+        split_upper_vol (int, optional): The upper volume limit for splitting
+        instructions. Defaults to np.iinfo(np.int32).max.
+        split_lower_vol (int, optional): The lower volume limit for splitting
+        instructions. Defaults to 0.
+        logger (Logger): The logger object for logging messages. Defaults to getLogger(__name__).
 
-    Returns
-    -------
-    echo_instructions: Dict
-        Dict with echo instructions dataframes
+    Returns:
+        list: A list of instructions for transferring components.
     """
-    logger.debug('Generating Echo® instructions')
-    logger.debug(f'Source plates: {source_plates}')
-    logger.debug(f'Destination plates: {dest_plates}')
-    logger.debug(f'Split components: {split_components}')
-    logger.debug(f'Source plate type: {src_plate_type}')
-
-    # Reindex plates by factors ID
-    src_plates_by_factor = reindex_plates_by_factor(source_plates, logger)
-    dst_plates_by_factor = reindex_plates_by_factor(dest_plates, logger)
-
-    # Set source plate type in src_plates_by_factor
-    set_src_plt_type(
-        plates_by_factor=src_plates_by_factor,
-        def_src_plt_type=DEFAULT_ARGS['SRC_PLATE_TYPE'],
-        src_plt_type=src_plate_type,
-        logger=logger
-    )
-
-    # Generate instructions
     instructions = []
-    for factor in dst_plates_by_factor:
-        instructions += gen_factor_instr(
-            factor,
-            src_plates_by_factor[factor]['spread'],
-            src_plates_by_factor[factor]['plt_type'],
-            dst_plates_by_factor[factor]['spread'],
-            split_components,
-            logger
+    unique_components = set()
+
+    # Get unique components from all source and destination dataframes
+    for source_df in source_dfs:
+        unique_components.update(set(source_df.columns[1:]))
+    for destination_df in destination_dfs:
+        unique_components.update(set(destination_df.columns[1:]))
+
+    for component in unique_components:
+        # Get the source plate type for the current component
+        source_plate_type = plate_types.get(component, plate_types["ALL"])
+
+        # Get the source wells where the component is present from all source dataframes
+        source_wells = []
+        for df in source_dfs:
+            if component in df.columns:
+                source_wells.extend(df[df[component] > 0]['Well'])
+
+        # Skip if no source wells are found
+        if not source_wells:
+            continue
+
+        source_wells_str = (
+            "{" + ";".join(source_wells) + "}"
+            if len(source_wells) > 1 else source_wells[0]
         )
 
-    return DataFrame(
-        instructions,
-        columns=[
-            'Source Plate Name',
-            'Source Plate Type',
-            'Source Well',
-            'Destination Plate Name',
-            'Destination Well',
-            'Transfer Volume',
-            'Sample ID'
-        ]
-    )
+        # Get the destination wells where the component needs to be transferred from all destination dataframes
+        dest_wells = []
+        for df in destination_dfs:
+            if component in df.columns:
+                dest_wells.extend(df[df[component] > 0][['Well', component]].iterrows())
 
+        src_plt_index = get_plate_index(component, source_dfs) + 1
+        dst_plt_index = get_plate_index(component, destination_dfs) + 1
+        # Iterate over each destination well and create transfer instructions
+        for _, dest_row in dest_wells:
+            transfer_volume = dest_row[component]
+            if transfer_volume > split_upper_vol:
+                full_splits = int(transfer_volume // split_upper_vol)
+                remaining_volume = transfer_volume % split_upper_vol
 
-def set_src_plt_type(
-    plates_by_factor: Dict,
-    def_src_plt_type: str,
-    src_plt_type: str,
-    logger: Logger = getLogger(__name__)
-) -> Dict:
-    """
-    Set source plate type for each factor
-
-    Parameters
-    ----------
-    plates_by_factor: Dict
-        Source plates reindexed by factor
-    def_src_plt_type: str
-        Default source plate type
-    src_plt_type: str
-        Source plate type
-    logger: Logger
-        Logger
-
-    Returns
-    -------
-    plates_by_factor: Dict
-        Source plates reindexed by factor
-    """
-
-    if len(src_plt_type) % 2 == 1:
-        def_src_plt_type = src_plt_type.pop(0)
-    # Put src_plate_type in a dict
-    src_plate_type_dict = {}
-    for i in range(0, len(src_plt_type), 2):
-        src_plate_type_dict[src_plt_type[i]] = src_plt_type[i+1]
-    # Set plate type for each parameter
-    for factor in plates_by_factor:
-        if factor in src_plate_type_dict:
-            plates_by_factor[factor]['plt_type'] = \
-                src_plate_type_dict[factor]
-        else:
-            plates_by_factor[factor]['plt_type'] = def_src_plt_type
-
-
-def gen_factor_instr(
-    factor: str,
-    src_plates: Dict,
-    plt_type: str,
-    dst_plates: Dict,
-    split_components: Dict,
-    logger: Logger = getLogger(__name__)
-) -> List:
-    """
-    Generate instructions for a given factor
-
-    Parameters
-    ----------
-    factor: str
-        Factor ID
-    src_plates: Dict
-        Source plates
-    src_plates_by_factor: Dict
-        Source plates reindexed by factor
-    dst_plates: Dict
-        Destination plates
-    split_components: Dict
-        Volume bounds for picking components in the source plates
-
-    Returns
-    -------
-    instructions: DataFrame
-        Instructions
-    """
-    logger.debug(f'Generating instructions for {factor}')
-    logger.debug(f'Source plates: {src_plates}')
-    logger.debug(f'Destination plates: {dst_plates}')
-    logger.debug(f'Split components: {split_components}')
-
-    # Init the instructions
-    instructions = []
-
-    for dst_plt_id, dst_plt_content in dst_plates.items():
-
-        # One component on one single src plate
-        src_plt_id = list(src_plates.keys())[0]
-        src_plt_type = plt_type
-        src_wells = list(src_plates[src_plt_id].keys())
-        # Put {} around src_well_ids if there are more than one (ECHO)
-        if len(src_wells) > 1:
-            src_well_ids = \
-                f'{{{";".join(src_wells)}}}'
-        else:
-            src_well_ids = src_wells[0]
-
-        for dst_well_id, dst_well_vol in dst_plt_content.items():
-            # If the volume to drop in the destination well
-            # is greater than the upper bound (given by ),
-            # split the volume in several instructions
-            if (
-                factor in split_components and
-                dst_well_vol > split_components[factor]['upper']
-            ):
-                logger.debug(
-                    f'Volume to drop in {dst_well_id} > '
-                    f'{split_components[factor]["upper"]} nL'
-                )
-                # Get the number of times the volume has to be split
-                n_splits = int(
-                    dst_well_vol / split_components[factor]['upper']
-                )
-                # Get the volume to drop in the last instruction
-                last_vol = dst_well_vol % split_components[factor]['upper']
-                # Get the volume to drop in each instruction
-                split_vol = split_components[factor]['upper']
-                for _ in range(n_splits):
-                    instructions += [[
-                        f'Source[{src_plt_id}]',
-                        src_plt_type, src_well_ids,
-                        f'Destination[{dst_plt_id}]',
-                        dst_well_id, float(split_vol),
-                        factor
-                    ]]
-                # Add the last instruction
-                # If the last volume is less than the lower bound,
-                # add it to the last instruction
-                if last_vol < split_components[factor]['lower']:
-                    dst_well_vol = split_vol + last_vol
-                    # remove last elt
-                    instructions = instructions[:-1]
+                for _ in range(full_splits):
+                    instructions.append({
+                        'Source Plate Name': f'Source[{src_plt_index}]',
+                        'Source Plate Type': source_plate_type,
+                        'Source Well': source_wells_str,
+                        'Destination Plate Name': f'Destination[{dst_plt_index}]',
+                        'Destination Well': dest_row['Well'],
+                        'Transfer Volume': split_upper_vol,
+                        'Sample ID': component
+                    })
+                if remaining_volume > split_lower_vol:
+                    instructions.append({
+                        'Source Plate Name': f'Source[{src_plt_index}]',
+                        'Source Plate Type': source_plate_type,
+                        'Source Well': source_wells_str,
+                        'Destination Plate Name': f'Destination[{dst_plt_index}]',
+                        'Destination Well': dest_row['Well'],
+                        'Transfer Volume': remaining_volume,
+                        'Sample ID': component
+                    })
                 else:
-                    dst_well_vol = last_vol
-
-            # Add the last instruction
-            instructions += [[
-                f'Source[{src_plt_id}]',
-                src_plt_type, src_well_ids,
-                f'Destination[{dst_plt_id}]',
-                dst_well_id, float(dst_well_vol),
-                factor
-            ]]
+                    # Integrate remaining volume into penultimate instruction
+                    instructions[-1]['Transfer Volume'] += remaining_volume
+            else:
+                instructions.append({
+                    'Source Plate Name': f'Source[{src_plt_index}]',
+                    'Source Plate Type': source_plate_type,
+                    'Source Well': source_wells_str,
+                    'Destination Plate Name': f'Destination[{dst_plt_index}]',
+                    'Destination Well': dest_row['Well'],
+                    'Transfer Volume': transfer_volume,
+                    'Sample ID': component
+                })
 
     return instructions
 
 
-def reindex_plates_by_factor(
-    plates: Dict,
+def split_instructions_by_components(
+    instructions_df: pd.DataFrame,
+    base_output_instructions_path: str,
+    split_components: str,
     logger: Logger = getLogger(__name__)
-) -> Dict:
+) -> None:
     """
-    Reindex plates by factor ID
+    Splits the instructions DataFrame into multiple CSV files based on the
+    given component groups.
 
-    Parameters
-    ----------
-    plates: Dict
-        Plates to reindex
+    Args:
+        instructions_df (pandas.DataFrame): The DataFrame containing the
+        instructions.
+        base_output_instructions_path (str): The base path for the output
+        CSV files.
+        split_components (str): A string representing the component groups
+        to split the instructions by. Each group should be separated by a
+        comma, and multiple groups should be separated by a space.
+        logger (Logger): The logger object for logging messages (default: getLogger(__name__))
 
-    Returns
-    -------
-    plates_by_factor: Dict
-        Plates reindexed by factor ID
+    Returns:
+        None
     """
+    # Split the component groups into a list of lists
+    split_components = [comp.split(',') for comp in split_components.split()]
+    processed_components = set()  # Set to keep track of processed components
 
-    plates_by_factor = {}
+    for i, component_group in enumerate(split_components):
+        # Create a mask to select instructions for the current component group
+        mask = instructions_df['Sample ID'].isin(component_group)
+        # Select the instructions for the current component group
+        selected_instructions = instructions_df[mask]
+        # Concatenate component names for the file name
+        components_name = "_".join(component_group)
+        # Generate the output file path
+        output_file_path = base_output_instructions_path.replace(
+            '.csv', f'_split_{components_name}.csv'
+        )
+        # Save the selected instructions to a CSV file
+        selected_instructions.to_csv(output_file_path, index=False)
+        # Log the generated file path
+        logger.info(f"Generated: {output_file_path}")
+        # Add the processed components to the set
+        processed_components.update(component_group)
 
-    for plt_id, plt in enumerate(plates.values()):
-        # Re-index the wells by factor
-        plate_reindexed = plt.reindex_wells_by_factor(plt_id+1)
-        # Extract plt_id from plate_reindexed
-        # and put it as a key in plates_by_factor
-        for param in plate_reindexed:
-            if param not in plates_by_factor:
-                # 'plt_type' will added later on
-                plates_by_factor[param] = {}
-                _plt_id = plate_reindexed[param]['plt_id']
-                plates_by_factor[param]['spread'] = {
-                    _plt_id: {}
-                }
-            for i in range(len(plate_reindexed[param]['wells'])):
-                well_id = plate_reindexed[param]['wells'][i]
-                well_vol = plate_reindexed[param]['volumes'][i]
-                _plt_id = plate_reindexed[param]['plt_id']
-                if _plt_id not in plates_by_factor[param]['spread']:
-                    plates_by_factor[param]['spread'][_plt_id] = {}
-                plates_by_factor[param]['spread'][_plt_id][well_id] = well_vol
+    # Select the remaining instructions
+    remaining_instructions = instructions_df[
+        ~instructions_df['Sample ID'].isin(processed_components)
+    ]
+    # Generate the output file path for the remaining instructions
+    remaining_file_path = base_output_instructions_path.replace(
+        '.csv', '_split_rest.csv'
+    )
+    # Save the remaining instructions to a CSV file
+    remaining_instructions.to_csv(remaining_file_path, index=False)
+    # Log the generated file path for the remaining instructions
+    logger.info(f"Generated: {remaining_file_path}")
 
-    logger.debug(f'Plates by factor: {plates_by_factor}')
 
-    return plates_by_factor
+def generate_final_instructions(
+    source_plate_paths: List[str],
+    destination_plate_paths: List[str],
+    base_output_instructions_path: str,
+    split_upper_vol: int = DEFAULT_ARGS['SPLIT_UPPER_VOL'],
+    split_lower_vol: int = DEFAULT_ARGS['SPLIT_LOWER_VOL'],
+    split_outfile_components: List[str] = None,
+    src_plate_type_option: str = None,
+    logger: Logger = getLogger(__name__)
+) -> None:
+    """
+    Generate the final instructions based on the source and destination plate
+    data.
+
+    Parameters:
+    source_plate_paths (List[str]): List of file paths of the source plate data.
+    destination_plate_paths (List[str]): List of file paths of the destination plate data.
+    base_output_instructions_path (str): The file path to save the generated
+        instructions.
+    split_upper_vol (int, optional): The upper volume limit for splitting
+        instructions. Defaults to np.iinfo(np.int32).max.
+    split_lower_vol (int, optional): The lower volume limit for splitting
+        instructions. Defaults to 0.
+    split_outfile_components (List[str], optional): List of components to split the
+        instructions into separate files. Defaults to None.
+    src_plate_type_option (str, optional): The plate type option
+        for parsing the source plate data. Defaults to None.
+    logger (Logger, optional): The logger object. Defaults to getLogger(__name__).
+
+    Returns:
+    None
+    """
+    # Initialize an empty list to store the source dataframes
+    source_dfs = []
+
+    # Initialize an empty list to store the destination dataframes
+    destination_dfs = []
+
+    # Read the source plate data from the specified file paths
+    for source_plate_path in source_plate_paths:
+        source_df = pd.read_csv(source_plate_path)
+        source_dfs.append(source_df)
+
+    # Read the destination plate data from the specified file paths
+    for destination_plate_path in destination_plate_paths:
+        destination_df = pd.read_csv(destination_plate_path)
+        destination_dfs.append(destination_df)
+
+    # Parse the source plate type option to obtain the plate types
+    plate_types = parse_src_plate_type_option(src_plate_type_option, logger)
+
+    # Generate the instructions based on the source and destination plate data
+    # and plate types
+    instructions_final = generate_instructions(
+        source_dfs, destination_dfs,
+        plate_types, split_upper_vol, split_lower_vol, logger
+    )
+
+    # Convert the instructions to a DataFrame
+    instructions_df_final = pd.DataFrame(instructions_final)
+
+    # Save the instructions DataFrame to the specified file path
+    instructions_df_final.to_csv(base_output_instructions_path, index=False)
+
+    # Check if split_outfile_components is specified
+    if split_outfile_components:
+        # Split the instructions DataFrame into multiple CSV files based on the
+        # specified components
+        split_instructions_by_components(
+            instructions_df_final, base_output_instructions_path,
+            split_outfile_components, logger
+        )
