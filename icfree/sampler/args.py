@@ -5,9 +5,9 @@ from brs_utils import add_logger_args
 
 DEFAULTS = {
     'OUTPUT_FILE': "",
-    'NB_SAMPLING_STEPS': None,
     'RATIOS': None,
-    'NB_SAMPLING_STEPS': None,
+    'NB_STEPS': None,
+    'NB_BINS': None,
     'NB_SAMPLES': 100,
     'OUTPUT_FORMAT': 'tsv',
     'method': 'auto',
@@ -60,9 +60,9 @@ def add_arguments(parser, signature):
     parser.add_argument(
         "--step", "-p",
         type=int,
-        default=DEFAULTS['NB_SAMPLING_STEPS'],
+        default=DEFAULTS['NB_STEPS'],
         help="Step size for creating discrete ranges for all component."
-        f" (default: {DEFAULTS['NB_SAMPLING_STEPS']})."
+        f" (default: {DEFAULTS['NB_STEPS']})."
     )
     # Ratios for creating discrete ranges
     parser.add_argument(
@@ -78,7 +78,7 @@ def add_arguments(parser, signature):
         "--nb-bins", "-b",
         type=int,
         help="Number of bins for creating discrete ranges."
-        f" (default: {DEFAULTS['NB_SAMPLING_STEPS']})."
+        f" (default: {DEFAULTS['NB_BINS']})."
     )
     parser.add_argument(
         "--seed", "-S",
