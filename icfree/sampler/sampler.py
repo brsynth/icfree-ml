@@ -1,7 +1,4 @@
-from logging import (
-    getLogger,
-    Logger
-)
+from logging import getLogger, Logger
 import numpy as np
 import pandas as pd
 from itertools import product
