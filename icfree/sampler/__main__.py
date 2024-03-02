@@ -1,120 +1,22 @@
-'''
-Sampler module
-
-Generates sampling dataframes from list of cfps parameters.
-'''
-import sys
-from pandas import (
-    read_csv as pd_read_csv,
-    DataFrame
-)
-from logging import (
-    Logger,
-    getLogger
-)
-from typing import (
-    Dict
-)
-from math import isnan
-from re import findall
+from sys import modules as sys_modules
+from pandas import option_context as pd_option_context
 
 from brs_utils import (
     create_logger
 )
 
-from .sampler import (
-    sampling,
-    save_values,
-    set_sampling_ratios,
-    check_sampling,
-    convert
-)
-from .args import build_args_parser
 from icfree._version import __version__
+from .args import build_args_parser
+from .sampler import (
+    load_data,
+    get_discrete_ranges,
+    sampling
+)
 
-__signature__ = f'{sys.modules[__name__].__package__} {__version__}'
-
-
-def input_importer(
-    parameters,
-    logger: Logger = getLogger(__name__)
-) -> DataFrame:
-    """
-    Import tsv input into a dataframe
-
-    Parameters
-    ----------
-    cfps_parameters : tsv file
-        tsv with list of cfps parameters and relative features
-    logger: Logger
-        Logger, default is getLogger(__name__)
-
-    Returns
-    -------
-    parameters_df : DataFrame
-        Pandas dataframe populated with cfps_parameters data
-    """
-    parameters_df = pd_read_csv(parameters, sep='\t')
-
-    logger.debug(f'CFPs parameters dataframe: {parameters_df}')
-
-    return parameters_df
-
-
-def input_processor(
-    parameters_df: DataFrame,
-    logger: Logger = getLogger(__name__)
-) -> Dict:
-    """
-    Determine variable and fixed parameters, and maximum concentrations.
-
-    Parameters
-    ----------
-    parameters_df: 2d-array
-        N-by-samples array where values are uniformly spaced between 0 and 1.
-    logger: Logger
-        Logger, default is getLogger(__name__)
-
-    Returns
-    -------
-    parameters: dict
-        Dictionnary of parameters.
-        First level is indexed on 'Status' column.
-        Second level is indexed on 'Component' column.
-    """
-    parameters = {}
-
-    for dic in parameters_df.to_dict('records'):
-        parameters[dic['Component']] = {
-            k: dic[k] for k in dic.keys() - {'Component'}
-        }
-        # Convert list of ratios str into list of float
-        # ratio is a list of float
-        if isinstance(parameters[dic['Component']]['Ratios'], str):
-            parameters[dic['Component']]['Ratios'] = list(
-                map(
-                    float,
-                    findall(
-                        r"(?:\d*\.\d+|\d+)",
-                        parameters[dic['Component']]['Ratios']
-                    )
-                )
-            )
-        # ratio is nan
-        elif isnan(parameters[dic['Component']]['Ratios']):
-            parameters[dic['Component']]['Ratios'] = []
-        # ratio is a float
-        else:
-            parameters[dic['Component']]['Ratios'] = \
-                [parameters[dic['Component']]['Ratios']]
-
-    return parameters
+__signature__ = f'{sys_modules[__name__].__package__} {__version__}'
 
 
 def main():
-    """
-    Main function
-    """
 
     parser = build_args_parser(
         signature=__signature__,
@@ -129,82 +31,50 @@ def main():
     # CREATE LOGGER
     logger = create_logger(parser.prog, args.log)
 
-    # READ INPUT FILE
-    input_df = input_importer(args.cfps, logger=logger)
-    parameters = input_processor(input_df, logger=logger)
+    # Load the data from file
+    try:
+        data = load_data(args.input_file, logger)
+    except FileNotFoundError:
+        logger.error("File not found. Exiting.")
+        exit()
+    except Exception as e:
+        logger.error(f"An error occurred: {e}")
+        exit()
 
-    # Set the ratios for each parameter
-    ratios = {
-        parameter: data['Ratios']
-        for parameter, data in parameters.items()
-    }
-    sampling_ratios = set_sampling_ratios(
-        ratios=ratios,
-        all_nb_steps=args.nb_sampling_steps,
-        all_ratios=args.sampling_ratios,
+    # Get the discrete ranges
+    discrete_ranges = get_discrete_ranges(
+        data=data,
+        ratios=args.ratios,
+        step=args.step,
+        nb_bins=args.nb_bins,
         logger=logger
     )
 
-    # PRINT INFOS
-    logger.info('List of parameters')
-    # Compute the number of combinations,
-    # i.e. the maximum number of samples
-    nb_combinations = 1
-    for param, _ratios in sampling_ratios.items():
-        nb_ratios = len(_ratios)
-        logger.info(f'   {param}\t({nb_ratios} possible values)')
-        nb_combinations *= nb_ratios
-    logger.info('')
-    logger.info(f'Maximum number of unique samples: {nb_combinations}')
-    logger.info('')
-
-    # PROCESS TO THE SAMPLING
+    # Call the sampling method
     try:
-        sampling_values = sampling(
-            nb_parameters=len(parameters),
-            ratios=sampling_ratios,
-            nb_samples=args.nb_samples,
+        samples_df = sampling(
+            discrete_ranges=discrete_ranges,
+            n_samples=args.nb_samples,
+            method=args.method,
             seed=args.seed,
             logger=logger
         )
-    except ValueError as e:
-        logger.error(e)
-        logger.error('Exiting...')
-        sys.exit(1)
+    except Exception as e:
+        logger.error(f"An error occurred: {e}")
+        exit()
+    # Rename the columns
+    samples_df.columns = data.columns
 
-    # import matplotlib.pyplot as plt
-    # plt.scatter(*zip(*sampling_values))
-    # plt.show()
-
-    # CONVERT RATIOS INTO VALUES
-    max_values = [
-        v['maxValue']
-        for v in parameters.values()
-    ]
-    sampling_values = convert(sampling_values, max_values, logger=logger)
-
-    # Get the min and max values for each parameter
-    min_max = []
-    for i in range(len(sampling_ratios.values())):
-        _sampling = list(sampling_ratios.values())[i]
-        min_max += [
-            (min(_sampling)*max_values[i], max(_sampling)*max_values[i])
-        ]
-    # Check sampling
-    check_sampling(
-        sampling_values,
-        min_max,
-        logger
-    )
-
-    # WRITE TO DISK
-    save_values(
-        values=sampling_values,
-        parameters=list(parameters.keys()),
-        output_folder=args.output_folder,
-        output_format=args.output_format
-    )
+    # Save the output
+    if args.output_file == "":
+        with pd_option_context(
+            'display.max_rows', None, 'display.max_columns', None
+        ):
+            print(samples_df)
+    else:
+        samples_df.to_csv(args.output_file, index=False)
+        logger.info(f"File saved to {args.output_file}")
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    main()

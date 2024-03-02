@@ -1,636 +1,508 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-from os import (
-    path as os_path,
-    mkdir as os_mkdir
-)
-from itertools import product
-from numpy import (
-    prod as np_prod,
-    vstack as np_vstack,
-    floor as np_floor,
-    unique as np_unique,
-    random as np_random,
-    array as np_array,
-    asarray as np_asarray,
-    linspace as np_linspace,
-    set_printoptions as np_set_printoptions,
-    inf as np_inf,
-    ndarray as np_ndarray,
-    savetxt as np_savetxt
-)
-from pyDOE2 import (
-    lhs
-)
 from logging import (
-    Logger,
-    getLogger
+    getLogger,
+    Logger
 )
-from typing import (
-    Dict,
-    List
-)
+import numpy as np
+import pandas as pd
+from itertools import product
+from scipy.stats import qmc
 
 from .args import DEFAULTS
 
-# To print numpy arrays in full
-np_set_printoptions(threshold=np_inf)
 
-
-def set_sampling_ratios(
-    ratios: Dict,
-    all_nb_steps: int = DEFAULTS['NB_SAMPLING_STEPS'],
-    all_ratios: np_ndarray = None,
+def load_data(
+    file_path: str,
     logger: Logger = getLogger(__name__)
-) -> Dict:
+) -> tuple:
     """
-    Set the ratios for each parameter.
+    Load and prepare data from a CSV file.
 
-    Parameters
-    ----------
-    concentation_ratios : Dict
-        Parameter concentration ratios.
+    Parameters:
+    - file_path : str
+        The file path to the CSV file.
+    - logger : Logger, optional
+        The logger object for logging messages.
 
-    all_nb_steps : int
-        Number of ratios for all factor
-
-    all_ratios: np_ndarray
-        Possible ratio values (between 0.0 and 1.0) for all factors.
-        If no list is passed, a default list will be built,
-        e.g. if nb_sampling_steps = 5 the list of considered
-        discrete ratios will be: 0.0 0.25 0.5 0.75 1.0
-
-    Returns
-    -------
-    sampling_ratios : Dict
-        Ratio values for each parameter.
+    Returns:
+    - pd.DataFrame
+        The loaded data.
     """
-    logger.debug(f'ratios: {ratios}')
-    logger.debug(f'all_nb_steps: {all_nb_steps}')
-    logger.debug(f'all_ratios: {all_ratios}')
-
-    # If ratios are not defined for all parameters
-    if all_ratios is None:
-        all_ratios = np_linspace(0.0, 1.0, all_nb_steps).tolist()
-
-    _ratios = dict(ratios)
-
-    for param in ratios:
-        if not isinstance(ratios[param], list):
-            # Put single concentration into a list
-            _ratios[param] = [ratios[param]]
-        elif len(ratios[param]) == 0:
-            # Set ratios to default value
-            _ratios[param] = all_ratios
-
-    logger.debug(f'ratios returned: {_ratios}')
-
-    return _ratios
+    logger.info("Loading data from file.")
+    data = pd.read_csv(file_path, delimiter='\t')
+    return data
 
 
-def convert(
-    sampling_values: np_array,
-    max_values: np_array,
+def extract_specs(
+    spec: str,
     logger: Logger = getLogger(__name__)
-) -> np_array:
+) -> tuple:
     """
-    Convert sampling ratios into values.
+    Extract ratios, step, and nb_bins from the specification string.
 
-    Parameters
-    ----------
-    sampling_values: np_array
-        N-by-samples array where values are uniformly spaced between 0 and 1.
-    max_values: np_array
-        N-by-1 array of maximum values for each parameter.
+    Parameters:
+    - spec (str): The specification string containing
+    ratios, step, and nb_bins separated by '|'.
+    - logger : Logger, optional
+        The logger object for logging messages.
 
-    Returns
-    -------
-    sampling_values: np_array
-        N-by-samples array where values are uniformly spaced between 0 and 1.
+    Returns:
+    - ratios (list): A list of floats representing
+    the ratios extracted from the specification string.
+    - step (int): The step value extracted from the specification string.
+    - nb_bins (int): The number of bins extracted from
+    the specification string.
     """
-    try:
-        return sampling_values * max_values
-    except ValueError:
-        return np_asarray([])
+    ratios, step, nb_bins = None, None, None
+    if spec == "":
+        return ratios, step, nb_bins
+    values = spec.split('|')
+    # Check values length, if not 3, raise an error
+    if len(values) != 3:
+        raise ValueError("Invalid specification string.")
 
-
-# def lhs_discrete_sampling(
-#     n_features: int,
-#     discrete_space: np_ndarray,
-#     n_samples: int = DEFAULTS['NB_SAMPLES'],
-#     seed: int = None,
-#     logger: Logger = getLogger(__name__)
-# ) -> np_ndarray:
-#     """
-#     Generate a Latin Hypercube Sampling (LHS) in a discrete space.
-
-#     Parameters
-#     ----------
-#     n_samples : int
-#         Number of samples to generate.
-
-#     n_features : int
-#         Number of features.
-
-#     discrete_space : np_ndarray
-#         Discrete space.
-
-#     Returns
-#     -------
-#     samples : np_ndarray
-#         N-by-samples array with uniformly spaced values between 0 and 1.
-#     """
-
-#     logger.debug(f'n_samples: {n_samples}')
-#     logger.debug(f'n_features: {n_features}')
-#     logger.debug(f'discrete_space: {discrete_space}')
-#     logger.debug(f'seed: {seed}')
-
-#     # Set seed
-#     np_random.seed(seed)
-
-#     # Initialize the samples array
-#     samples = np_empty((n_samples, n_features))
-
-#     # Loop over each feature
-#     for i in range(n_features):
-#         # Get the unique values of the current feature in the discrete space
-#         # unique_values = np.unique(discrete_space[:, i])
-#         unique_values = np_unique(discrete_space[i])
-
-#         # Get the number of unique values
-#         n_unique = unique_values.shape[0]
-
-#         # Generate an array of random numbers between 0 and 1
-#         random_numbers = np_random.rand(n_samples)
-
-#         # Scale the random numbers so that they are between 0 and n_unique
-#         scaled_random_numbers = (random_numbers * n_unique).astype(int)
-
-#         # Sort the unique values randomly
-#         np_random.shuffle(unique_values)
-
-#         # Assign the random values to the samples
-#         for j, rn in enumerate(scaled_random_numbers):
-#             samples[j, i] = unique_values[rn]
-
-#     return samples
-
-#     # Remove duplicates
-#     samples = np_unique(samples, axis=0)
-
-#     from numpy import vstack as np_vstack
-#     # Resample if the number of unique samples is less than n_samples
-#     while samples.shape[0] < n_samples:
-#         new_samples = lhs_discrete_sampling(
-#             n_samples=n_samples - samples.shape[0],
-#             n_features=n_features,
-#             discrete_space=discrete_space,
-#             seed=seed,
-#             logger=logger
-#         )
-#         samples = np_vstack((samples, new_samples))
-
-#     return samples[:n_samples]
-
-
-def bin_LHS(
-    nb_parameters: int,
-    nb_samples: int,
-    nb_levels: List[int],
-    seed: int = None,
-    logger: Logger = getLogger(__name__)
-):
-    """
-    Generate a Latin Hypercube Sampling (LHS) in a discrete space.
-
-    Parameters
-    ----------
-    nb_parameters : int
-        Number of parameters.
-
-    nb_samples : int
-        Number of samples to generate.
-
-    nb_levels : List[int]
-        Number of levels for each parameter.
-
-    seed : int
-        Seed for the random number generator.
-
-    Returns
-    -------
-    samples : np_ndarray
-        N-by-samples array with uniformly spaced values between 0 and 1.
-    """
-    logger.debug(f'nb_parameters: {nb_parameters}')
-    logger.debug(f'nb_samples: {nb_samples}')
-    logger.debug(f'nb_levels: {nb_levels}')
-    logger.debug(f'seed: {seed}')
-
-    if seed is None:
-        sampling = lhs(
-            nb_parameters,
-            samples=nb_samples,
-            criterion='center'
-        )
+    if values[0]:
+        ratios = [float(r) for r in values[0].split(',')]
     else:
-        sampling = lhs(
-            nb_parameters,
-            samples=nb_samples,
-            criterion='center',
-            random_state=seed
-        )
+        ratios = None
+    if values[1]:
+        step = int(values[1])
+    else:
+        step = None
+    if values[2]:
+        nb_bins = int(values[2])
+    else:
+        nb_bins = None
 
-    # Put each value in the right bin
-    for i in range(sampling.shape[1]):
-        sampling[:, i] = sampling[:, i] * nb_levels[i]
-        # Round each value to the nearest integer
-        sampling[:, i] = np_floor(sampling[:, i])
-
-    return sampling
+    return ratios, step, nb_bins
 
 
-def remove_duplicates(samples: np_ndarray) -> np_ndarray:
+def generate_ranges_by_ratios(
+    max_value: float,
+    ratios: list,
+    logger: Logger = getLogger(__name__)
+) -> list:
     """
-    Remove duplicate rows from a 2D array.
+    Generate discrete ranges based on specified ratios.
 
-    Parameters
-    ----------
-    samples : np_ndarray
-        2D array of samples.
+    Args:
+        max_value (float): The maximum value for the range.
+        ratios (list): A list of ratios representing
+        the proportions of each range.
+        logger : Logger, optional
+        The logger object for logging messages.
 
-    Returns
-    -------
-    samples : np_ndarray
-        2D array of samples with duplicate rows removed.
+    Returns:
+        list: A list of discrete ranges based on the specified ratios.
+
+    Example:
+        >>> generate_ranges_by_ratios(100, [0.2, 0.3, 0.5])
+        [20, 50, 100]
     """
-    return np_asarray(
-        [
-            samples[i]
-            for i in sorted(
-                np_unique(samples, axis=0, return_index=True)[1]
-            )
+    return [round(max_value * ratio) for ratio in ratios]
+    # total_ratio = sum(ratios)
+    # cumulative_ratio = 0
+    # range_list = []
+    # for ratio in ratios[:-1]:
+    #     cumulative_ratio += ratio
+    #     next_value = round((cumulative_ratio / total_ratio) * max_value)
+    #     range_list.append(next_value)
+    # range_list.append(max_value)
+    # return range_list
+
+
+def generate_ranges_by_step(
+    max_value: int,
+    step: int,
+    logger: Logger = getLogger(__name__)
+) -> list:
+    """
+    Generate discrete ranges based on a step value.
+
+    Parameters:
+    - max_value (int): The maximum value for the range.
+    - step (int): The step value for generating the ranges.
+
+    Returns:
+    - list: A list of discrete ranges generated based on the step value.
+    """
+    # Check if step is non-negative
+    if step < 0:
+        raise ValueError("Step should be non-negative.")
+    return list(range(0, max_value + 1, step))
+
+
+def generate_ranges_by_nbins(
+    max_value: float,
+    nb_bins: int,
+    logger: Logger = getLogger(__name__)
+) -> list:
+    """
+    Generate discrete ranges by dividing the maxValue into nb_bins equal parts.
+
+    Parameters:
+    - max_value (float): The maximum value to be divided into ranges.
+    - nb_bins (int): The number of bins to divide the max_value into.
+
+    Returns:
+    - list: A list of discrete ranges generated by dividing the max_value into
+    nb_bins equal parts.
+    """
+    if nb_bins < 0:
+        raise ValueError("Number of bins should be non-negative.")
+    step = max_value / nb_bins
+    return [round(step * i) for i in range(nb_bins + 1)]
+
+
+def generate_discrete_ranges(
+    data: pd.DataFrame,
+    logger: Logger = getLogger(__name__)
+) -> list:
+    """
+    Generate discrete ranges based on the DataFrame.
+
+    Parameters:
+    - data: DataFrame containing the data.
+
+    Returns:
+    - discrete_ranges: List of discrete ranges generated based on the data.
+
+    This function iterates over the rows of the input DataFrame and
+    generates discrete ranges based on the values in each row.
+    It extracts specifications from the 'Ratios|Step|NbBins' column and
+    uses them to determine the ranges. If multiple specifications are found,
+    warnings are issued. The generated ranges are then appended to
+    the 'discrete_ranges' list, which is returned at the end.
+
+    Note: The 'Ratios|Step|NbBins' column should contain the specifications
+    in the format 'ratios|step|nb_bins',
+    where 'ratios' is a comma-separated list of ratios,
+    'step' is the step size, and
+    'nb_bins' is the number of bins.
+    """
+
+    discrete_ranges = []
+    for _, row in data.iterrows():
+        ratios, step, nb_bins = extract_specs(row['Ratios|Step|NbBins'])
+        if ratios:
+            if step or nb_bins:
+                logger.warning(
+                    f"Multiple specifications found for {row['Component']}."
+                    " Using Ratios."
+                )
+            ranges = generate_ranges_by_ratios(row['maxValue'], ratios)
+        elif step:
+            if nb_bins:
+                logger.warning(
+                    f"Both Step and NbBins provided for {row['Component']}."
+                    " Using Step."
+                )
+            ranges = generate_ranges_by_step(row['maxValue'], step)
+        elif nb_bins:
+            ranges = generate_ranges_by_nbins(row['maxValue'], nb_bins)
+        else:
+            ranges = []
+        discrete_ranges.append(ranges)
+    return discrete_ranges
+
+
+def get_discrete_ranges(
+    data: pd.DataFrame,
+    ratios: list,
+    step: int,
+    nb_bins: int,
+    logger: Logger = getLogger(__name__)
+) -> list:
+    """
+    Get the discrete ranges for each component.
+
+    Parameters:
+    - data : pd.DataFrame
+        The loaded data.
+    - ratios : list
+        The ratios for each component.
+    - step : int
+        The step size for creating discrete ranges.
+    - nb_bins : int
+        The number of bins for creating discrete ranges.
+    - logger : Logger, optional
+        The logger object for logging messages.
+
+    Returns:
+    - list
+        The discrete ranges for each component.
+    """
+    logger.info("Creating discrete ranges.")
+
+    # If args.ratios set, use them to create the discrete ranges
+    if ratios is not None:
+        # for each component, generate the discrete ranges
+        # by taking each ratios and multiplying it by the max value
+        discrete_ranges = [
+            generate_ranges_by_ratios(max_val, ratios)
+            for max_val in data['maxValue']
         ]
-    )
+    # If args.step, use it to create the discrete ranges
+    elif step is not None:
+        discrete_ranges = [
+            generate_ranges_by_step(max_val, step)
+            for max_val in data['maxValue']
+        ]
+    # If args.nb_bins set, use it to create the discrete ranges
+    elif nb_bins is not None:
+        discrete_ranges = [
+            generate_ranges_by_nbins(max_val, nb_bins)
+            for max_val in data['maxValue']
+        ]
+    # Otherwise, use content file to create the discrete ranges
+    else:
+        discrete_ranges = generate_discrete_ranges(data)
+    return discrete_ranges
 
 
-def random_sampling(
-    nb_samples: int,
-    nb_levels: List[int],
+def gen_samples(
+    discrete_ranges: list,
+    sampler: qmc.LatinHypercube,
+    n_samples: int,
     seed: int = None,
     logger: Logger = getLogger(__name__)
-):
+) -> np.ndarray:
     """
-    Generate a random sampling in a discrete space.
+    Generate samples from the given discrete ranges.
 
-    Parameters
-    ----------
-    nb_samples : int
-        Number of samples to generate.
+    Parameters:
+    - discrete_ranges : list of lists
+        The discrete ranges for each component.
+    - sampler : scipy.stats.qmc.LatinHypercube
+        The sampler object for generating samples.
+    - n_samples : int
+        The number of samples to generate.
+    - seed : int, optional
+        The seed value for random number generation.
+    - logger : Logger, optional
+        The logger object for logging messages.
 
-    nb_levels : List[int]
-        Number of levels for each parameter.
-
-    seed : int
-        Seed for the random number generator.
-
-    Returns
-    -------
-    samples : np_ndarray
-        N-by-samples array with uniformly spaced values between 0 and 1.
+    Returns:
+    - np.ndarray
+        The generated samples.
     """
-    nb_parameters = len(nb_levels)
-    if seed is None:
-        sampling = np_random.randint(
-            0,
-            nb_levels,
-            (nb_samples, nb_parameters)
-        )
-    else:
-        sampling = np_random.RandomState(seed).randint(
-            0,
-            nb_levels,
-            (nb_samples, nb_parameters)
-        )
-
-    return sampling
-
-
-def full_factorial_sampling(
-    nb_levels: List[int],
-    logger: Logger = getLogger(__name__)
-):
-    """
-    Generate a full factorial sampling in a discrete space.
-
-    Parameters
-    ----------
-    nb_levels : List[int]
-        Number of levels for each parameter.
-
-    seed : int
-        Seed for the random number generator.
-
-    Returns
-    -------
-    samples : np_ndarray
-        N-by-samples array with uniformly spaced values between 0 and 1.
-    """
-    return np_asarray(
-        list(
-            product(
-                *[
-                    range(nb_levels[i])
-                    for i in range(len(nb_levels))
-                ]
-            )
-        )
-    )
+    if discrete_ranges == []:
+        return np.array([])
+    if seed is not None:
+        np.random.seed(seed)  # Set the seed for reproducibility
+    samples_unit = sampler.random(n=n_samples)
+    samples_indices = np.floor(
+        samples_unit * [len(r) for r in discrete_ranges]
+    ).astype(int)
+    # Initialize an empty array to hold the scaled samples
+    samples_scaled_discrete = np.zeros(samples_indices.shape)
+    # Convert indices to actual values in the discrete space
+    for dim in range(len(discrete_ranges)):
+        samples_scaled_discrete[:, dim] = [
+            list(discrete_ranges[dim])[idx]
+            for idx in samples_indices[:, dim]
+        ]
+    return samples_scaled_discrete
 
 
 def replace_duplicates(
-    sampling: np_ndarray,
-    nb_samples: int,
-    nb_levels: List[int],
+    samples_df: pd.DataFrame,
+    discrete_ranges: list,
+    sampler: qmc.LatinHypercube,
     seed: int = None,
     logger: Logger = getLogger(__name__)
-):
+) -> pd.DataFrame:
     """
-    Replace duplicates by random samples.
+    Replace duplicates in the samples DataFrame.
 
-    Parameters
-    ----------
-    sampling : np_ndarray
-        N-by-samples array with duplicates.
+    Parameters:
+    - samples_df : pd.DataFrame
+        The DataFrame containing the samples.
+    - discrete_ranges : list of lists
+        The discrete ranges for each component.
+    - sampler : scipy.stats.qmc.LatinHypercube
+        The sampler object for generating samples.
+    - seed : int
+        The seed value for random number generation.
+    - logger : Logger, optional
+        The logger object for logging messages.
 
-    nb_samples : int
-        Number of samples to generate.
-
-    nb_levels : List[int]
-        Number of levels for each parameter.
-
-    seed : int
-        Seed for the random number generator.
-
-    Returns
-    -------
-    samples : np_ndarray
-        N-by-samples array with no duplicate.
+    Returns:
+    - pd.DataFrame
+        The DataFrame with duplicates replaced.
     """
-    logger.debug(f'sampling: {sampling}')
-    logger.debug(f'nb_samples: {nb_samples}')
-    logger.debug(f'nb_levels: {nb_levels}')
-    logger.debug(f'seed: {seed}')
-    # Remove duplicates
-    sampling = remove_duplicates(sampling)
-    nb_duplicates = nb_samples - sampling.shape[0]
-    if nb_duplicates > 0:
-        logger.warning(f'{nb_duplicates} duplicates removed')
+    logger.warning("Replacing duplicates with random samples.")
 
-    while nb_duplicates > 0:
-        # Generate random new samples
-        logger.warning(f'Generating {nb_duplicates} random sample(s)')
-        new_samples = random_sampling(
-            nb_samples=nb_samples - sampling.shape[0],
-            nb_levels=nb_levels,
-            seed=seed,
-            logger=logger
+    nb_possible_combinations = np.prod([len(r) for r in discrete_ranges])
+
+    # Checks to prevent infinite loop
+    # If length of samples_df > possible combinations, raise an error
+    if len(samples_df) > nb_possible_combinations:
+        raise ValueError("Number of samples exceeds total combinations.")
+    # Else if length of samples_df == possible combinations,
+    # return all combinations
+    elif len(samples_df) == nb_possible_combinations:
+        # return all possible combinations from discrete_ranges
+        return generate_all_combinations(discrete_ranges, logger)
+
+    if seed is not None:
+        np.random.seed(seed)
+
+    while samples_df.duplicated().any():
+        # Keep the first occurrence of each duplicate,
+        # and build the mask with the remaining duplicates
+        duplicate_mask = samples_df.duplicated(keep='first')
+        # Number of new samples to generate
+        num_duplicates = duplicate_mask.sum()
+        samples = gen_samples(
+            discrete_ranges, sampler, num_duplicates, seed, logger
         )
-        # Add new samples to sampling
-        sampling = np_vstack((sampling, new_samples))
-        # Remove duplicates
-        sampling = remove_duplicates(sampling)
-        nb_duplicates = nb_samples - sampling.shape[0]
-        logger.warning(f'{nb_duplicates} duplicates removed')
+        # Convert the scaled samples to DataFrame
+        new_samples_df = pd.DataFrame(samples)
+        new_samples_df.columns = samples_df.columns
+        # Replace the duplicates with the new samples
+        samples_df.loc[duplicate_mask, :] = new_samples_df.values
 
-    return sampling
+    return samples_df
 
 
-def replace_values_by_ratios(
-    sampling: np_ndarray,
-    nb_parameters: int,
-    ratios: Dict,
+def random_sampling(
+    discrete_ranges: list,
+    n_samples: int,
+    seed: int = None,
     logger: Logger = getLogger(__name__)
-):
+) -> np.ndarray:
     """
-    Replace values by ratios.
+    Generate random samples.
 
-    Parameters
-    ----------
-    sampling : np_ndarray
-        Sampling array.
+    Parameters:
+    - discrete_ranges : list of lists
+        The discrete ranges for each component.
+    - n_samples : int
+        The number of samples to generate.
+    - logger : Logger, optional
+        The logger object for logging messages.
 
-    nb_parameters : int
-        Number of variable parameters.
-
-    ratios: Dict
-        Ratios for each parameter.
-
-    Returns
-    -------
-    f_sampling : np_ndarray
-        Sampling array with vratios.
+    Returns:
+    - np.ndarray
+        The generated random samples.
     """
-    logger.debug(f'sampling: {sampling}')
-    logger.debug(f'nb_parameters: {nb_parameters}')
-    logger.debug(f'ratios: {ratios}')
-    f_sampling = sampling.astype(float)
-    for i in range(nb_parameters):
-        f_sampling[:, i] = np_asarray(
-            list(ratios.values())[i]
-        )[sampling[:, i].astype(int)]
-    return f_sampling
+    # CHeck for non-negative number of samples
+    if n_samples < 0:
+        raise ValueError("Number of samples should be non-negative.")
+    logger.info("Proceeding with random sampling.")
+    np.random.seed(seed)  # Set the seed for reproducibility
+    samples = np.array(
+        [
+            [np.random.choice(range_) for range_ in discrete_ranges]
+            for _ in range(n_samples)
+        ]
+    )
+    return samples
+
+
+def generate_all_combinations(
+    discrete_ranges: list,
+    logger: Logger = getLogger(__name__)
+) -> np.ndarray:
+    """
+    Generate all possible combinations.
+
+    Parameters:
+    - discrete_ranges : list of lists
+        The discrete ranges for each component.
+    - logger : Logger, optional
+        The logger object for logging messages.
+
+    Returns:
+    - np.ndarray
+        All possible combinations of the given ranges.
+    """
+    logger.info("Generating all possible combinations.")
+    all_combinations = np.array(list(product(*discrete_ranges)))
+    return all_combinations
 
 
 def sampling(
-    nb_parameters,
-    ratios: Dict,
-    nb_samples: int = DEFAULTS['NB_SAMPLES'],
+    discrete_ranges: list,
+    n_samples: int,
+    method: str = DEFAULTS['method'],
     seed: int = None,
     logger: Logger = getLogger(__name__)
-):
+) -> pd.DataFrame:
     """
-    Generate sampling array.
-    Refactor sampling array with rounded values.
+    Adapted sampling method based on the number of samples and
+    total combinations.
 
-    Parameters
-    ----------
-    nb_parameters : int
-        Number of variable parameters.
+    Parameters:
+    - discrete_ranges : list of lists
+        The discrete ranges for each component.
+    - n_samples : int
+        The number of samples to generate.
+    - method : str, optional
+        The sampling method to use ('auto', 'lhs', 'random', 'all').
+        'lhs' for Latin Hypercube Sampling, 'random' for random sampling,
+        'all' for generating all combinations, and 'auto' for automatic
+        selection based on the number of samples and total combinations.
+        If the number of samples is less than or equal to one third of
+        the total combinations, LHS sampling is used. If the number of
+        samples is greater than one third of the total combinations and
+        less than the total combinations, random sampling is used. If the
+        number of samples equals the total combinations, all combinations
+        are generated. The default is 'auto'.
+    - seed : int, optional
+        The seed value for random number generation.
+    - logger : Logger, optional
+        The logger object for logging messages.
 
-    ratios: Dict
-        Ratios for each parameter.
-
-    nb_samples: int
-        Number of samples to generate for all factors
-
-    seed: int
-        Seed-number to controls the seed and random draws
-
-    Returns
-    -------
-    levels_array : 2d-array
-        N-by-samples array with uniformly spaced values between 0 and 1.
+    Returns:
+    - pd.DataFrame
+        The DataFrame containing the generated samples.
     """
 
-    logger.debug(f'nb parameters: {nb_parameters}')
-    logger.debug(f'ratios: {ratios}')
-    logger.debug(f'nb samples: {nb_samples}')
+    # Check if discrete_ranges is empty
+    if discrete_ranges == []:
+        return pd.DataFrame([])
 
-    if nb_parameters <= 0:
-        return np_asarray([])
+    logger.info("Starting adapted sampling method.")
+    np.random.seed(seed)  # Set the seed for reproducibility
+    N = np.prod([len(r) for r in discrete_ranges])
+    logger.info(f"Total combinations: {N}")
+    logger.info(f"Number of samples: {n_samples}")
 
-    nb_levels = [len(ratios_lst) for ratios_lst in ratios.values()]
+    sampler = qmc.LatinHypercube(
+        d=len(discrete_ranges),
+        # optimization='random-cd',
+        seed=seed
+    )
 
-    # Check if the number of samples is greater
-    # than the number of possible combinations
-    # And select the sampling method
-    nb_combinations = np_prod(nb_levels)
+    # LHS sampling
+    if method == 'lhs' or method == 'auto' and n_samples <= N / 3:
+        samples_df = pd.DataFrame(
+            gen_samples(discrete_ranges, sampler, n_samples, seed, logger)
+        )
+        if samples_df.duplicated().any():
+            samples_df = replace_duplicates(
+                samples_df, discrete_ranges, sampler, seed, logger
+            )
 
-    if nb_samples > nb_combinations:
-        raise ValueError(
-            f'Number of samples ({nb_samples}) is greater than the number of '
-            f'possible combinations ({np_prod(nb_levels)})'
+    # Random sampling
+    elif method == 'random' or method == 'auto' and N / 3 < n_samples < N:
+        logger.info("Number of samples high relative to combinations."
+                    " Using random sampling.")
+        samples_df = pd.DataFrame(
+            random_sampling(discrete_ranges, n_samples, seed, logger)
         )
 
-    elif nb_samples == nb_combinations:
-        logger.warning(
-            f'Number of samples ({nb_samples}) is equal to the number of '
-            f'possible combinations ({np_prod(nb_levels)})'
-        )
-        logger.warning('Proceeding to full factorial design')
-        # Proceed to full factorial design
-        sampling = full_factorial_sampling(nb_levels, logger)
-
-    elif nb_samples > nb_combinations / 3:
-        logger.warning(
-            f'Number of samples ({nb_samples}) is greater than 1/3 of the '
-            f'number of possible combinations ({np_prod(nb_levels)})'
-        )
-        logger.warning('Proceeding to random sampling')
-        # Proceed to initial random sampling
-        sampling = random_sampling(
-            nb_samples, nb_levels, seed, logger
-        )
-        # If needed, replace duplicate samples by random ones
-        sampling = replace_duplicates(
-            sampling, nb_samples, nb_levels, seed, logger
+    # Generate all combinations
+    elif method == 'all' or method == 'auto' and n_samples == N:
+        logger.info("Number of samples equals total combinations."
+                    " Generating all combinations.")
+        samples_df = pd.DataFrame(
+            generate_all_combinations(discrete_ranges, logger)
         )
 
+    # Invalid number of samples
     else:
-        # Generate initial LHS
-        sampling = bin_LHS(
-            nb_parameters, nb_samples, nb_levels, seed, logger
-        )
-        # If needed, replace duplicate samples by random ones
-        sampling = replace_duplicates(
-            sampling, nb_samples, nb_levels, seed, logger
-        )
+        raise ValueError("Number of samples exceeds total combinations.")
 
-    # Replace values by ratios
-    sampling = replace_values_by_ratios(
-        sampling, nb_parameters, ratios, logger
-    )
-
-    logger.debug(f'LHS:\n{sampling}')
-
-    return sampling
-
-
-def check_sampling(
-    values: np_ndarray,
-    min_max: list,
-    logger: Logger = getLogger(__name__)
-):
-    logger.debug('Checking sampling...')
-    logger.debug(f'values: {values}')
-    logger.debug(f'min_max: {min_max}')
-
-    nb_parameters = values.shape[1]
-
-    # Check that the min and max values
-    # are in the LHS result
-    # For each column, check the values
-    for i_param in range(nb_parameters):
-        param_levels = values[:, i_param]
-        try:
-            assert min_max[i_param][0] in param_levels
-        except AssertionError:
-            logger.warning(
-                'Min value not found in sampling'
-            )
-        try:
-            assert min_max[i_param][1] in param_levels
-        except AssertionError:
-            logger.warning(
-                'Max value not found in sampling'
-            )
-
-    # Check that there is no duplicate,
-    # i.e. that each row is unique
-    nb_dup = len(values) - len(set(map(tuple, values)))
-    if nb_dup > 0:
-        # Find duplicates
-        unique = set()
-        duplicates = set()
-        for row in values:
-            if tuple(row) in unique:
-                duplicates.add(tuple(row))
-            else:
-                unique.add(tuple(row))
-        logger.warning(f'Duplicates found in sampling: {nb_dup}')
-        # Print one duplicate per line
-        for dup in duplicates:
-            logger.warning(f'   --> {dup}')
-        # logger.warning(f'{nb_dup} duplicates found in sampling')
-
-    logger.debug('Sampling checked')
-
-
-def save_values(
-    values,
-    parameters,
-    output_folder: str = DEFAULTS['OUTPUT_FOLDER'],
-    output_format: str = DEFAULTS['OUTPUT_FORMAT'],
-    logger: Logger = getLogger(__name__)
-):
-    """
-    Save Pandas dataframes in tsv files
-
-    Parameters
-    ----------
-    initial_set_df : dataframe
-        Matrix generated from the concatenation of all samples.
-
-    normalizer_set_df : dataframe
-        Duplicate of initial_set. 0 is assigned to the GOI-DNA column.
-
-    autofluorescence_set_df : dataframe
-        Duplicate of normalizer_set. 0 is assigned to the GFP-DNA column.
-
-    all_parameters: List
-        List of the name of all cfps parameters
-
-    output_folder: str
-        Path where store output files
-    """
-    if not os_path.exists(output_folder):
-        os_mkdir(output_folder)
-
-    if output_format == 'tsv':
-        delimiter = '\t'
-    elif output_format == 'csv':
-        delimiter = ','
-
-    np_savetxt(
-        fname=os_path.join(
-            output_folder,
-            f'sampling.{output_format}'),
-        fmt='%s',
-        X=values,
-        delimiter=delimiter,
-        header=delimiter.join(parameters),
-        comments=''
-    )
+    return samples_df
