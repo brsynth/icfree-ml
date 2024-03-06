@@ -1,429 +1,310 @@
-"""Plates generator module"""
-from pandas import DataFrame
-from math import (
-    ceil,
-    floor
+from pandas import (
+    concat as pd_concat,
+    DataFrame
 )
-from typing import (
-    Dict,
-    List
-)
-from logging import (
-    Logger,
-    getLogger
-)
-from copy import deepcopy
+from math import ceil
+from re import match as re_match
 
-from .args import (
-    DEFAULT_ARGS
-)
-from .plate import Plate
+from .args import DEFAULT_ARGS
 
 
-def extract_dead_volumes(
-    parameters_df: DataFrame,
-    logger: Logger = getLogger(__name__)
-) -> DataFrame:
+def well_label_generator(dimensions):
     """
-    Extract deadVolumes from cfps_parameters_df and volumes_df
+    Generate well labels for a plate based on the given dimensions.
 
-    Parameters
-    ----------
-    cfps_parameters_df : DataFrame
-        Dataframe with cfps_parameters data
-    logger: Logger
-        Logger, default is getLogger(__name__)
+    Args:
+        dimensions (str):
+            The dimensions of the plate in the format 'rowsxcols'.
 
-    Returns
-    -------
-    dead_volumes : Dict
-        Dict with deadVolumes data
+    Returns:
+        list: A list of well labels.
+
+    Example:
+        >>> well_label_generator('4x6')
+        ['A1', 'A2', 'A3', 'A4', 'A5', 'A6',
+        'B1', 'B2', 'B3', 'B4', 'B5', 'B6',
+        'C1', 'C2', 'C3', 'C4', 'C5', 'C6',
+        'D1', 'D2', 'D3', 'D4', 'D5', 'D6']
     """
-    logger.debug(f'parameters_df:\n{parameters_df}')
+    nb_rows, nb_cols = map(int, dimensions.split('x'))
+    single_letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    double_letters = [
+        f"{a}{b}"
+        for a in single_letters
+        for b in single_letters
+    ]
+    # Correctly extend the list without attempting to concatenate directly
+    all_labels = list(single_letters) + double_letters
 
-    dead_volumes = dict(
-        parameters_df[
-            [
-                'Component',
-                'deadVolume'
-            ]
-        ].to_numpy()
-    )
-    dead_volumes['Water'] = 0
-    logger.debug(f'deadVolume:{dead_volumes}')
-    return dead_volumes
+    # Determine row labels based on the number of rows needed
+    row_labels = all_labels[:nb_rows]
 
-
-def init_plate(
-    dimensions: str,
-    start_well: str = DEFAULT_ARGS['SRC_PLT_START_WELL'],
-    vertical: bool = True,
-    dead_volume: int = DEFAULT_ARGS['SRC_PLT_DEAD_VOLUME'],
-    well_capacity: float = DEFAULT_ARGS['SRC_PLT_WELL_CAPACITY'],
-    logger: Logger = getLogger(__name__)
-) -> Plate:
-    """Initialize a Plate object
-
-    Parameters
-    ----------
-    start_well : str, optional
-        Well to fill first, by default 'A1'
-    vertical : bool, optional
-        Reading/writing direction, by default True
-    dimensions : str, optional
-        Dimensions, by default '16x24'
-    dead_volume : int, optional
-        Plate deadVolume per well, by default 15000
-    well_capacity : float, optional
-        Capacity of each well, by default 60000
-    logger : Logger, optional
-        Logger, by default getLogger(__name__)
-
-    Returns
-    -------
-    Plate
-        _description_
-    """
-    plate = Plate(
-        dimensions=dimensions,
-        dead_volume=dead_volume,
-        well_capacity=well_capacity,
-        vertical=vertical,
-        logger=logger
-    )
-    plate.set_current_well(start_well)
-    return plate
+    # Generate well labels
+    well_labels = [
+        f"{row}{col}"
+        for col in range(1, nb_cols + 1)
+        for row in row_labels
+    ]
+    return well_labels
 
 
-def dst_plate_generator(
-    volumes: DataFrame,
-    dimensions: str = DEFAULT_ARGS['DST_PLT_DIM'],
-    start_well: str = DEFAULT_ARGS['DST_PLT_START_WELL'],
+def gen_dst_plt(
+    sampling_df: list,
+    sample_volume: float,
     well_capacity: float = DEFAULT_ARGS['DST_PLT_WELL_CAPACITY'],
-    plate_dead_volume: int = DEFAULT_ARGS['DST_PLT_DEAD_VOLUME'],
-    vertical: bool = True,
-    nplicates: int = DEFAULT_ARGS['NPLICATES'],
-    logger: Logger = getLogger(__name__)
-) -> List:
+    dimensions: str = DEFAULT_ARGS['DST_PLT_DIM'],
+    starting_well: str = DEFAULT_ARGS['DST_PLT_START_WELL'],
+    nplicates: int = DEFAULT_ARGS['NPLICATES']
+) -> list:
     """
-    Generate destination plates dataframe
+    Generates a list of dataframes, each representing a destination plate
+    with well assignments and water volumes to reach a specified
+    sample volume, based on plate dimensions given as "nb_rows x nb_cols",
+    starting from a specified well, and considering the number of replicates
+    for each sample. Distributes samples across multiple plates if needed.
 
-    Parameters
-    ----------
-    volumes: DataFrame
-        DataFrames with samples
-    dimensions: str
-        Plate dimensions, by default '16x24'
-    start_well : str
-        Starter well to begin filling the 384 well-plate. Defaults to 'A1'
-    well_capacity: float
-        Plate well capacity, by default 60000
-    plate_dead_volume: int
-        Plate deadVolume, by default 15000
-    vertical: bool
-        - True: plate is filled column by column from top to bottom
-        - False: plate is filled row by row from left to right
-    nplicates: int
-        Number of plates to generate, by default 1
-    logger: Logger
-        Logger
+    Args:
+    - sampling_df (pd.DataFrame): The input dataframe with sample components.
+    - sample_volume (float): The target sample volume for each well.
+    - well_capacity (float): The maximum capacity for each well.
+    - dimensions (str): The dimensions of the plate (e.g., "8 x 12").
+    - starting_well (str): The well label from which
+                           to start filling (e.g., "B3").
+    - nplicates (int): The number of replicates for each sample.
 
-    Returns
-    -------
-    plates: List
-        List with destination plates dataframes
+    Returns:
+    - List[pd.DataFrame]: A list of dataframes,
+                          each representing a destination plate.
     """
-
-    plates = []
-
-    for i in range(nplicates):
-        # Generate destination plate(s)
-        plates += __dst_plate_generator(
-            volumes=volumes,
-            dimensions=dimensions,
-            start_well=start_well,
-            well_capacity=well_capacity,
-            plate_dead_volume=plate_dead_volume,
-            vertical=vertical,
-            logger=logger
+    # Check if sample volume is not greater than well capacity
+    if sample_volume > well_capacity:
+        raise ValueError(
+            "The sample volume cannot be greater than the well capacity."
         )
 
-    if nplicates > 1:
-        # Merge plates
-        return Plate.merge(plates)
+    well_labels = well_label_generator(dimensions)
+    if starting_well not in well_labels:
+        raise ValueError(
+            "The starting well is not valid for the given plate dimensions."
+        )
+    nb_rows, nb_cols = map(int, dimensions.split('x'))
+    plate_size = nb_rows * nb_cols
+    total_samples_needed = len(sampling_df) * nplicates
 
-    return plates
+    # Calculate the total component volume and
+    # the water volume needed for each sample
+    sampling_df['Total_Volume'] = sampling_df.sum(axis=1)
+    sampling_df['Water'] = sample_volume - sampling_df['Total_Volume']
 
+    # Prepare the expanded sampling dataframe for replicates
+    if nplicates > 0:
+        sampling_df_expanded = \
+            pd_concat([sampling_df]*nplicates).reset_index(drop=True)
 
-def __dst_plate_generator(
-    volumes: DataFrame,
-    dimensions: str = DEFAULT_ARGS['DST_PLT_DIM'],
-    start_well: str = DEFAULT_ARGS['DST_PLT_START_WELL'],
-    well_capacity: float = DEFAULT_ARGS['DST_PLT_WELL_CAPACITY'],
-    plate_dead_volume: int = DEFAULT_ARGS['DST_PLT_DEAD_VOLUME'],
-    vertical: bool = True,
-    logger: Logger = getLogger(__name__)
-) -> List:
-    """
-    Generate destination plates dataframe
+    # List to store destination plates
+    dest_plates = []
 
-    Parameters
-    ----------
-    volumes: DataFrame
-        DataFrames with samples
-    dimensions: str
-        Plate dimensions, by default '16x24'
-    start_well : str
-        Starter well to begin filling the 384 well-plate. Defaults to 'A1'
-    well_capacity: float
-        Plate well capacity, by default 60000
-    plate_dead_volume: int
-        Plate deadVolume, by default 15000
-    vertical: bool
-        - True: plate is filled column by column from top to bottom
-        - False: plate is filled row by row from left to right
-    logger: Logger
-        Logger
+    while total_samples_needed > 0:
+        current_plate_df = sampling_df_expanded.head(plate_size).copy()
+        current_plate_df['Final_Volume'] = \
+            current_plate_df['Total_Volume'] + current_plate_df['Water']
 
-    Returns
-    -------
-    plates: List
-        List with destination plates dataframes
-    """
-    # No deadVolume for destination plates
-    plate_dead_volume = 0
-    plates = []
-    plate = init_plate(
-        start_well=start_well,
-        dead_volume=plate_dead_volume,
-        dimensions=dimensions,
-        well_capacity=well_capacity,
-        vertical=vertical,
-        logger=logger
-    )
-
-    for _, row in volumes.iterrows():
-        # For all parameters
-        for param in volumes.columns:
-            logger.debug(f'param: {param}, volume: {row[param]}')
-            plate.fill_well(
-                parameter=param,
-                volume=row[param]
-            )
-        try:
-            plate.next_well()
-        except ValueError:  # Out of plate
-            # Store current plate
-            plates.append(deepcopy(plate))
-            # Create new plate
-            logger.warning('A new destination plate is created')
-            plate = Plate(
-                dimensions=plate.get_dimensions(),
-                dead_volume=plate_dead_volume,
-                well_capacity=well_capacity,
-                vertical=vertical,
-                logger=logger
+        # Ensure no negative water volumes
+        if any(current_plate_df['Water'] < 0):
+            raise ValueError(
+                "Some samples require more volume"
+                "than the target sample volume."
             )
 
-    plates.append(deepcopy(plate))
+        # Assign well labels for the current plate
+        num_samples_current_plate = min(total_samples_needed, plate_size)
+        start_index = \
+            well_labels.index(starting_well) if dest_plates == [] else 0
+        adjusted_well_labels = \
+            well_labels[start_index:] + well_labels[:start_index]
+        current_plate_df['Well'] = \
+            adjusted_well_labels[:num_samples_current_plate]
 
-    return plates
+        # Reorder columns for the current plate
+        cols = ['Well'] + [
+            col for col in
+            current_plate_df.columns
+            if col not in ['Well', 'Water', 'Total_Volume', 'Final_Volume']
+        ] + ['Water']
+        dest_plates.append(current_plate_df[cols])
+
+        # Update counters and dataframe for remaining samples
+        total_samples_needed -= num_samples_current_plate
+        sampling_df_expanded = \
+            sampling_df_expanded.iloc[num_samples_current_plate:].reset_index(
+                drop=True
+            )
+
+    return dest_plates
 
 
-def src_plate_generator(
-    dest_plates: List,
-    param_dead_volumes: Dict,
-    plate_dead_volume: int = DEFAULT_ARGS['SRC_PLT_DEAD_VOLUME'],
+def gen_src_plt(
+    dest_plates: list,
     well_capacity: float = DEFAULT_ARGS['SRC_PLT_WELL_CAPACITY'],
-    start_well: str = DEFAULT_ARGS['SRC_PLT_START_WELL'],
-    new_col_comp: str = DEFAULT_ARGS['NEW_COL_COMP'],
-    opt_well_vol: List = DEFAULT_ARGS['OPTIMIZE_WELL_VOLUMES'],
-    vertical: bool = True,
     dimensions: str = DEFAULT_ARGS['SRC_PLT_DIM'],
-    logger: Logger = getLogger(__name__)
-) -> List:
+    starting_well: str = DEFAULT_ARGS['SRC_PLT_START_WELL'],
+    new_col: str = DEFAULT_ARGS['NEW_COL_COMP'],
+    dead_volume: str = DEFAULT_ARGS['SRC_PLT_DEAD_VOLUME']
+) -> list:
     """
-    Generate source plate dataframe
+    Generate source plates based on the destination plates and
+    other parameters.
 
-    Parameters
-    ----------
-    dest_plates: List
-        List of destination plates
-    param_dead_volumes: Dict
-        deadVolumes of parameters
-    plate_dead_volume: int
-        Source plate deadVolume. Defaults to 15000 nL
-    well_capacity: float
-        Source plate well capacity. Defaults to 60000 nL
-    start_well : str
-        Starter well to begin filling the 384 well-plate. Defaults to 'A1'
-    new_col_comp: str
-        Start component at a new column. Defaults to None
-    opt_well_vol: List
-        List of parameters to optimize. set to [] if none
-    vertical: bool
-        - True: plate is filled column by column from top to bottom
-        - False: plate is filled row by row from left to right
-    dimensions: str
-        Dimensions of the plate given as a string with nb_rows
-        and nb_cols separated by 'x'
-    logger: Logger
-        Logger
+    Args:
+        dest_plates (list): List of destination plates.
+        well_capacity (float): Capacity of each well in the source plates.
+        dimensions (str): Dimensions of the source plates in
+                          the format 'rows x columns'.
+        starting_well (str): Label of the starting well in the source plates.
+        new_col (list): List of components that should be placed
+                        in a new column.
+        dead_volume (float): Dead volume to be added to each well.
 
-    Returns
-    -------
-    plate: List
-        List with source plate dataframe
+    Returns:
+        list: List of source plates, where each plate
+              is represented as a DataFrame.
+
     """
-    logger.debug(f'dest_plates:\n{dest_plates}')
-    logger.debug(f'param_dead_volumes: {param_dead_volumes}')
-    logger.debug(f'plate_dead_volume: {plate_dead_volume}')
-    logger.debug(f'plate_well_capacity: {well_capacity}')
-    logger.debug(f'starting_well: {start_well}')
-    logger.debug(f'optimize_well_volumes: {opt_well_vol}')
-    logger.debug(f'vertical: {vertical}')
-    logger.debug(f'plate_dimensions: {dimensions}')
-    logger.debug(f'new_col_comp: {new_col_comp}')
-
-    plates = []
-    plate = init_plate(
-        start_well=start_well,
-        dead_volume=plate_dead_volume,
-        dimensions=dimensions,
-        well_capacity=well_capacity,
-        vertical=vertical,
-        logger=logger
-    )
-
-    # Sum volumes for each factor
-    vol_sums = Plate.get_volumes_summary(dest_plates)
-    logger.debug(f'vol_sums: {vol_sums}')
-
-    if new_col_comp == []:
-        new_col_comp = vol_sums.keys()
-
-    # Set number of wells needed
-    for param, volume in vol_sums.items():
-        logger.debug(f'param: {param}, volume: {volume}')
-        # If volume = 0, then nothing to do
-        if volume == 0:
-            logger.warning(
-                f'{param} has a volume = 0. '
-                'Please check if is expected or because '
-                f'sample volume is too low '
-                f'or the stock concentration is too high.'
-            )
-            continue
-        nb_wells, volume_per_well = nb_wells_needed(
-            param=param,
-            volume=volume,
-            param_dead_volume=param_dead_volumes[param],
-            opt_well_vol=opt_well_vol,
-            plate=plate,
-            logger=logger
+    if well_capacity < 0:
+        raise ValueError("The well capacity cannot be negative.")
+    if dead_volume < 0:
+        raise ValueError("The dead volume cannot be negative.")
+    # Adjust effective well capacity to account for dead volume
+    effective_well_capacity = well_capacity - dead_volume
+    if effective_well_capacity < 0:
+        raise ValueError(
+            "The well capacity must be greater than the dead volume."
         )
 
-        try:
-            # Start at a new column if requested
-            if new_col_comp and param in new_col_comp:
-                plate.next_col()
+    # Aggregate component volumes across all destination plates
+    component_volumes = {}
+    for plate in dest_plates:
+        # Include all components, assuming last column is 'Water'
+        for component in plate.columns[1:]:
+            component_volumes[component] = \
+                component_volumes.get(component, 0) + plate[component].sum()
 
-            # Fill wells
-            for _ in range(nb_wells):
-                plate.fill_well(param, volume_per_well)
-                plate.next_well()
+    # Generate well labels and find the starting index
+    well_labels = well_label_generator(dimensions)
+    start_index = well_labels.index(starting_well)
 
-        except ValueError:  # Out of plate
-            # Store current plate
-            plates.append(deepcopy(plate))
-            # Create new plate
-            logger.warning('A new source plate is created')
-            plate = Plate(
-                dimensions=plate.get_dimensions(),
-                dead_volume=plate_dead_volume,
-                well_capacity=well_capacity,
-                vertical=vertical,
-                logger=logger
-            )
+    # Initialize source plates data structure
+    nb_rows, nb_cols = map(int, dimensions.split('x'))
+    plate_capacity = nb_rows * nb_cols
+    source_plates = [
+        DataFrame(0, index=well_labels, columns=component_volumes.keys())
+    ]
+    # Offset to move to new column for components in new_col
+    well_column_offset = 0
 
-    plates.append(deepcopy(plate))
+    # Allocate wells to components starting from the starting_well
+    current_well_index = start_index
+    for component, volume in component_volumes.items():
+        wells_needed = ceil(volume / effective_well_capacity)
 
-    for plate in plates:
-        logger.debug(f'{plate}')
+        if component in new_col:
+            # Move to new column if the component is in new_col
+            current_well_index += nb_rows - (current_well_index % nb_rows)
 
-    return plates
+        for _ in range(wells_needed):
+            # If last plate is full, add a new plate
+            if current_well_index == len(well_labels):
+                # Add a new plate
+                source_plates.append(
+                    DataFrame(
+                        0,
+                        index=well_labels,
+                        columns=component_volumes.keys()
+                    )
+                )
+                # Reset to the beginning
+                current_well_index = 0
+
+            well_position = \
+                (current_well_index + well_column_offset) % plate_capacity
+            well_label = well_labels[well_position]
+            actual_volume = min(volume, effective_well_capacity)
+            source_plates[-1].at[well_label, component] = \
+                actual_volume + dead_volume  # Add dead volume
+            volume -= actual_volume
+            current_well_index += 1
+
+    # Remove rows contain only 0s
+    for i in range(len(source_plates)):
+        plate = source_plates[i]
+        source_plates[i] = plate[(plate.T != 0).any()]
+        # Convert index in 'Well' column
+        source_plates[i].reset_index(inplace=True)
+        source_plates[i] = source_plates[i].rename(columns={'index': 'Well'})
+
+    return source_plates
 
 
-def nb_wells_needed(
-    param: str,
-    volume: float,
-    param_dead_volume: float,
-    opt_well_vol: List,
-    plate: Plate,
-    logger: Logger = getLogger(__name__)
-) -> int:
+def extract_literal_numeric(s):
     """
-    Calculate the number of wells needed to store the volume
+    Extracts the first literal part and the first numeric part
+    from a given string, e.g. 'A123' -> ('A', '123').
+    All remaining parts, are ignored, e.g. 'xYA123B456' -> ('xYA', '123').
 
-    Parameters
-    ----------
-    param : str
-        Parameter name
-    volume : float
-        Volume to store
-    param_dead_volume: float
-        DeadVolume of parameter
-    opt_well_vol: List
-        List of parameters to optimize. set to [] if none
-    plate : Plate
-        Plate to store the volume
-    logger : Logger
-        Logger
+    Args:
+        s (str): The input string to extract from.
 
-    Returns
-    -------
-    nb_wells : int
-        Number of wells needed
-    volume_per_well : float
-        Volume per well
+    Returns:
+        tuple: A tuple containing the literal part and numeric part extracted
+               from the input string.
+               If the pattern is not found, returns (None, None).
     """
-    logger.debug(f'param: {param}, volume: {volume}')
-    logger.debug(f'plate: {plate}')
+    # Pattern to match the literal part (letters) and the numeric part (digits)
+    pattern = r'([A-Za-z]+)(\d+)'
 
-    # Take account of deadVolumes
-    # Multiple of 2.5 (ECHO)
-    dead_volume = max(
-        plate.get_dead_volume(),
-        param_dead_volume
-    )
-    well_net_capacity = floor(
-        (
-            plate.get_well_capacity()
-            - dead_volume
-        ) / 2.5
-    ) * 2.5
-    logger.debug(f'well_net_capacity: {well_net_capacity}')
-    # Volume w/o deadVolumes
-    nb_wells = ceil(volume / well_net_capacity)
-    logger.debug(f'nb_wells: {nb_wells}')
-    # Raw volume per well
-    # Multiple of 2.5 (ECHO)
-    net_volume_per_well = ceil(
-        volume / nb_wells / 2.5
-    ) * 2.5
-    logger.debug(f'net_volume_per_well: {net_volume_per_well}')
-    logger.debug(f'optmize_well_volumes: {opt_well_vol}')
-    # Optimize well volume
-    if (
-        param in opt_well_vol
-        or opt_well_vol == ['all']
-    ):
-        # Net volume per well
-        volume_per_well = (
-            net_volume_per_well
-            + dead_volume
-        )
+    # Search for the pattern in the input string
+    match = re_match(pattern, s)
+
+    if match:
+        # Extract the literal and numeric parts
+        literal_part = match.group(1)
+        numeric_part = match.group(2)
+        return literal_part, numeric_part
     else:
-        volume_per_well = plate.get_well_capacity()
+        return None, None
 
-    return nb_wells, volume_per_well
+
+def set_grid_for_display(plate, dimensions):
+    """
+    Returns a DataFrame with 'X' in the wells where the plate has non-0 values.
+
+    Args:
+        plate (DataFrame):
+            The plate data containing well information.
+        dimensions (tuple):
+            The dimensions of the plate (number of rows, number of columns).
+
+    Returns:
+        None
+
+    """
+    well_labels = well_label_generator(dimensions)
+    # Extract with regex numeric and literal parts from well labels
+    rows = set()
+    cols = set()
+    for well in well_labels:
+        row, col = extract_literal_numeric(well)
+        rows.add(row)
+        cols.add(col)
+    rows = sorted(rows)
+    cols = list(map(str, sorted([int(x) for x in cols])))
+
+    # Extract number of rows and columns from dimensions
+    grid = DataFrame('', columns=cols, index=rows)
+    # For each non-0 value in the plate, write an 'X' in the corresponding well
+    for _, row in plate.iterrows():
+        well = row['Well']
+        row, col = extract_literal_numeric(well)
+        grid.at[row, col] = 'X'
+
+    return grid

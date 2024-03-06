@@ -5,11 +5,9 @@ from argparse import (
 from os import getcwd as os_getcwd
 
 from brs_utils import add_logger_args
-from icfree._version import __version__
 
 DEFAULT_ARGS = {
     'OUTPUT_FOLDER': os_getcwd(),
-    'SAMPLE_VOLUME': 1000,
     'SRC_PLT_DEAD_VOLUME': 15000,
     'SRC_PLT_WELL_CAPACITY': 60000,
     'SRC_PLT_DIM': '16x24',
@@ -19,37 +17,43 @@ DEFAULT_ARGS = {
     'DST_PLT_WELL_CAPACITY': 60000,
     'DST_PLT_DIM': '16x24',
     'NPLICATES': 1,
-    'NEW_COL_COMP': None,
-    'KEEP_NIL_VOL': False,
-    'OPTIMIZE_WELL_VOLUMES': ['none'],
+    'NEW_COL_COMP': [],
+    # 'KEEP_NIL_VOL': False,
+    # 'OPTIMIZE_WELL_VOLUMES': ['none'],
     'OUTPUT_FORMAT': 'csv'
 }
 
 
-def build_args_parser(program, description):
+def build_args_parser(signature, description):
 
     parser = ArgumentParser(
-        program,
-        description
+        signature.split(' ')[0],
+        description,
     )
 
-    parser = add_arguments(parser)
+    parser = add_arguments(parser, signature)
 
     return parser
 
 
-def add_arguments(parser):
+def add_arguments(parser, signature):
+
+    # parser.add_argument(
+    #     'parameters',
+    #     type=str,
+    #     help='Path to a .csv file containing component parameters',
+    # )
 
     parser.add_argument(
-        'parameters',
-        type=str,
-        help='Path to a .tsv file containing component parameters',
-    )
-
-    parser.add_argument(
-        'volumes',
+        'volumes_file',
         type=str,
         help='Path to a .tsv file containing volumes',
+    )
+    parser.add_argument(
+        '-v', '--sample-volume',
+        type=float,
+        required=True,
+        help=('Final sample volume in each well in nL.')
     )
 
     src_plates_group = parser.add_argument_group("Source Plates")
@@ -95,13 +99,6 @@ def add_arguments(parser):
 
     dst_plates_group = parser.add_argument_group("Destination Plates")
     dst_plates_group.add_argument(
-        '-ddv', '--dst-plt-dead-volume',
-        type=int,
-        default=DEFAULT_ARGS['DST_PLT_DEAD_VOLUME'],
-        help=('deadVolume to add in the dest plate in nL'
-              f' (default: {DEFAULT_ARGS["DST_PLT_DEAD_VOLUME"]})')
-    )
-    dst_plates_group.add_argument(
         '-dsw', '--dst-start-well',
         type=str,
         default=DEFAULT_ARGS['DST_PLT_START_WELL'],
@@ -125,34 +122,27 @@ def add_arguments(parser):
               f' (default: {DEFAULT_ARGS["DST_PLT_WELL_CAPACITY"]})')
     )
 
-    vol_group = parser.add_argument_group("Volumes")
-    vol_group.add_argument(
-        '-knv', '--keep-nil-vol',
-        type=bool,
-        # action=BooleanOptionalAction,
-        default=DEFAULT_ARGS['KEEP_NIL_VOL'],
-        help='Keep nil volumes in instructions or not (default: yes)'
-    )
+    # vol_group = parser.add_argument_group("Volumes")
+    # vol_group.add_argument(
+    #     '-knv', '--keep-nil-vol',
+    #     type=bool,
+    #     # action=BooleanOptionalAction,
+    #     default=DEFAULT_ARGS['KEEP_NIL_VOL'],
+    #     help='Keep nil volumes in instructions or not (default: yes)'
+    # )
 
-    vol_group.add_argument(
-        '-owv', '--opt-well-vol',
-        nargs='*',
-        type=str,
-        default=DEFAULT_ARGS["OPTIMIZE_WELL_VOLUMES"],
-        help=('Save volumes in source plate for all factors. '
-              'It may trigger more volume pipetting warnings. '
-              'If list of factors is given (separated by blanks), '
-              'save only for these ones '
-              f' (default: {DEFAULT_ARGS["OPTIMIZE_WELL_VOLUMES"]}).')
-    )
-    vol_group.add_argument(
-        '-v', '--sample-volume',
-        type=float,
-        default=DEFAULT_ARGS['SAMPLE_VOLUME'],
-        help=('Final sample volume in each well in nL'
-              f' (default: {DEFAULT_ARGS["SAMPLE_VOLUME"]})')
-    )
-    vol_group.add_argument(
+    # vol_group.add_argument(
+    #     '-owv', '--opt-well-vol',
+    #     nargs='*',
+    #     type=str,
+    #     default=DEFAULT_ARGS["OPTIMIZE_WELL_VOLUMES"],
+    #     help=('Save volumes in source plate for all factors. '
+    #           'It may trigger more volume pipetting warnings. '
+    #           'If list of factors is given (separated by blanks), '
+    #           'save only for these ones '
+    #           f' (default: {DEFAULT_ARGS["OPTIMIZE_WELL_VOLUMES"]}).')
+    # )
+    parser.add_argument(
         '--nplicates',
         type=int,
         default=DEFAULT_ARGS['NPLICATES'],
@@ -182,7 +172,7 @@ def add_arguments(parser):
     parser.add_argument(
         '--version',
         action='version',
-        version='%(prog)s {}'.format(__version__),
+        version=signature,
         help='show the version number and exit'
     )
 
