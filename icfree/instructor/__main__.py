@@ -29,7 +29,7 @@ def main():
         destination_plate_paths=args.destination_plates,
         split_upper_vol=args.split_upper_vol,
         split_lower_vol=args.split_lower_vol,
-        src_plate_type_option=args.src_plate_type,
+        src_plate_type=args.src_plate_type,
         logger=logger
     )
 

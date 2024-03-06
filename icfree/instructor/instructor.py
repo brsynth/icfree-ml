@@ -65,7 +65,6 @@ def get_plate_index(
     Returns:
         int: The plate index for the given component.
     """
-    logger.info("Getting plate index for component...")
     for i in range(len(plate_dfs)):
         if component in plate_dfs[i].columns:
             return i
