@@ -3,7 +3,10 @@ Converter module
 
 Converts concentrations into volumes from sampler module
 '''
-import sys
+from sys import (
+    modules as sys_modules,
+    exit as sys_exit
+)
 from logging import (
     Logger,
     getLogger
@@ -17,6 +20,9 @@ from brs_utils import (
 from .converter import concentrations_to_volumes
 from .args import build_args_parser
 from icfree.utils import save_df
+from icfree._version import __version__
+
+__signature__ = f'{sys_modules[__name__].__package__} {__version__}'
 
 
 def input_importer(
@@ -56,23 +62,23 @@ def input_importer(
     return parameters_df, values_df
 
 
-def main():
+def main(args):
     """
     Main function
     """
     parser = build_args_parser(
-        program='converter',
+        signature=__signature__,
         description='Convert concentrations into volumes'
     )
 
-    args = parser.parse_args()
+    args = parser.parse_args(args)
 
     # CREATE LOGGER
     logger = create_logger(parser.prog, args.log)
 
     (parameters_df,
      concentrations_df) = input_importer(
-        args.cfps,
+        args.parameters,
         args.concentrations,
         logger=logger
     )
@@ -93,16 +99,16 @@ def main():
         )
     except ValueError as e:
         logger.error(f'{e}\nExiting...')
-        return -1
+        sys_exit(-1)
 
     # Save volumes
     save_df(
         df=volumes_df,
-        outfile='sampling_volumes.tsv',
-        output_folder=args.output_folder,
+        outfile=args.outfile,
         logger=logger
     )
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    import sys
+    sys_exit(main(sys.argv[1:]))

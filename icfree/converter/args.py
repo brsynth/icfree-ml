@@ -1,35 +1,28 @@
-from argparse import (
-    ArgumentParser,
-    # BooleanOptionalAction
-)
-from os import getcwd as os_getcwd
+from argparse import ArgumentParser
 
 from brs_utils import add_logger_args
 from icfree._version import __version__
 
 
 DEFAULT_ARGS = {
-    'OUTPUT_FOLDER': os_getcwd(),
     'SAMPLE_VOLUME': 1000,
     'ROBOT': 'echo',
 }
 
 
-def build_args_parser(
-        program,
-        description):
+def build_args_parser(signature, description):
 
     parser = ArgumentParser(
-        program,
+        signature.split(' ')[0],
         description,
     )
 
-    parser = add_arguments(parser)
+    parser = add_arguments(parser, signature)
 
     return parser
 
 
-def add_arguments(parser):
+def add_arguments(parser, signature):
 
     parser.add_argument(
         'parameters',
@@ -52,11 +45,10 @@ def add_arguments(parser):
     )
 
     parser.add_argument(
-        '-of', '--output-folder',
+        '-o', '--outfile',
         type=str,
-        default=DEFAULT_ARGS['OUTPUT_FOLDER'],
-        help=('Output folder to write output files'
-              f' (default: {DEFAULT_ARGS["OUTPUT_FOLDER"]})')
+        required=True,
+        help=('Output file to write the converted volumes')
     )
 
     parser.add_argument(
@@ -73,7 +65,7 @@ def add_arguments(parser):
     parser.add_argument(
         '--version',
         action='version',
-        version='%(prog)s {}'.format(__version__),
+        version=signature,
         help='show the version number and exit'
     )
 
