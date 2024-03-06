@@ -7,7 +7,7 @@ from scipy.stats import qmc
 from .args import DEFAULTS
 
 
-def load_data(
+def load_parameters_file(
     file_path: str,
     logger: Logger = getLogger(__name__)
 ) -> tuple:
@@ -27,7 +27,11 @@ def load_data(
     logger.info("Loading data from file.")
     data = pd.read_csv(file_path, delimiter='\t')
     # replace NaN in Ratios|Step|NbBins with empty string
-    data['Ratios|Step|NbBins'] = data['Ratios|Step|NbBins'].fillna('1||')
+    if 'Ratios|Step|NbBins' in data.columns:
+        data['Ratios|Step|NbBins'] = data['Ratios|Step|NbBins'].fillna('1||')
+    # replace NaN in deadVolume with 0
+    if 'deadVolume' in data.columns:
+        data['deadVolume'] = data['deadVolume'].fillna(0)
     return data
 
 

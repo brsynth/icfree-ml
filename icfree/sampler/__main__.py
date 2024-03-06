@@ -7,7 +7,7 @@ from brs_utils import (
 from icfree._version import __version__
 from .args import build_args_parser
 from .sampler import (
-    load_data,
+    load_parameters_file,
     get_discrete_ranges,
     sampling
 )
@@ -35,7 +35,7 @@ def main(args):
 
     # Load the data from file
     try:
-        data = load_data(args.input_file, logger)
+        data = load_parameters_file(args.input_file, logger)
     except FileNotFoundError:
         logger.error("File not found. Exiting.")
         exit()
