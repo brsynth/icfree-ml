@@ -26,7 +26,7 @@ python -m icfree.converter <parameters.tsv> <concentrations.tsv>
 ### Optional arguments
 <ul>
 <li><code>-v</code> or <code>--sample_volume</code>: Final sample volume in each well in nL (default: 1000)</li>
-<li><code>-of</code>, <code>--output-folder</code>: Output folder to write output files (default: working dir)</li>
+<li><code>-o</code>, <code>--outfile</code>: Output file to write volumes to</li>
 <li><code>-r</code>, <code>--robot</code>: Robot to use (default: echo)</li>
 </ul>
 
@@ -35,7 +35,7 @@ python -m icfree.converter <parameters.tsv> <concentrations.tsv>
 python -m icfree.converter \
   tests/data/converter/input/parameters.tsv \
   tests/data/converter/input/sampling_concentrations.tsv \
-  -of out
+  -o out
 ~~~
 
 The output file contains the volumes and can be found here: [volumes.tsv](/tests/data/converter/output/sampling_volumes.tsv)
