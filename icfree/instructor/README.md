@@ -10,30 +10,35 @@ The module generates a list of instructions to perform the experiment on a given
 ### Running from the CLI
 ~~~bash
 python -m icfree.instructor 
-  --source_plates <src_plate_file_1.json> <src_plate_file_2.json>... \
-  --dest_plates <dst_plate_file_1.json> <dst_plate_file_2.json>... \
+  --source_plates <src_plate_file_1.csv> <src_plate_file_2.csv>... \
+  --dest_plates <dst_plate_file_1.csv> <dst_plate_file_2.csv>... \
 ~~~
 
 ### Positional arguments
-* [src_plate.json](/tests/data/instructor/input/source_plate.json): File containing the source plate description.
-* [dst_plate.json](/tests/data/instructor/input/destination_plate.json): File containing the destination plate description.
+* <code>--source-plates</code>: Source plates files.</li>
+* <code>--destination-plates</code>: Destination plates files.</li>
+* <code>-of</code>, <code>--output-file</code>: Output file to write output files (default: working dir)
 
 ### Optional arguments
 <ul>
-  <li><code>-of</code>, <code>--output-folder</code>: Output folder to write output files (default: working dir)</li>
-  <li><code>--robot</code>: Robot name (default: echo)</li>
-  <li><code>--source_plates</code>: Source plates files.</li>
-  <li><code>--dest_plates</code>: Destination plates files.</li>
+  <li><code>-suv</code>, <code>--split-upper-vol</code>: Max value for volume transfer, split instruction beyond this value.</li>
+  <li><code>-slv</code>, <code>--split-lower-vol</code>: If the last split instruction transfers a volume below this value, re-integrate this volume to the penultimate split instruction.</li>
+  <li><code>-soc</code>, <code>--split-outfile-components</code>: Generate one output file per component specified in this list.</li>
+  <li><code>-spt</code>, <code>--src-plate-type</code>: Specifies the plate type for each component listed (default: 'ALL:384PP_AQ_GP3').</li>
 </ul>
 
 ### Example
 ~~~bash
 python -m icfree.instructor \
-  --source_plates tests/data/instructor/input/source_plate.json \
-  --dest_plates tests/data/instructor/input/destination_plate.json \
+  --source_plates tests/data/instructor/input/source_plate.csv \
+  --dest_plates tests/data/instructor/input/destination_plate.csv \
   --robot echo \
   -of out
 ~~~
+
+with:
+* [source_plate.csv](/tests/data/instructor/input/source_plate.csv): File containing the source plate description.
+* [destination_plate.csv](/tests/data/instructor/input/destination_plate.csv): File containing the destination plate description.
 
 ### Output
 The output files is:
@@ -47,7 +52,7 @@ python -m icfree.instructor --help
 ~~~
 
 ### Authors
-Joan Hérisson
+Joan Hérisson (with help of ChatGPT-4)
 
 ### License
 Released under the MIT licence. See the [LICENSE](https://github.com/brsynth/icfree-ml/blob/main/LICENSE.md) file for details.
