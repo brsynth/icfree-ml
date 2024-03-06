@@ -20,9 +20,9 @@ from icfree.sampler.sampler import (
     generate_all_combinations,
     random_sampling,
     sampling,
-    load_data
+    load_parameters_file
 )
-from icfree.sampler.args import build_args_parser, DEFAULTS
+from icfree.sampler.args import build_args_parser
 from icfree.sampler.__main__ import main
 
 
@@ -673,25 +673,37 @@ class TestSampling(unittest.TestCase):
             sampling(self.discrete_ranges, -1, 'auto', self.seed)
 
 
-class TestLoadData(unittest.TestCase):
-    def test_with_existing_file(self):
-        data = load_data(input_file)
-        expected = pd.DataFrame({
+class TestLoadParametersFile(unittest.TestCase):
+    def setUp(self) -> None:
+        self.parameters_df = pd.DataFrame({
             'Component': ['Component_1', 'Component_2', 'Component_3', 'Component_4', 'Component_5', 'Component_6'],
             'maxValue': [200, 125, 40, 100, 400, 100],
             'Ratios|Step|NbBins': ['0.0,0.1,0.3,0.5,1.0||', '1||', '1||', '|10|', '||10', '1'
             ]
         })
-        pd.testing.assert_frame_equal(data, expected)
+
+    def test_with_existing_file(self):
+        data = load_parameters_file(input_file)
+        pd.testing.assert_frame_equal(data, self.parameters_df)
 
     def test_invalid_file_path(self):
         with self.assertRaises(FileNotFoundError):
-            load_data('nonexistent_file.csv')
+            load_parameters_file('nonexistent_file.csv')
 
     def test_empty_file(self):
         with NamedTemporaryFile(mode='w') as temp_file:
             with self.assertRaises(pd.errors.EmptyDataError):
-                load_data(temp_file.name)
+                load_parameters_file(temp_file.name)
+
+    def test_with_dead_volume(self):
+        parameters_df = self.parameters_df.copy()
+        # Add deadVolume column with no value
+        parameters_df['deadVolume'] = ""
+        with NamedTemporaryFile(mode='w', suffix='.tsv') as temp_file:
+            parameters_df.to_csv(temp_file.name, index=False, sep='\t')
+            data = load_parameters_file(temp_file.name)
+            parameters_df['deadVolume'] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+            pd.testing.assert_frame_equal(data, parameters_df)
 
 
 class TestArgsParser(unittest.TestCase):
@@ -774,7 +786,7 @@ class TestCLI(unittest.TestCase):
                 '--method', 'lhs',
                 '--seed', '42'
             ]
-        with patch('icfree.sampler.__main__.load_data', side_effect=ValueError("Invalid method")):
+        with patch('icfree.sampler.__main__.load_parameters_file', side_effect=ValueError("Invalid method")):
             with self.assertRaises(SystemExit):
                 main(args)
         with patch('icfree.sampler.__main__.sampling', side_effect=ValueError("Invalid method")):
@@ -798,7 +810,6 @@ class TestCLI(unittest.TestCase):
             actual = pd.read_csv(temp_file.name)
             expected = pd.read_csv(ref_output_file)
             pd.testing.assert_frame_equal(actual, expected)
-
 
     def test_subprocess_call(self):
         with NamedTemporaryFile(mode='w', suffix='.csv') as temp_file:

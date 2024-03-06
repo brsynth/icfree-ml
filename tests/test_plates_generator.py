@@ -1,688 +1,302 @@
-# Tests plates_generator.py
-from unittest import (
-    TestCase
-)
-from pytest import (
-    raises as pytest_raises
-)
-
-from os import (
-    path as os_path
-)
-from json import (
-    load as json_load,
-    dumps as json_dumps
-)
-from logging import getLogger
-from pandas import (
-    read_csv as pd_read_csv,
-    testing as pd_testing
-)
-from tempfile import gettempdir
-from uuid import uuid1
+import unittest
+import pandas as pd
+from math import ceil
 
 from icfree.plates_generator.plates_generator import (
-    init_plate,
-    dst_plate_generator,
-    src_plate_generator,
-    extract_dead_volumes
+    well_label_generator,
+    gen_dst_plt,
+    gen_src_plt,
+    extract_literal_numeric,
+    set_grid_for_display
 )
-from icfree.plates_generator.args import DEFAULT_ARGS
-from icfree.plates_generator.__main__ import input_importer
-from icfree.plates_generator.plate import Plate
+from icfree.plates_generator.args import build_args_parser
 
 
-class TestPlatesGenerator(TestCase):
+class TestWellLabelGenerator(unittest.TestCase):
+    def test_standard_dimensions(self):
+        self.assertEqual(well_label_generator('4x6'), 
+                         ['A1', 'B1', 'C1', 'D1',
+                          'A2', 'B2', 'C2', 'D2',
+                          'A3', 'B3', 'C3', 'D3',
+                          'A4', 'B4', 'C4', 'D4',
+                          'A5', 'B5', 'C5', 'D5',
+                          'A6', 'B6', 'C6', 'D6'])
 
+    def test_single_row(self):
+        self.assertEqual(well_label_generator('1x10'), 
+                         ['A1', 'A2', 'A3', 'A4', 'A5', 'A6', 'A7', 'A8', 'A9', 'A10'])
+
+    def test_single_column(self):
+        self.assertEqual(well_label_generator('10x1'), 
+                         ['A1', 'B1', 'C1', 'D1', 'E1', 'F1', 'G1', 'H1', 'I1', 'J1'])
+
+    def test_max_single_letter_rows(self):
+        self.assertEqual(well_label_generator('26x1'), 
+                         [f"{chr(65+i)}1" for i in range(26)])
+
+    def test_first_double_letter_row(self):
+        self.assertEqual(well_label_generator('27x1'), 
+                         [f"{chr(65+i)}1" for i in range(26)] + ['AA1'])
+
+    def test_large_number_of_columns(self):
+        self.assertEqual(well_label_generator('1x100'), 
+                         [f"A{i+1}" for i in range(100)])
+
+    def test_large_number_of_rows(self):
+        expected = [f"{chr(65+j)}1" for j in range(26)]
+        for i in range(2):
+            expected += [f"{chr(65+i)}{chr(65+j)}1" for j in range(26)]
+        expected += [f"{chr(65+2)}{chr(65+j)}1" for j in range(22)]
+        self.assertEqual(well_label_generator('100x1'), 
+                         expected)
+
+    def test_invalid_dimensions_format(self):
+        with self.assertRaises(ValueError):
+            well_label_generator('3x')
+
+    def test_zero_dimensions(self):
+        self.assertEqual(well_label_generator('0x5'), [])
+        self.assertEqual(well_label_generator('5x0'), [])
+
+    def test_high_dimensions(self):
+        # This test ensures the function can handle a large number of rows and columns
+        result = well_label_generator('50x50')
+        self.assertEqual(len(result), 2500)  # Ensure the total count of labels is correct
+        self.assertTrue(result[-1], 'AX50')  # Check the last label for correctness
+
+
+class TestGenDstPlt(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        # Mock DataFrame setup
+        cls.mock_df = pd.DataFrame({
+            'Component1': [100, 200, 300],
+            'Component2': [50, 100, 150]
+        })
+
+    def test_standard_case(self):
+        result = gen_dst_plt(self.mock_df.copy(), 1000, 60000, '8x12', 'A1', 1)
+        self.assertIsInstance(result, list)
+        self.assertEqual(len(result), 1)  # Expecting a single plate
+        self.assertTrue('Well' in result[0].columns)
+
+    def test_sample_volume_exceeds_well_capacity(self):
+        with self.assertRaises(ValueError):
+            gen_dst_plt(self.mock_df.copy(), 100000, 60000, '8x12', 'A1', 1)
+
+    def test_single_plate_distribution(self):
+        result = gen_dst_plt(self.mock_df.copy(), 2000, 60000, '8x12', 'A1', 1)
+        self.assertEqual(len(result), 1)
+
+    def test_multiple_plate_distribution(self):
+        result = gen_dst_plt(self.mock_df.copy(), 2000, 60000, '3x3', 'A1', 10)
+        self.assertTrue(len(result) > 1)
+
+    def test_starting_well_mid_plate(self):
+        result = gen_dst_plt(self.mock_df.copy(), 2000, 60000, '8x12', 'B3', 1)
+        self.assertTrue(result[0]['Well'].iloc[0], 'B3')
+
+    def test_exact_fit(self):
+        result = gen_dst_plt(self.mock_df.copy(), 2000, 60000, '1x3', 'A1', 1)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(len(result[0]), 3)
+
+    def test_overcapacity(self):
+        result = gen_dst_plt(self.mock_df.copy(), 2000, 60000, '1x2', 'A1', 2)
+        self.assertTrue(len(result) > 1)  # Expecting multiple plates due to overcapacity
+
+    def test_negative_water_volume(self):
+        with self.assertRaises(ValueError):
+            gen_dst_plt(pd.DataFrame({'Component1': [1000], 'Component2': [1100]}), 2000, 60000, '8x12', 'A1', 1)
+
+    def test_edge_cases(self):
+        # Empty DataFrame
+        self.assertEqual([], gen_dst_plt(pd.DataFrame(), 2000, 60000, '8x12', 'A1', 1))
+        # Zero replicates
+        self.assertEqual([], gen_dst_plt(self.mock_df.copy(), 2000, 60000, '8x12', 'A1', 0))
+        # Invalid starting well
+        with self.assertRaises(ValueError):
+            gen_dst_plt(self.mock_df.copy(), 2000, 60000, '8x12', 'Z1', 1)
+
+
+class TestGenSrcPlt(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        # Setup for mock destination plates
+        cls.dest_plates = [
+            pd.DataFrame({
+                'Well': ['A1', 'A2', 'A3'],
+                'Component1': [20, 30, 40],
+                'Component2': [10, 15, 25],
+                'Water': [70, 55, 35]
+            }),
+            pd.DataFrame({
+                'Well': ['A1', 'A2', 'A3'],
+                'Component1': [25, 35, 45],
+                'Component2': [15, 20, 30],
+                'Water': [60, 45, 25]
+            })
+        ]
+
+    def test_basic_functionality(self):
+        source_plates = gen_src_plt(self.dest_plates, 100, '8x12', 'A1', [], 10)
+        self.assertIsInstance(source_plates, list)
+        self.assertTrue(len(source_plates) > 0)
+
+    def test_single_component_distribution(self):
+        # Assuming the test data setup is correct
+        component_volume = sum([plate['Component1'].sum() for plate in self.dest_plates])
+        effective_well_capacity = 90  # 100 - 10 dead volume
+        expected_wells = ceil(component_volume / effective_well_capacity)
+        source_plates = gen_src_plt(self.dest_plates, 100, '8x12', 'A1', [], 10)
+        actual_wells = sum(plate['Component1'].astype(bool).sum() for plate in source_plates)
+        self.assertEqual(expected_wells, actual_wells)
+
+    def test_multiple_component_distribution(self):
+        source_plates = gen_src_plt(self.dest_plates, 100, '8x12', 'A1', [], 10)
+        self.assertTrue(all(['Component1' in plate for plate in source_plates]))
+        self.assertTrue(all(['Component2' in plate for plate in source_plates]))
+
+    def test_new_column_requirement(self):
+        source_plates = gen_src_plt(self.dest_plates, 100, '8x12', 'A1', ['Component2'], 10)
+        # Get the 'Well' value for the first non-zero value in the 'Component2' column
+        # and check if it's in a new column in the plate
+        well = source_plates[0].loc[source_plates[0]['Component2'] > 0, 'Well'].values
+        self.assertEqual(well[0], 'A2')  # Expecting the well to be in a new column
+
+    def test_starting_well_effect(self):
+        source_plates = gen_src_plt(self.dest_plates, 100, '8x12', 'B2', [], 10)
+        # Get the 'Well' value for the last non-0 value in the first plate
+        well = source_plates[0]['Well'].iloc[-1]
+        self.assertEqual(well, 'B3')  # Expecting the well to be the starting well
+
+    def test_empty_destination_plates(self):
+        source_plates = gen_src_plt([], 100, '8x12', 'A1', [], 10)
+        self.assertTrue(source_plates[0].empty)
+
+    def test_invalid_parameters(self):
+        # Negative well capacity
+        with self.assertRaises(ValueError):
+            gen_src_plt(self.dest_plates, -100, '8x12', 'A1', [], 10)
+        # Negative dead volume
+        with self.assertRaises(ValueError):
+            gen_src_plt(self.dest_plates, 100, '8x12', 'A1', [], -10)
+        # Dead volume exceeding well capacity
+        with self.assertRaises(ValueError):
+            gen_src_plt(self.dest_plates, 100, '8x12', 'A1', [], 110)
+
+    def test_plate_capacity_exceeded(self):
+        samples_df = pd.DataFrame({
+            'Component1': [100, 200, 300],
+            'Component2': [50, 100, 150]
+        })
+        # Generate as many duplicates as needed to exceed one single source plate
+        dest_plates = gen_dst_plt(samples_df, 2000, 60000, '8x12', 'A1', 2)
+        result = gen_src_plt(dest_plates, 100, '8x12', 'A1', [], 10)
+        self.assertTrue(len(result) > 1)  # Expecting multiple plates due to overcapacity
+
+
+class TestExtractLiteralNumeric(unittest.TestCase):
+    def test_basic_match(self):
+        self.assertEqual(extract_literal_numeric('A123'), ('A', '123'))
+
+    def test_no_match(self):
+        self.assertEqual(extract_literal_numeric('123A'), (None, None))
+        self.assertEqual(extract_literal_numeric('ABC'), (None, None))
+
+    def test_multiple_matches(self):
+        self.assertEqual(extract_literal_numeric('ABC123XYZ456'), ('ABC', '123'))
+
+    def test_special_characters(self):
+        self.assertEqual(extract_literal_numeric('AB-CD123'), (None, None))
+        self.assertEqual(extract_literal_numeric('AB CD123'), (None, None))
+
+    def test_case_sensitivity(self):
+        self.assertEqual(extract_literal_numeric('aBc123'), ('aBc', '123'))
+
+    def test_long_strings(self):
+        long_input = 'A' * 1000 + '123'
+        self.assertEqual(extract_literal_numeric(long_input), ('A' * 1000, '123'))
+
+    def test_empty_string(self):
+        self.assertEqual(extract_literal_numeric(''), (None, None))
+
+    def test_numeric_only_and_literal_only(self):
+        self.assertEqual(extract_literal_numeric('12345'), (None, None))
+        self.assertEqual(extract_literal_numeric('ABCDE'), (None, None))
+
+
+class TestSetGridForDisplay(unittest.TestCase):
     def setUp(self):
-        self.DATA_FOLDER = os_path.join(
-            os_path.dirname(os_path.realpath(__file__)),
-            'data', 'plates_generator'
-        )
+        # Sample plate data setup
+        self.sample_plate_data = pd.DataFrame({
+            'Well': ['A1', 'B2', 'C3'],
+            'Value': [1, 2, 3]
+        })
 
-        self.INPUT_FOLDER = os_path.join(
-            self.DATA_FOLDER,
-            'input'
-        )
+    def test_standard_usage(self):
+        grid = set_grid_for_display(self.sample_plate_data, '3x3')
+        expected_grid = pd.DataFrame('', columns=['1', '2', '3'], index=['A', 'B', 'C'])
+        expected_grid.at['A', '1'] = 'X'
+        expected_grid.at['B', '2'] = 'X'
+        expected_grid.at['C', '3'] = 'X'
+        pd.testing.assert_frame_equal(grid, expected_grid)
 
-        self.REF_FOLDER = os_path.join(
-            self.DATA_FOLDER,
-            'output'
-        )
+    def test_empty_plate(self):
+        empty_plate_data = pd.DataFrame(columns=['Well', 'Value'])
+        grid = set_grid_for_display(empty_plate_data, '3x3')
+        expected_grid = pd.DataFrame('', columns=['1', '2', '3'], index=['A', 'B', 'C'])
+        pd.testing.assert_frame_equal(grid, expected_grid)
 
-        self.parameters = os_path.join(
-            self.INPUT_FOLDER,
-            'parameters.tsv'
-        )
-
-        self.sampling = os_path.join(
-            self.INPUT_FOLDER,
-            'sampling.tsv'
-        )
-
-    def test_init_plate(self):
-        plate = init_plate(dimensions='16x24')
-        self.assertEqual(len(plate.get_cols()), 24)
-        self.assertEqual(len(plate.get_rows()), 16)
-        self.assertEqual(plate.get_dead_volume(), 15000)
-        self.assertEqual(plate.get_well_capacity(), 60000)
-        self.assertEqual(plate.get_current_well(), 'A1')
-
-    def test_extract_dead_volumes(self):
-        parameters_df, _ = input_importer(
-            self.parameters,
-            self.sampling
-        )
-        # Exract dead plate volumes from cfps_parameters_df
-        dead_volumes = extract_dead_volumes(parameters_df)
-        self.assertEqual(
-            dead_volumes,
-            {
-                'Component_1': 0,
-                'Component_2': 0,
-                'Component_3': 0,
-                'Component_4': 0,
-                'Component_5': 0,
-                'Component_6': 0,
-                'Component_7': 0,
-                'Component_8': 0,
-                'Water': 0
-            }
-        )
-
-    def test_src_plate_generator(self):
-        sample_volume = 10000
-        parameters_df, values_df = input_importer(
-            self.parameters,
-            self.sampling
-        )
-        # Extract dead plate volumes from parameters_df
-        dead_volumes = extract_dead_volumes(parameters_df)
-        values_df['Water'] = \
-            sample_volume - values_df.sum(axis=1)
-
-        # Generate dest plates
-        dest_plates = dst_plate_generator(
-            volumes=values_df,
-            start_well='A1',
-            well_capacity=60000,
-            vertical=True,
-        )
-
-        # Generate source plates
-        source_plates = src_plate_generator(
-            dest_plates=dest_plates,
-            plate_dead_volume=15000,
-            well_capacity=60000,
-            param_dead_volumes=dead_volumes,
-            start_well='A1',
-            opt_well_vol=[],
-            vertical=True,
-            dimensions='16x24',
-        )
-        expected_plate = Plate.from_file(
-            os_path.join(self.REF_FOLDER, 'source_plate_1.json')
-        )
-        self.assertEqual(source_plates[0], expected_plate)
-
-    def test_src_plate_generator_wOptVol(self):
-        sample_volume = 10000
-        (
-            parameters_df,
-            values_df
-        ) = input_importer(
-            self.parameters,
-            self.sampling
-        )
-        # Exract dead plate volumes from cfps_parameters_df
-        dead_volumes = extract_dead_volumes(parameters_df)
-        values_df['Water'] = \
-            sample_volume - values_df.sum(axis=1)
-
-        # Generate dest plates
-        dest_plates = dst_plate_generator(
-            volumes=values_df,
-            start_well='A1',
-            well_capacity=60000,
-            vertical=True,
-        )
-
-        # Generate source plates
-        source_plates = src_plate_generator(
-            dest_plates=dest_plates,
-            plate_dead_volume=15000,
-            well_capacity=60000,
-            param_dead_volumes=dead_volumes,
-            start_well='A1',
-            opt_well_vol=['Component_1'],
-            vertical=True,
-            dimensions='16x24',
-        )
-
-        self.assertEqual(
-            source_plates[0].get_well('A1')['Component_1'],
-            19750.0
-        )
-
-    def test_src_plate_generator_outOfPlate(self):
-        sample_volume = 10000
-        (
-            parameters_df,
-            values_df
-        ) = input_importer(
-            self.parameters,
-            self.sampling
-        )
-        # Exract dead plate volumes from parameters_df
-        dead_volumes = extract_dead_volumes(parameters_df)
-        values_df['Water'] = \
-            sample_volume - values_df.sum(axis=1)
-
-        # Generate dest plates
-        dest_plates = dst_plate_generator(
-            volumes=values_df,
-            start_well='A1',
-            well_capacity=60000,
-            vertical=True,
-        )
-
-        # Generate source plates
-        source_plates = src_plate_generator(
-            dest_plates=dest_plates,
-            plate_dead_volume=15000,
-            well_capacity=60000,
-            param_dead_volumes=dead_volumes,
-            start_well='N24',
-            opt_well_vol=DEFAULT_ARGS['OPTIMIZE_WELL_VOLUMES'],
-            vertical=True,
-            dimensions='16x24',
-        )
-        expected_plate_1 = Plate.from_file(
-            os_path.join(self.REF_FOLDER, 'src_plate_1.json')
-        )
-        expected_plate_2 = Plate.from_file(
-            os_path.join(self.REF_FOLDER, 'src_plate_2.json')
-        )
-
-        self.assertEqual(source_plates[0], expected_plate_1)
-        self.assertEqual(source_plates[1], expected_plate_2)
-
-    def test_src_plate_generator_WithNullVolume(self):
-        sample_volume = 10000
-        parameters_df, values_df = input_importer(
-            self.parameters,
-            self.sampling
-        )
-        # Exract dead plate volumes from parameters_df
-        dead_volumes = extract_dead_volumes(parameters_df)
-        values_df['Water'] = \
-            sample_volume - values_df.sum(axis=1)
-        values_df['Component_1'] = 0
-
-        # Generate dest plates
-        dest_plates = dst_plate_generator(
-            volumes=values_df,
-            start_well='A1',
-            well_capacity=60000,
-            vertical=True,
-        )
-
-        # Generate source plates
-        source_plates = src_plate_generator(
-            dest_plates=dest_plates,
-            plate_dead_volume=15000,
-            well_capacity=60000,
-            param_dead_volumes=dead_volumes,
-            start_well='A1',
-            opt_well_vol=[],
-            vertical=True,
-            dimensions='16x24',
-        )
-        self.assertEqual(
-            source_plates[0].get_well('A1')['Component_2'],
-            60000
-        )
-
-    def test_dst_plate_generator(self):
-        _, values_df = input_importer(
-            self.parameters,
-            self.sampling
-        )
-        # Generate destination plates
-        dest_plates = dst_plate_generator(
-            volumes=values_df,
-            start_well='A1',
-            well_capacity=60000,
-            vertical=True,
-        )
-        expected_plate = Plate.from_file(
-            os_path.join(self.REF_FOLDER, 'destination_plate_1.json')
-        )
-        self.assertEqual(dest_plates[0], expected_plate)
-
-    def test_dst_plate_generator_OutOfPlate(self):
-        _, values_df = input_importer(
-            self.parameters,
-            self.sampling
-        )
-        # Generate destination plates
-        dest_plates = dst_plate_generator(
-            volumes=values_df,
-            start_well='N24',
-            well_capacity=60000,
-            vertical=True,
-        )
-        expected_plate_1 = Plate.from_file(
-            os_path.join(self.REF_FOLDER, 'dst_plate_1.json')
-        )
-        expected_plate_2 = Plate.from_file(
-            os_path.join(self.REF_FOLDER, 'dst_plate_2.json')
-        )
-        self.assertEqual(dest_plates[0], expected_plate_1)
-        self.assertEqual(dest_plates[1], expected_plate_2)
+    def test_full_plate(self):
+        full_plate_data = pd.DataFrame({
+            'Well': ['A1', 'A2', 'A3', 'B1', 'B2', 'B3', 'C1', 'C2', 'C3'],
+            'Value': [1] * 9
+        })
+        grid = set_grid_for_display(full_plate_data, '3x3')
+        expected_grid = pd.DataFrame('X', columns=['1', '2', '3'], index=['A', 'B', 'C'])
+        pd.testing.assert_frame_equal(grid, expected_grid)
 
 
-class TestPlate(TestCase):
-
+class TestArgsParser(unittest.TestCase):
     def setUp(self):
-        self.DATA_FOLDER = os_path.join(
-            os_path.dirname(os_path.realpath(__file__)),
-            'data', 'plates_generator'
+        self.parser = build_args_parser(
+            signature="",
+            description=""
         )
 
-        self.INPUT_FOLDER = os_path.join(
-            self.DATA_FOLDER,
-            'input'
+    def test_valid_input(self):
+        args = self.parser.parse_args(
+            [
+                'sampling.csv',
+                '-of', 'outN',
+                '-ofmt', 'csv',
+                '-sdv', '1000',
+                '-ssw', 'A2',
+                '-spd', '3x3',
+                '-spwc', '10000',
+                '-ncc', 'Component_2',
+                '-dsw', 'B12',
+                '-dpd', '4x4',
+                '-dpwc', '11000',
+                '-v', '5555',
+                '--nplicates', '3'
+            ]
         )
+        self.assertEqual(args.volumes_file, 'sampling.csv')
+        self.assertEqual(args.output_folder, 'outN')
+        self.assertEqual(args.output_format, 'csv')
+        self.assertEqual(args.src_plt_dead_volume, 1000)
+        self.assertEqual(args.src_start_well, 'A2')
+        self.assertEqual(args.src_plt_dim, '3x3')
+        self.assertEqual(args.src_plt_well_capacity, 10000)
+        self.assertEqual(args.new_col_comp, ['Component_2'])
+        self.assertEqual(args.dst_start_well, 'B12')
+        self.assertEqual(args.dst_plt_dim, '4x4')
+        self.assertEqual(args.dst_plt_well_capacity, 11000)
+        self.assertEqual(args.sample_volume, 5555)
+        self.assertEqual(args.nplicates, 3)
 
-        self.REF_FOLDER = os_path.join(
-            self.DATA_FOLDER,
-            'output'
-        )
-
-    def test_plate_vertical(self):
-        plate = Plate(
-            dimensions='16x24',
-            dead_volume=15000,
-            well_capacity=60000,
-            vertical=True
-        )
-        plate.next_well()
-        self.assertEqual(plate.get_current_well(), 'B1')
-
-    def test_plate_horizontal(self):
-        plate = Plate(
-            dimensions='16x24',
-            dead_volume=15000,
-            well_capacity=60000,
-            vertical=False
-        )
-        plate.next_well()
-        self.assertEqual(plate.get_current_well(), 'A2')
-
-    def test_plate_get_dimensions(self):
-        plate = Plate(
-            dimensions='16x24',
-            dead_volume=15000,
-            well_capacity=60000,
-            vertical=True
-        )
-        self.assertEqual(plate.get_dimensions(), '16x24')
-
-    def test_plate_get_list_of_parameters_null(self):
-        plate = Plate(
-            dimensions='16x24',
-            dead_volume=15000,
-            well_capacity=60000,
-            vertical=True
-        )
-        self.assertEqual(plate.get_list_of_parameters(), [])
-
-    def test_plate_well_out_of_range(self):
-        plate = Plate(
-            dimensions='16x24',
-            dead_volume=15000,
-            well_capacity=60000,
-            vertical=True
-        )
-        self.assertTrue(plate.well_out_of_range('A25'))
-
-    def test_plate_from_file(self):
-        plate = Plate.from_file(
-            os_path.join(self.REF_FOLDER, 'dst_plate_1.json')
-        )
-        self.assertEqual(plate.get_well('N24')['Component_1'], 0)
-
-    def test_plate_to_file(self):
-        plate = Plate.from_file(
-            os_path.join(self.REF_FOLDER, 'source_plate_1.json')
-        )
-        tmp_outfile = os_path.join(
-            gettempdir(),
-            str(uuid1())
-        ) + '.csv'
-        plate.to_file(tmp_outfile, 'csv')
-        _tmp_outfile = os_path.splitext(tmp_outfile)
-        plate_test = Plate.from_file(f'{_tmp_outfile[0]}.json')
-        self.assertEqual(plate, plate_test)
-
-    def test_plate_to_csv(self):
-        plate = Plate.from_file(
-            os_path.join(self.REF_FOLDER, 'source_plate_2.json')
-        )
-        tmp_outfile = os_path.join(
-            gettempdir(),
-            str(uuid1())
-        ) + '.csv'
-        plate.to_file(tmp_outfile, 'csv')
-        df = pd_read_csv(f'{tmp_outfile}', index_col=0)
-        ref_df = pd_read_csv(
-            os_path.join(self.REF_FOLDER, 'source_plate_1.csv'),
-            index_col=0
-        )
-        pd_testing.assert_frame_equal(df, ref_df)
-        plate.to_file(tmp_outfile, 'tsv')
-        df = pd_read_csv(f'{tmp_outfile}', index_col=0, sep='\t')
-        ref_df = pd_read_csv(
-            os_path.join(self.REF_FOLDER, 'source_plate_1.tsv'),
-            index_col=0,
-            sep='\t'
-        )
-        pd_testing.assert_frame_equal(df, ref_df)
-
-    def test_plate_get_well(self):
-        plate = Plate.from_file(
-            os_path.join(self.REF_FOLDER, 'dst_plate_1.json')
-        )
-        self.assertEqual(plate.get_well('N24')['Component_1'], 0)
-
-    def test_plate_set_current_well(self):
-        plate = Plate.from_file(
-            os_path.join(self.REF_FOLDER, 'source_plate_1.json')
-        )
-        plate.set_current_well('D4')
-        plate.next_well()
-        self.assertEqual(plate.get_current_well(), 'E4')
-
-    def test_plate_fill_well(self):
-        plate = Plate.from_file(
-            os_path.join(self.REF_FOLDER, 'dst_plate_1.json')
-        )
-        plate.fill_well('Component_1', 12.5, 'A1')
-        plate.fill_well('Component_2', 125.0, 'A1')
-        self.assertEqual(plate.get_well_volume('A1'), 137.5)
-        plate.fill_well('Component_1', 12.5, 'N24')
-        plate.fill_well('Component_2', 125.0, 'N24')
-        self.assertEqual(plate.get_well_volume('N24'), 668.75)
-
-    def test_plate_fill_well_OutOfRange(self):
-        plate = Plate(
-            dimensions='16x24',
-            dead_volume=15000,
-            well_capacity=60000,
-            vertical=True,
-            logger=getLogger('foo')
-        )
-        # Add new parameter with too high volume
-        with pytest_raises(ValueError):
-            plate.fill_well('Component_1', 60001, 'A1')
-        # Add new parameter with out of range well
-        with pytest_raises(IndexError):
-            plate.fill_well('Component_1', 12.5, 'A25')
-        plate = Plate.from_file(
-            os_path.join(self.REF_FOLDER, 'dst_plate_1.json')
-        )
-        # # Add already existing parameter
-        # with pytest_raises(ValueError):
-        #     plate.fill_well('Component_1', 59483, 'N24')
-
-    def test_plate_get_well_volume(self):
-        plate = Plate.from_file(
-            os_path.join(self.REF_FOLDER, 'dst_plate_1.json')
-        )
-        self.assertEqual(plate.get_well_volume('N24'), 531.25)
-        self.assertDictEqual(
-            plate.get_well('N24'),
-            {
-                "Component_1": 0.0,
-                "Component_2": 125.0,
-                "Component_3": 62.5,
-                "Component_4": 93.75,
-                "Component_5": 62.5,
-                "Component_6": 125.0,
-                "Component_7": 0.0,
-                "Component_8": 62.5
-            }
-        )
-
-    def test_plate_to_dict(self):
-        file = os_path.join(self.REF_FOLDER, 'source_plate_1.json')
-        plate = Plate.from_file(file)
-        with open(file, 'r') as f:
-            d_plate = json_load(f)
-        d_plate['Wells'] = Plate.wells_from_csv(d_plate['Wells'])
-        _d_plate = plate.to_dict()
-        self.assertEqual(_d_plate['Dimensions'], d_plate['Dimensions'])
-        self.assertEqual(
-            sorted(_d_plate['Parameters']),
-            sorted(d_plate['Parameters'])
-        )
-        self.assertEqual(_d_plate['Wells'], d_plate['Wells'])
-        self.assertEqual(_d_plate['deadVolume'], d_plate['deadVolume'])
-        self.assertEqual(_d_plate['Well capacity'], d_plate['Well capacity'])
-        # self.assertEqual(_d_plate['Empty wells'], d_plate['Empty wells'])
-        self.assertEqual(_d_plate['Current well'], d_plate['Current well'])
-
-    def test_plate___str__(self):
-        file = os_path.join(self.REF_FOLDER, 'source_plate_1.json')
-        plate = Plate.from_file(file)
-        s_plate = json_dumps(plate.to_dict(), indent=4)
-        self.assertEqual(str(plate), s_plate)
-
-    def test_plate___eq__(self):
-        file = os_path.join(self.REF_FOLDER, 'source_plate_1.json')
-        plate = Plate.from_file(file)
-        plate_test = Plate.from_file(file)
-        self.assertEqual(plate, plate_test)
-        self.assertNotEqual(plate, Plate(dimensions='16x24'))
-
-    def test_plate_reindex_wells_by_factor(self):
-        plate = Plate.from_file(
-            os_path.join(self.REF_FOLDER, 'source_plate_1.json')
-        )
-        d = plate.reindex_wells_by_factor()
-        self.assertDictEqual(
-            d,
-            json_load(
-                open(
-                    os_path.join(
-                        self.REF_FOLDER,
-                        'plate_reindexed_by_factors.json'
-                    )
-                )
-            )
-        )
-
-    def test_plate_get_volumes_summary_dict(self):
-        plate_1 = Plate.from_file(
-            os_path.join(self.REF_FOLDER, 'src_plate_1.json')
-        )
-        plate_2 = Plate.from_file(
-            os_path.join(self.REF_FOLDER, 'src_plate_2.json')
-        )
-        d = Plate.get_volumes_summary(
-            [plate_1, plate_2],
-            type_='dict'
-        )
-        self.assertDictEqual(
-            d,
-            json_load(
-                open(
-                    os_path.join(
-                        self.REF_FOLDER,
-                        'plate_volumes_summary.json'
-                    )
-                )
-            )
-        )
-
-    def test_plate_get_volumes_summary_pandas(self):
-        plate_1 = Plate.from_file(
-            os_path.join(self.REF_FOLDER, 'src_plate_1.json')
-        )
-        plate_2 = Plate.from_file(
-            os_path.join(self.REF_FOLDER, 'src_plate_2.json')
-        )
-        df = Plate.get_volumes_summary(
-            [plate_1, plate_2],
-            type_='pandas'
-        )
-        pd_testing.assert_frame_equal(
-            df,
-            pd_read_csv(
-                open(
-                    os_path.join(
-                        self.REF_FOLDER,
-                        'plate_volumes_summary.csv'
-                    )
-                ),
-                index_col=0
-            )
-        )
-
-    def test_plate_get_volumes_summary_str(self):
-        plate_1 = Plate.from_file(
-            os_path.join(self.REF_FOLDER, 'src_plate_1.json')
-        )
-        plate_2 = Plate.from_file(
-            os_path.join(self.REF_FOLDER, 'src_plate_2.json')
-        )
-        s = Plate.get_volumes_summary(
-            [plate_1, plate_2],
-            type_='str'
-        )
-        with open(
-            os_path.join(
-                self.REF_FOLDER,
-                'plate_volumes_summary.txt'
-            ), 'r'
-        ) as f:
-            lines = f.readlines()
-        self.assertEqual(s, ''.join(lines))
-
-    def test_from_file(self):
-        file = os_path.join(self.REF_FOLDER, 'src_plate_1.json')
-        wells_files = os_path.join(self.REF_FOLDER, 'src_plate_2.csv')
-        plate = Plate.from_file(file, wells_files)
-        self.assertDictEqual(
-            plate.to_dict()['Wells'],
-            Plate.wells_from_csv(wells_files)
-        )
-
-    # One single merged file
-    def test_plate_merge(self):
-        plate_1 = Plate.from_file(
-            os_path.join(self.REF_FOLDER, 'dst_plate_1.json')
-        )
-        plate_2 = Plate.from_file(
-            os_path.join(self.REF_FOLDER, 'dst_plate_2.json')
-        )
-        merged = Plate.merge([plate_1, plate_2])[0].to_dict()
-        ref_plate_dict = json_load(
-            open(
-                os_path.join(
-                    self.REF_FOLDER,
-                    'merged.json'
-                )
-            )
-        )
-        # Sort Parameters list
-        merged['Parameters'].sort()
-        ref_plate_dict['Parameters'].sort()
-        self.assertDictEqual(
-            merged,
-            ref_plate_dict
-        )
-
-    # Merge files with different parameters
-    def test_plate_merge_different_parameters(self):
-        plate_1 = Plate.from_file(
-            os_path.join(self.REF_FOLDER, 'dst_plate_1.json')
-        )
-        plate_2 = Plate.from_file(
-            os_path.join(self.REF_FOLDER, 'dst_plate_2.json')
-        )
-        plate_2.fill_well('Component_9', 1)
-        plate_2.next_well()
-        merged = Plate.merge([plate_1, plate_2])[0].to_dict()
-        ref_plate_dict = json_load(
-            open(
-                os_path.join(
-                    self.REF_FOLDER,
-                    'merged_new_param.json'
-                )
-            )
-        )
-        # Sort Parameters list
-        merged['Parameters'].sort()
-        ref_plate_dict['Parameters'].sort()
-        self.assertDictEqual(
-            merged,
-            ref_plate_dict
-        )
-
-    # Merge plates that generates a new plate
-    def test_plate_merge_new_plate(self):
-        plates = []
-        for i in range(1, 5):
-            plates.append(
-                Plate.from_file(
-                    os_path.join(
-                        self.REF_FOLDER,
-                        'dst_plate_2.json'
-                    )
-                )
-            )
-        merged = Plate.merge(plates)
-        # Convert into list of dicts
-        for i in range(len(merged)):
-            merged[i] = merged[i].to_dict()
-        ref_plate_dicts = []
-        for i in range(len(merged)):
-            ref_plate_dicts.append(
-                json_load(
-                    open(
-                        os_path.join(
-                            self.REF_FOLDER,
-                            f'merged_new_plate_{i+1}.json'
-                        )
-                    )
-                )
-            )
-
-        # Sort Parameters list
-        for i in range(len(merged)):
-            merged[i]['Parameters'].sort()
-            ref_plate_dicts[i]['Parameters'].sort()
-            self.assertDictEqual(
-                merged[i],
-                ref_plate_dicts[i]
-            )
-
-    def test_get_max_volume(self):
-        plate = Plate.from_file(
-            os_path.join(self.REF_FOLDER, 'dst_plate_1.json')
-        )
-        self.assertEqual(
-            plate.get_max_volume('Component_4'),
-            93.75
-        )
-
-    def test_get_max_volume_miss_comp(self):
-        plate = Plate.from_file(
-            os_path.join(self.REF_FOLDER, 'dst_plate_1.json')
-        )
-        self.assertEqual(
-            plate.get_max_volume('FOO'),
-            None
-        )
+    def test_missing_input(self):
+        with self.assertRaises(SystemExit):
+            self.parser.parse_args(['-of', 'outN', '-ofmt', 'csv', '-sdv', '1000', '-ssw', "'A2'", '-spd', "'3x3'", '-spwc', '10000', '--nplicates', '3', '-ncc', 'Component_2', '-dsw', "'B12'", '-dpd', "'4x4'", '-dpwc', '11000', '-v', '5555', '--nplicates', '3'])
