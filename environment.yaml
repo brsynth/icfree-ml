@@ -8,3 +8,4 @@ dependencies:
   - scipy
   - brs_utils
   - scikit-learn
+  - openpyxl
