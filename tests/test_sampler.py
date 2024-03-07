@@ -695,9 +695,9 @@ class TestLoadParametersFile(unittest.TestCase):
             load_parameters_file('nonexistent_file.csv')
 
     def test_empty_file(self):
-        with NamedTemporaryFile(mode='r', suffix='.csv') as temp_file:
-            with self.assertRaises(pd.errors.EmptyDataError):
-                load_parameters_file(temp_file.name)
+        tmp_fn = tmp_filepath(suffix='.csv')
+        with self.assertRaises(pd.errors.EmptyDataError):
+            load_parameters_file(tmp_fn)
 
     def test_with_dead_volume(self):
         parameters_df = self.parameters_df.copy()
