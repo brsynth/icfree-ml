@@ -23,7 +23,7 @@ python -m icfree.plates_generator \
 <ul>
   <li><code>-sdv</code>, <code>--src-plt-dead-volume</code>: dead volume to add in the source plate in nL (default: <code>15000</code>)</li>
   <li><code>-ssw</code>, <code>--src-start-well</code>: Starter well of source plate to begin filling the 384 well-plate. (default: <code>A1</code>)</li>
-  <li><code>-spd</code>, <code>--src-plt-dim</code>: Dimensions of source plate(s). (default: <code>16x24<c/ode>)</li>
+  <li><code>-spd</code>, <code>--src-plt-dim</code>: Dimensions of source plate(s). (default: <code>16x24</code>)</li>
   <li><code>-spwc</code>, <code>--src-plt-well-capacity</code>: Maximum volume capacity of the source plate(s) in nL (default: <code>60000</code>)</li>
   <li><code>-ncc</code>, <code>--new-col-comp</code>: List of components for which the filling will start at a new column in the source plate.</li>
   <li><code>-dsw</code>, <code>--dst-start-well</code>: Starter well of destination plate to begin filling the 384 well-plate. (default: <code>A1</code>)</li>
