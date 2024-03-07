@@ -19,10 +19,10 @@ python -m icfree.sampler <input_file.tsv>
 ## Options
 <ul>  
 <li><code>--output-file</code>: path to the output file where the generated sampling will be saved (default: print on stdout)</li>
-<li><code>--nb-samples</code>: Number of samples to generate for all factors when performing the sampling (default: 100)</li>
-<li><code>--method {lhs, random, all, auto}</code>: sampling method (default: 'auto')</li>
+<li><code>--nb-samples</code>: Number of samples to generate for all factors when performing the sampling (default: <code>100</code>)</li>
+<li><code>--method {lhs, random, all, auto}</code>: sampling method (default: <code>auto</code>)</li>
 <li><code>--nb-bins</code>: number of values for all factors when performing the sampling</li>
-<li><code>--ratios</code>: ratios for creating discrete ranges, e.g. if <code>maxValue</code> is 100 and ratios is set to <code>0 0.1 0.3 0.5 1</code>, available values will be <code>0 10 30 50 100</code>; must be a list of floats between 0.0 and 1.0 (separated by blanks)</li>
+<li><code>--ratios</code>: ratios for creating discrete ranges, e.g. if <code>maxValue</code> is <code>100</code> and ratios is set to <code>0 0.1 0.3 0.5 1</code>, available values will be $0 10 30 50 100$; must be a list of floats between $0.0$ and $1.0$ (separated by blanks)</li>
 <li><code>--seed</code>: seed to reproduce results (same seed number = same results)</li>
 </ul>
 

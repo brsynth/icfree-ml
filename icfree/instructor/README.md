@@ -24,7 +24,7 @@ python -m icfree.instructor
   <li><code>-suv</code>, <code>--split-upper-vol</code>: Max value for volume transfer, split instruction beyond this value.</li>
   <li><code>-slv</code>, <code>--split-lower-vol</code>: If the last split instruction transfers a volume below this value, re-integrate this volume to the penultimate split instruction.</li>
   <li><code>-soc</code>, <code>--split-outfile-components</code>: Generate one output file per component specified in this list.</li>
-  <li><code>-spt</code>, <code>--src-plate-type</code>: Specifies the plate type for each component listed (default: 'ALL:384PP_AQ_GP3').</li>
+  <li><code>-spt</code>, <code>--src-plate-type</code>: Specifies the plate type for each component listed (default: <code>ALL:384PP_AQ_GP3</code>).</li>
 </ul>
 
 ### Example
