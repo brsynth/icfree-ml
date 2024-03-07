@@ -696,8 +696,12 @@ class TestLoadParametersFile(unittest.TestCase):
 
     def test_empty_file(self):
         tmp_fn = tmp_filepath(suffix='.csv')
+        # Create an empty file
+        tmp_f = open(tmp_fn, 'w')
+        tmp_f.close()
         with self.assertRaises(pd.errors.EmptyDataError):
             load_parameters_file(tmp_fn)
+        clean_file(tmp_fn)
 
     def test_with_dead_volume(self):
         parameters_df = self.parameters_df.copy()
