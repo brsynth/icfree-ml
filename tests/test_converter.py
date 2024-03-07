@@ -22,6 +22,8 @@ from icfree.converter.__main__ import (
 from icfree.converter.converter import concentrations_to_volumes
 from icfree.converter.args import build_args_parser
 
+from tests.functions import tmp_filepath, clean_file
+
 
 __DATA_FOLDER = os_path.join(
     os_path.dirname(os_path.realpath(__file__)),
@@ -121,32 +123,34 @@ class TestCLI(TestCase):
         )
 
     def test_valid_input(self):
-        with NamedTemporaryFile(mode='w', suffix='.tsv') as temp_file:
-            args = [
-                parameters,
-                sampling_concentrations,
-                '-v', '1000',
-                '-o', temp_file.name,
-                '-r', 'echo'
-            ]
-            main(args)
-            actual = pd_read_csv(temp_file.name, sep='\t')
-            expected = pd_read_csv(sampling_volumes, sep='\t')
-            pd_testing.assert_frame_equal(actual, expected)
+        tmp_fn = tmp_filepath('.tsv')
+        args = [
+            parameters,
+            sampling_concentrations,
+            '-v', '1000',
+            '-o', tmp_fn,
+            '-r', 'echo'
+        ]
+        main(args)
+        actual = pd_read_csv(tmp_fn, sep='\t')
+        expected = pd_read_csv(sampling_volumes, sep='\t')
+        pd_testing.assert_frame_equal(actual, expected)
+        clean_file(tmp_fn)
 
     def test_other_robot(self):
-        with NamedTemporaryFile(mode='w', suffix='.tsv') as temp_file:
-            args = [
-                parameters,
-                sampling_concentrations,
-                '-v', '1000',
-                '-o', temp_file.name,
-                '-r', 'other'
-            ]
-            main(args)
-            actual = pd_read_csv(temp_file.name, sep='\t')
-            expected = pd_read_csv(sampling_volumes_other, sep='\t')
-            pd_testing.assert_frame_equal(actual, expected)
+        tmp_fn = tmp_filepath('.tsv')
+        args = [
+            parameters,
+            sampling_concentrations,
+            '-v', '1000',
+            '-o', tmp_fn,
+            '-r', 'other'
+        ]
+        main(args)
+        actual = pd_read_csv(tmp_fn, sep='\t')
+        expected = pd_read_csv(sampling_volumes_other, sep='\t')
+        pd_testing.assert_frame_equal(actual, expected)
+        clean_file(tmp_fn)
 
     def test_system_exit(self):
         args = [
@@ -161,9 +165,10 @@ class TestCLI(TestCase):
                 main(args)
 
     def test_subprocess_call(self):
-        with NamedTemporaryFile(mode='w', suffix='.tsv') as temp_file:
-            cmd = 'python -m icfree.converter {} {} -o {} -v 1000 -r echo'.format(parameters, sampling_concentrations, temp_file.name)
-            sp_run(cmd.split())
-            actual = pd_read_csv(temp_file.name)
-            expected = pd_read_csv(sampling_volumes)
-            pd_testing.assert_frame_equal(actual, expected)
+        tmp_fn = tmp_filepath('.tsv')
+        cmd = 'python -m icfree.converter {} {} -o {} -v 1000 -r echo'.format(parameters, sampling_concentrations, tmp_fn)
+        sp_run(cmd.split())
+        actual = pd_read_csv(tmp_fn)
+        expected = pd_read_csv(sampling_volumes)
+        pd_testing.assert_frame_equal(actual, expected)
+        clean_file(tmp_fn)

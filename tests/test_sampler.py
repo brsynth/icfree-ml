@@ -5,7 +5,10 @@ import numpy as np
 from scipy.stats import qmc
 from itertools import product
 from tempfile import NamedTemporaryFile
-from os import path as os_path
+from os import (
+    path as os_path,
+    name as os_name
+)
 from subprocess import run as sp_run
 
 from icfree.sampler.sampler import (
@@ -24,6 +27,8 @@ from icfree.sampler.sampler import (
 )
 from icfree.sampler.args import build_args_parser
 from icfree.sampler.__main__ import main
+
+from tests.functions import tmp_filepath, clean_file
 
 
 DATA_FOLDER = os_path.join(
@@ -50,7 +55,6 @@ ref_output_file = os_path.join(
     REF_FOLDER,
     'sampling.csv'
 )
-
 
 
 class TestExtractSpecs(unittest.TestCase):
@@ -691,7 +695,7 @@ class TestLoadParametersFile(unittest.TestCase):
             load_parameters_file('nonexistent_file.csv')
 
     def test_empty_file(self):
-        with NamedTemporaryFile(mode='w') as temp_file:
+        with NamedTemporaryFile(mode='r', suffix='.csv') as temp_file:
             with self.assertRaises(pd.errors.EmptyDataError):
                 load_parameters_file(temp_file.name)
 
@@ -699,11 +703,12 @@ class TestLoadParametersFile(unittest.TestCase):
         parameters_df = self.parameters_df.copy()
         # Add deadVolume column with no value
         parameters_df['deadVolume'] = ""
-        with NamedTemporaryFile(mode='w', suffix='.tsv') as temp_file:
-            parameters_df.to_csv(temp_file.name, index=False, sep='\t')
-            data = load_parameters_file(temp_file.name)
-            parameters_df['deadVolume'] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-            pd.testing.assert_frame_equal(data, parameters_df)
+        tmp_fn = tmp_filepath(suffix='.tsv')
+        parameters_df.to_csv(tmp_fn, index=False, sep='\t')
+        data = load_parameters_file(tmp_fn)
+        clean_file(tmp_fn)
+        parameters_df['deadVolume'] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        pd.testing.assert_frame_equal(data, parameters_df)
 
 
 class TestArgsParser(unittest.TestCase):
@@ -750,18 +755,21 @@ class TestCLI(unittest.TestCase):
         )
 
     def test_valid_input(self):
-        with NamedTemporaryFile(mode='w', suffix='.csv') as temp_file:
-            args = [
-                    input_file,
-                    '-o', temp_file.name,
-                    '--nb-samples', '40',
-                    '--method', 'lhs',
-                    '--seed', '42'
-                ]
-            main(args)
-            actual = pd.read_csv(temp_file.name)
-            expected = pd.read_csv(ref_output_file)
-            pd.testing.assert_frame_equal(actual, expected)
+        # Do not use NamedTemporaryFile as opening a file
+        # already opened is not supported on Windows
+        tmp_fn = tmp_filepath()
+        args = [
+                input_file,
+                '-o', tmp_fn,
+                '--nb-samples', '40',
+                '--method', 'lhs',
+                '--seed', '42'
+            ]
+        main(args)
+        actual = pd.read_csv(tmp_fn)
+        clean_file(tmp_fn)
+        expected = pd.read_csv(ref_output_file)
+        pd.testing.assert_frame_equal(actual, expected)
 
     def test_missing_input(self):
         with self.assertRaises(SystemExit):
@@ -794,6 +802,9 @@ class TestCLI(unittest.TestCase):
                 main(args)
 
     def test_without_ouput_file(self):
+        # Do not run on Windows
+        if os_name == 'nt':
+            return
         import sys
         with NamedTemporaryFile(mode='w', suffix='.csv') as temp_file:
             # simulate a redirection of the output to a file
@@ -812,9 +823,10 @@ class TestCLI(unittest.TestCase):
             pd.testing.assert_frame_equal(actual, expected)
 
     def test_subprocess_call(self):
-        with NamedTemporaryFile(mode='w', suffix='.csv') as temp_file:
-            cmd = 'python -m icfree.sampler {} -o {} --nb-samples 40 --method lhs --seed 42'.format(input_file, temp_file.name)
-            sp_run(cmd.split())
-            actual = pd.read_csv(temp_file.name)
-            expected = pd.read_csv(ref_output_file)
-            pd.testing.assert_frame_equal(actual, expected)
+        tmp_fn = tmp_filepath()
+        cmd = 'python -m icfree.sampler {} -o {} --nb-samples 40 --method lhs --seed 42 --silent'.format(input_file, tmp_fn)
+        sp_run(cmd.split())
+        actual = pd.read_csv(tmp_fn)
+        clean_file(tmp_fn)
+        expected = pd.read_csv(ref_output_file)
+        pd.testing.assert_frame_equal(actual, expected)

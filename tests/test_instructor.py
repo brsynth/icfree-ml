@@ -15,6 +15,8 @@ from icfree.instructor.args import (
     build_args_parser
 )
 
+from tests.functions import tmp_filepath, clean_file
+
 
 class TestParseSrcPlateTypeOption(TestCase):
 
@@ -58,33 +60,35 @@ class TestGenerateInstructions(TestCase):
         })
         plate_types = "ALL:384PP_AQ_GP3;Component_1:384PP_AQ_GP4"
 
+        tmp_sfn = tmp_filepath()
+        tmp_dfn = tmp_filepath()
         # Write source and destination dataframes to CSV temp files
-        with NamedTemporaryFile() as source_file, NamedTemporaryFile() as destination_file:
-            source_df.to_csv(source_file.name, index=False)
-            destination_df.to_csv(destination_file.name, index=False)
+        source_df.to_csv(tmp_sfn, index=False)
+        destination_df.to_csv(tmp_dfn, index=False)
 
-            # Generate instructions
-            instructions = generate_instructions(
-                [source_file.name], [destination_file.name], src_plate_type=plate_types
-            )
+        # Generate instructions
+        instructions = generate_instructions(
+            [tmp_sfn], [tmp_dfn], src_plate_type=plate_types
+        )
 
-            # Define expected instructions as DataFrame
-            expected_instructions = DataFrame({
-                'Source Plate Name': ['Source[1]', 'Source[1]', 'Source[1]', 'Source[1]'],
-                'Source Plate Type': ['384PP_AQ_GP4', '384PP_AQ_GP4', '384PP_AQ_GP3', '384PP_AQ_GP3'],
-                'Source Well': ['{A2;B1}', '{A2;B1}', 'A1', 'A1'],
-                'Destination Plate Name': ['Destination[1]', 'Destination[1]', 'Destination[1]', 'Destination[1]'],
-                'Destination Well': ['A2', 'B1', 'A1', 'B2'],
-                'Transfer Volume': [10, 20, 5, 15],
-                'Sample ID': ['Component_1', 'Component_1', 'Component_2', 'Component_2']
-            })
+        # Define expected instructions as DataFrame
+        expected_instructions = DataFrame({
+            'Source Plate Name': ['Source[1]', 'Source[1]', 'Source[1]', 'Source[1]'],
+            'Source Plate Type': ['384PP_AQ_GP4', '384PP_AQ_GP4', '384PP_AQ_GP3', '384PP_AQ_GP3'],
+            'Source Well': ['{A2;B1}', '{A2;B1}', 'A1', 'A1'],
+            'Destination Plate Name': ['Destination[1]', 'Destination[1]', 'Destination[1]', 'Destination[1]'],
+            'Destination Well': ['A2', 'B1', 'A1', 'B2'],
+            'Transfer Volume': [10, 20, 5, 15],
+            'Sample ID': ['Component_1', 'Component_1', 'Component_2', 'Component_2']
+        })
 
-            # Sort dataframes for comparison
-            instructions = instructions.sort_values(by=['Sample ID'], ignore_index=True)
-            expected_instructions = expected_instructions.sort_values(by=['Sample ID'], ignore_index=True)
-            # Compare instructions with expected instructions
-            self.assertTrue(instructions.equals(expected_instructions))
-
+        # Sort dataframes for comparison
+        instructions = instructions.sort_values(by=['Sample ID'], ignore_index=True)
+        expected_instructions = expected_instructions.sort_values(by=['Sample ID'], ignore_index=True)
+        # Compare instructions with expected instructions
+        self.assertTrue(instructions.equals(expected_instructions))
+        clean_file(tmp_sfn)
+        clean_file(tmp_dfn)
 
 class TestGetPlateIndex(TestCase):
     def setUp(self):
