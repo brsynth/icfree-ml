@@ -6,7 +6,7 @@ The number of values generated is given by the user and the values are saved in 
 
 It is important to note that the user can pass some values that he whishes to combine. In this case, we are dealing with discrete space, and because LHS is working on continuous space the result sampling can contain duplicates. To avoid this, we have set some filters to select the appropriate sampling method. Let consider $N$ the number of possible combinations and $n$ the number of samples to generate. The following rules are applied:
 <ul>
-<li>If \($n < \frac{1}{3} \times $N\) or if the CLI option <code>--method</code> is set to <code>`lhs`</code>, then LHS is applied. If the result sampling contain duplicates, then we replace them by random samples.</li>
+<li>If $n < \frac{1}{3} \times N$ or if the CLI option <code>--method</code> is set to <code>`lhs`</code>, then LHS is applied. If the result sampling contain duplicates, then we replace them by random samples.</li>
 <li>If $n > 1 \over 3 \times N$ or if the CLI option <code>`--method`</code> is set to <code>`random`</code>, then LHS is not required and we proceed to random sampling.</li>
 <li>If $n == N$ or if the CLI option <code>`--method`</code> is set to <code>`all`</code>, then we generate all the combinations.</li>
 </ul>
