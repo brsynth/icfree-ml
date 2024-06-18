@@ -1,0 +1,23 @@
+name: Python Linting
+
+on: [push, pull_request]
+
+jobs:
+  flake8-lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 1
+    - name: Set up Python
+      uses: actions/setup-python@v3
+      with:
+        python-version: '3.x'  # Use the version of Python you're working with
+    - name: Install flake8
+      run: pip install flake8
+    - name: Run flake8
+      run: flake8 icfree --count --select=E9,F63,F7,F82 --show-source --statistics
+    - name: Run flake8 on all files
+      run: flake8 icfree --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+      # This step ensures the workflow fails if flake8 finds errors in the critical rules defined above,
+      # but it reports warnings for other issues.

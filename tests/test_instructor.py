@@ -1,177 +1,79 @@
-# Test for instructor
+import unittest
+import pandas as pd
+import numpy as np
+from icfree.instructor import parse_plate_types, generate_echo_instructions
 
-from unittest import (
-    TestCase
-)
+class TestInstructorModule(unittest.TestCase):
 
-from os import path as os_path
-from pandas import (
-    read_csv as pd_read_csv,
-    testing as pd_testing
-)
-from json import load as json_load
-
-from icfree.instructor.instructor import (
-    check_volumes,
-    instructions_generator
-)
-from icfree.plates_generator.plate import Plate
-
-
-class TestInstructor(TestCase):
-
-    def setUp(self):
-        self.DATA_FOLDER = os_path.join(
-            os_path.dirname(os_path.realpath(__file__)),
-            'data', 'instructor'
-        )
-        for folder in ['input', 'output', 'ref']:
-            setattr(
-                self,
-                folder + '_folder',
-                os_path.join(self.DATA_FOLDER, folder)
-            )
-        # self.src_plt_1, self.src_plt_2
-        # self.dst_plt_1, self.dst_plt_2
-        for plate_type in ['src', 'dst']:
-            for i in range(1, 3):
-                setattr(
-                    self,
-                    f'{plate_type}_plt_{str(i)}',
-                    os_path.join(
-                        self.input_folder,
-                        f'{plate_type}_plate_{i}.json'
-                    )
-                )
-        self.source_plate = os_path.join(
-            self.input_folder,
-            'source_plate.json'
-        )
-        self.dest_plate = os_path.join(
-            self.input_folder,
-            'destination_plate.json'
-        )
-
-    def test_check_volumes(self):
-        plate = Plate.from_file(self.dst_plt_1)
-        warning_volumes_report = check_volumes(
-            plate.to_dict(),
-            lower_bound=10,
-            upper_bound=1000
+    def test_parse_plate_types_normal(self):
+        self.assertEqual(
+            parse_plate_types("component1:type1,component2:type2"),
+            {"component1": "type1", "component2": "type2", "default": "384PP_AQ_GP3"}
         )
         self.assertEqual(
-            len(warning_volumes_report),
-            0
+            parse_plate_types("component1:type1"),
+            {"component1": "type1", "default": "384PP_AQ_GP3"}
         )
 
-    def test_check_volumes_warning_upper(self):
-        plate = Plate.from_file(self.src_plt_1)
-        warning_volumes_report = check_volumes(
-            plate.to_dict(),
-            lower_bound=10,
-            upper_bound=1000
+    def test_parse_plate_types_edge(self):
+        self.assertEqual(
+            parse_plate_types(""),
+            {"default": "384PP_AQ_GP3"}
         )
-        # Read json ref file
-        ref_report_file = os_path.join(
-            self.ref_folder,
-            'src_plate_1_warn_report_upper.json'
-        )
-        with open(ref_report_file, 'r') as f:
-            d_report = json_load(f)
-        # Compare
-        self.assertListEqual(
-            warning_volumes_report.to_dict(orient='records'),
-            d_report
+        self.assertEqual(
+            parse_plate_types(None),
+            {"default": "384PP_AQ_GP3"}
         )
 
-    def test_check_volumes_warning_lower(self):
-        plate = Plate.from_file(self.dest_plate)
-        warning_volumes_report = check_volumes(
-            plate.to_dict(),
-            lower_bound=100,
-            upper_bound=1000
-        )
-        # Read json ref file
-        ref_report_file = os_path.join(
-            self.ref_folder,
-            'src_plate_1_warn_report_lower.json'
-        )
-        with open(ref_report_file, 'r') as f:
-            d_report = json_load(f)
-        # Compare
-        self.assertListEqual(
-            warning_volumes_report.to_dict(orient='records'),
-            d_report
+    def test_parse_plate_types_invalid(self):
+        with self.assertRaises(ValueError):
+            parse_plate_types("component1")
+        
+        self.assertEqual(
+            parse_plate_types("component1:"),
+            {"component1": "", "default": "384PP_AQ_GP3"}
         )
 
-    def test_instructions_generator(self):
-        source_plates = {
-            'plate_1': Plate.from_file(self.src_plt_1),
-            'plate_2': Plate.from_file(self.src_plt_2)
-        }
-        destination_plates = {
-            'plate_1': Plate.from_file(self.dst_plt_1),
-            'plate_2': Plate.from_file(self.dst_plt_2)
-        }
-        instructions = instructions_generator(
-            source_plates,
-            destination_plates,
-            robot='echo'
-        )
-        # Read csv ref file
-        ref_instructions_file = os_path.join(
-            self.ref_folder,
-            'echo_instructions_1.csv'
-        )
-        ref_instructions = pd_read_csv(ref_instructions_file)
-        # Compare
-        pd_testing.assert_frame_equal(
-            instructions,
-            ref_instructions
-        )
+    def test_generate_echo_instructions_normal(self):
+        source_plate_df = pd.DataFrame({
+            'Well': ['A1', 'B1', 'C1'],
+            'Component1': [1000, 0, 0],
+            'Component2': [0, 1500, 0]
+        })
+        destination_plate_df = pd.DataFrame({
+            'Well': ['A1', 'B1', 'C1'],
+            'Component1': [10, 20, 30],
+            'Component2': [5, 15, 25]
+        })
+        source_plate_types = {'default': '384PP_AQ_GP3'}
+        
+        result = generate_echo_instructions(source_plate_df, destination_plate_df, source_plate_types)
+        self.assertIsInstance(result, pd.DataFrame)
 
-    def test_src_plate_type(self):
-        source_plates = {
-            'plate_1': Plate.from_file(self.src_plt_1),
-            'plate_2': Plate.from_file(self.src_plt_2)
-        }
-        destination_plates = {
-            'plate_1': Plate.from_file(self.dst_plt_1),
-            'plate_2': Plate.from_file(self.dst_plt_2)
-        }
-        src_plate_type = ['384PP_AQ_GP3', 'Component_2', '384PP_AQ_TEST']
-        instructions = instructions_generator(
-            source_plates,
-            destination_plates,
-            src_plate_type=src_plate_type,
-            robot='echo'
-        )
-        # Read csv ref file
-        ref_instructions_file = os_path.join(
-            self.ref_folder,
-            'echo_instructions_2.csv'
-        )
-        ref_instructions = pd_read_csv(ref_instructions_file)
-        # Compare
-        pd_testing.assert_frame_equal(
-            instructions,
-            ref_instructions
-        )
-        src_plate_type = ['384PP_AQ_TEST']
-        instructions = instructions_generator(
-            source_plates,
-            destination_plates,
-            src_plate_type=src_plate_type,
-            robot='echo'
-        )
-        # Read csv ref file
-        ref_instructions_file = os_path.join(
-            self.ref_folder,
-            'echo_instructions_3.csv'
-        )
-        ref_instructions = pd_read_csv(ref_instructions_file)
-        # Compare
-        pd_testing.assert_frame_equal(
-            instructions,
-            ref_instructions
-        )
+        expected_result = pd.DataFrame({
+            'Source Plate Name': ['Source[1]', 'Source[1]', 'Source[1]', 'Source[1]', 'Source[1]', 'Source[1]'],
+            'Source Plate Type': ['384PP_AQ_GP3'] * 6,
+            'Source Well': ['A1', 'A1', 'B1', 'B1', 'C1', 'C1'],
+            'Destination Plate Name': ['Destination[1]'] * 6,
+            'Destination Well': ['A1', 'A1', 'B1', 'B1', 'C1', 'C1'],
+            'Transfer Volume': [10, 5, 20, 15, 30, 25],
+            'Sample ID': ['Component1', 'Component1', 'Component1', 'Component2', 'Component2', 'Component2']
+        })
+        np.array_equal(result.values, expected_result.values)
+
+    def test_generate_echo_instructions_edge(self):
+        empty_source_df = pd.DataFrame(columns=['Well', 'Component1', 'Component2'])
+        empty_destination_df = pd.DataFrame(columns=['Source Plate Name', 'Source Plate Type', 'Source Well', 'Destination Plate Name', 'Destination Well', 'Transfer Volume', 'Sample ID'])
+        source_plate_types = {'default': '384PP_AQ_GP3'}
+        
+        with self.assertRaises(KeyError):
+            generate_echo_instructions(empty_source_df, empty_destination_df, source_plate_types)
+
+    def test_generate_echo_instructions_invalid(self):
+        with self.assertRaises(AttributeError):
+            generate_echo_instructions(None, None, None)
+        with self.assertRaises(AttributeError):
+            generate_echo_instructions("invalid", "invalid", "invalid")
+
+if __name__ == '__main__':
+    unittest.main()

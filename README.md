@@ -1,56 +1,120 @@
-[![Tests](https://github.com/brsynth/icfree-ml/actions/workflows/test.yml/badge.svg)](https://github.com/brsynth/icfree-ml/actions/workflows/test.yml)
+# iCFree
 
-# Description
+iCFree is a Python-based program designed to automate the process of generating and running a Snakemake workflow for sampling and preparing instructions for laboratory experiments. The program includes components for generating samples, creating plates, and instructing the handling of these plates.
 
-Design of experiments (DoE) and machine learning packages for the iCFree project
+## Table of Contents
 
-![icfree](/img/icfree.png)
+- [iCFree](#icfree)
+  - [Table of Contents](#table-of-contents)
+  - [Installation](#installation)
+  - [Usage](#usage)
+    - [Basic Command](#basic-command)
+  - [Components](#components)
+    - [Sampler](#sampler)
+      - [Usage](#usage-1)
+      - [Arguments](#arguments)
+    - [Plate Generator](#plate-generator)
+      - [Usage](#usage-2)
+      - [Options](#options)
+    - [Instructor](#instructor)
+      - [Usage](#usage-3)
+      - [Options](#options-1)
+  - [Example](#example)
+  - [License](#license)
+  - [Authors](#authors)
 
-# Requirements
+## Installation
 
-Python 3.8+
+1. Clone the repository:
+    ```bash
+    git clone https://github.com/yourusername/icfree.git
+    cd icfree
+    ```
 
-# Installation
+2. Install the required dependencies:
+    ```bash
+    pip install -r requirements.txt
+    ```
 
-~~~bash
-conda env create -n <env_name> icfree
-conda activate <env_name>
-~~~
+## Usage
 
-# Usage
-iCFree is a package and is only runnable through the modules below.
+The main entry point of the program is the `__main__.py` file. You can run the program from the command line by providing the necessary arguments for each step of the workflow.
 
-## Sampler
-This module generates a list of values for all parameters given in the input file. The values are generated using a Latin Hypercube Sampling (LHS) method. The number of values generated is given by the user and the values are saved in csv or tsv file.
+### Basic Command
 
-The LHS values are generated using the `lhs` function from the `pyDOE` package and binned into bins to reduce the combinatorial space.
+```bash
+python -m icfree --sampler_input_filename <input_file> --sampler_nb_samples <number_of_samples> --sampler_seed <seed> --sampler_output_filename <output_file> --plate_generator_input_filename <input_file> --plate_generator_sample_volume <volume> --plate_generator_default_dead_volume <dead_volume> --plate_generator_num_replicates <replicates> --plate_generator_well_capacity <capacity> --plate_generator_start_well_src_plt <start_well_src> --plate_generator_start_well_dst_plt <start_well_dst> --plate_generator_output_folder <output_folder> --instructor_max_transfer_volume <max_volume> --instructor_split_threshold <split_threshold> --instructor_source_plate_type <plate_type> --instructor_split_components <components> --instructor_output_filename <instructions_file>
+```
 
-Documentation can be found in [icfree/sampler/README.md](icfree/sampler/README.md) file.
+## Components
 
-## Converter
-The `plates_generator` module works with volume values as input. This `converter` module converts concentration values into volume values.
+### Sampler
 
-Documentation can be found in [icfree/converter/README.md](icfree/converter/README.md) file.
+The `sampler.py` script generates Latin Hypercube Samples (LHS) for given components.
+
+#### Usage
+
+```bash
+python icfree/sampler.py <input_file> <output_file> <num_samples> [--step <step_size>] [--seed <seed>]
+```
+
+#### Arguments
+
+- `input_file`: Input file path with components and their max values.
+- `output_file`: Output CSV file path for the samples.
+- `num_samples`: Number of samples to generate.
+- `--step`: Step size for creating discrete ranges (default: 2.5).
+- `--seed`: Seed for random number generation for reproducibility (optional).
+
+### Plate Generator
+
+The `plate_generator.py` script generates plates based on the sampled data.
+
+#### Usage
+
+```bash
+python icfree/plate_generator.py <input_file> <sample_volume> [options]
+```
+
+#### Options
+
+- `--default_dead_volume`: Default dead volume.
+- `--dead_volumes`: Dead volumes for specific wells.
+- `--num_replicates`: Number of replicates.
+- `--well_capacity`: Well capacity.
+- `--start_well_src_plt`: Starting well for the source plate.
+- `--start_well_dst_plt`: Starting well for the destination plate.
+- `--output_folder`: Folder to save the output files.
+
+### Instructor
+
+The `instructor.py` script generates instructions for handling the generated plates.
+
+#### Usage
+
+```bash
+python icfree/instructor.py <source_plate> <destination_plate> <output_instructions> [options]
+```
+
+#### Options
+
+- `--max_transfer_volume`: Maximum transfer volume.
+- `--split_threshold`: Threshold for splitting components.
+- `--source_plate_type`: Type of the source plate.
+- `--split_components`: Components to split.
+
+## Example
+
+Here is an example of how to run the program with sample data:
+
+```bash
+python -m icfree --sampler_input_filename data/components.csv --sampler_nb_samples 100 --sampler_seed 42 --sampler_output_filename results/samples.csv --plate_generator_input_filename results/samples.csv --plate_generator_sample_volume 10 --plate_generator_default_dead_volume 2 --plate_generator_num_replicates 3 --plate_generator_well_capacity 200 --plate_generator_start_well_src_plt A1 --plate_generator_start_well_dst_plt B1 --plate_generator_output_folder results/plates --instructor_max_transfer_volume 50 --instructor_split_threshold 5 --instructor_source_plate_type '96-well' --instructor_split_components 'component1,component2' --instructor_output_filename results/instructions.txt
+```
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
 
-## Plates Generator
-This module generates a list of source and destination plates according to the set of samples to test.
-
-Documentation can be found in [icfree/plates_generator/README.md](icfree/plates_generator/README.md) file.
-
-## Instructor
-The module generates a list of instructions to perform the experiment.
-
-Documentation can be found in [icfree/instructor/README.md](icfree/instructor/README.md) file.
-
-# Help
-Display help by running:
-~~~bash
-python -m icfree.<module> --help
-~~~
-
-# Authors
-Joan Hérisson, Yorgo EL MOUBAYED
-
-# License
-Released under the MIT licence. See the [LICENSE](https://github.com/brsynth/icfree-ml/blob/main/LICENSE.md) file for details.
+## Authors
+ChatGPT-4
