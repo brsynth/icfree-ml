@@ -1,4 +1,3 @@
-
 # iCFree
 
 iCFree is a Python-based program designed to automate the process of generating and running a Snakemake workflow for sampling and preparing instructions for laboratory experiments. The program includes components for generating samples, creating plates, and instructing the handling of these plates.
