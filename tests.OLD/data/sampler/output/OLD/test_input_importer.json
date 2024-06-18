@@ -1,0 +1,32 @@
+{
+    "Component":{
+        "0":"Component_1",
+        "1":"Component_2",
+        "2":"Component_3",
+        "3":"Component_4",
+        "4":"Component_5",
+        "5":"Component_6",
+        "6":"Component_7",
+        "7":"Component_8"
+    },
+    "maxValue":{
+        "0":125,
+        "1":125,
+        "2":125,
+        "3":125,
+        "4":125,
+        "5":125,
+        "6":125,
+        "7":125
+    },
+    "Ratios":{
+        "0":"0.0 0.1 0.3 0.5 1.0",
+        "1":"1",
+        "2":null,
+        "3":null,
+        "4":null,
+        "5":null,
+        "6":null,
+        "7":null
+    }
+}

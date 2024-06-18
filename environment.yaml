@@ -1,4 +1,4 @@
-name: icfree
+name: icfree-ml
 channels:
   - conda-forge
 dependencies:
@@ -7,5 +7,6 @@ dependencies:
   - pandas
   - scipy
   - brs_utils
-  - scikit-learn
+  - pyDOE2
   - openpyxl
+  - bioconda::snakemake

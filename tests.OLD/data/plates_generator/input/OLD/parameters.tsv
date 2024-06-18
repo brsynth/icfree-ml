@@ -1,0 +1,7 @@
+Component	maxValue	Ratios|Step|NbBins
+Component_1	200	0.0,0.1,0.3,0.5,1.0||
+Component_2	125	1||
+Component_3	40
+Component_4	100	|10|
+Component_5	400	||10
+Component_6	100	1

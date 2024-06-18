@@ -1,0 +1,118 @@
+{
+    "doe": {
+        "Mg-glutamate": {
+            "Maximum": 4.0,
+            "Stock concentration": 168.0,
+            "Parameter deadVolume": 0,
+            "Ratios": [0.0, 0.1, 0.3, 0.5, 1.0]
+        },
+        "k-glutamate": {
+            "Maximum": 80.0,
+            "Stock concentration": 3360.0,
+            "Parameter deadVolume": 0,
+            "Ratios": null
+        },
+        "CoA": {
+            "Maximum": 0.26,
+            "Stock concentration": 210.0,
+            "Parameter deadVolume": 0,
+            "Ratios": null
+        },
+        "3-PGA": {
+            "Maximum": 30.0,
+            "Stock concentration": 1400.0,
+            "Parameter deadVolume": 0,
+            "Ratios": null
+        },
+        "NTP": {
+            "Maximum": 1.5,
+            "Stock concentration": 630.0,
+            "Parameter deadVolume": 0,
+            "Ratios": null
+        },
+        "NAD": {
+            "Maximum": 0.33,
+            "Stock concentration": 138.6,
+            "Parameter deadVolume": 0,
+            "Ratios": null
+        },
+        "Folinic acid": {
+            "Maximum": 0.068,
+            "Stock concentration": 28.56,
+            "Parameter deadVolume": 0,
+            "Ratios": null
+        },
+        "Spermidine": {
+            "Maximum": 1.0,
+            "Stock concentration": 420.0,
+            "Parameter deadVolume": 0,
+            "Ratios": null
+        },
+        "tRNA": {
+            "Maximum": 0.2,
+            "Stock concentration": 84.0,
+            "Parameter deadVolume": 0,
+            "Ratios": null
+        },
+        "Amino acids": {
+            "Maximum": 1.5,
+            "Stock concentration": 6.0,
+            "Parameter deadVolume": 0,
+            "Ratios": null
+        },
+        "CAMP": {
+            "Maximum": 0.75,
+            "Stock concentration": 200.0,
+            "Parameter deadVolume": 0,
+            "Ratios": null
+        }
+    },
+    "const": {
+        "Extract": {
+            "Maximum": 30.0,
+            "Stock concentration": 300.0,
+            "Parameter deadVolume": 2000,
+            "Ratios": null
+        },
+        "HEPES": {
+            "Maximum": 50.0,
+            "Stock concentration": 2100.0,
+            "Parameter deadVolume": 0,
+            "Ratios": null
+        },
+        "PEG": {
+            "Maximum": 2.0,
+            "Stock concentration": 200.0,
+            "Parameter deadVolume": 4000,
+            "Ratios": null
+        },
+        "Promoter": {
+            "Maximum": 10.0,
+            "Stock concentration": 300.0,
+            "Parameter deadVolume": 0,
+            "Ratios": null
+        },
+        "RBS": {
+            "Maximum": 10.0,
+            "Stock concentration": 200.0,
+            "Parameter deadVolume": 0,
+            "Ratios": null
+        }
+    },
+    "dna_fluo": {
+        "GFP-DNA": {
+            "Maximum": 50.0,
+            "Stock concentration": 300.0,
+            "Parameter deadVolume": 0,
+            "Ratios": null
+        }
+    },
+    "dna_goi": {
+        "GOI-DNA": {
+            "Maximum": 50.0,
+            "Stock concentration": 300.0,
+            "Parameter deadVolume": 0,
+            "Ratios": null
+        }
+    }
+}

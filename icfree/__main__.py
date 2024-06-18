@@ -1,139 +1,99 @@
-'''
-iCFree: A package for cell-free protein synthesis
+import argparse
+import subprocess
+import os
 
-iCFree is a package for cell-free protein synthesis (CFPS) that allows to
-design and optimize CFPS reactions. It is composed of the following modules:
-- sampler: sample values with DoE methods
-- converter: convert concentrations into volumes (optional)
-- plates_generator: generates source and destination plates
-- instructor: generate instructions for robotic pipetting
-'''
-from glob import glob
-from os import path as os_path
-from argparse import (
-    ArgumentParser,
-    Namespace
-)
-from logging import Logger
-from typing import List
-from colored import fg, attr
+def generate_snakefile(args):
+    output_folder = args.plate_generator_output_folder
+    os.makedirs(output_folder, exist_ok=True)
 
-from .args import build_args_parser
+    snakefile_content = f"""
+rule all:
+    input:
+        "{args.instructor_output_filename}"
 
+rule SAMPLER:
+    input:
+        components="{args.sampler_input_filename}"
+    output:
+        csv="{args.plate_generator_sampling_file}"
+    params:
+        nb_samples={args.sampler_nb_samples},
+        seed={args.sampler_seed},
+        step={args.sampler_step}
+    shell:
+        "python icfree/sampler.py {{input.components}} {{output.csv}} {{params.nb_samples}} --step {{params.step}} --seed {{params.seed}}"
 
-def init(
-    parser: ArgumentParser,
-    args: Namespace
-) -> Logger:
-    '''
-    Initialize the logger and print the program name and version
+rule PLATE_GENERATOR:
+    input:
+        sampling_file=rules.SAMPLER.output.csv
+    output:
+        source_plate="{output_folder}/source_plate.csv",
+        destination_plate="{output_folder}/destination_plate.csv"
+    params:
+        sample_volume={args.plate_generator_sample_volume},
+        default_dead_volume={args.plate_generator_default_dead_volume},
+        dead_volumes="{args.plate_generator_dead_volumes}",
+        num_replicates={args.plate_generator_num_replicates},
+        well_capacity={args.plate_generator_well_capacity},
+        start_well_src_plt="{args.plate_generator_start_well_src_plt}",
+        start_well_dst_plt="{args.plate_generator_start_well_dst_plt}",
+        output_folder="{args.plate_generator_output_folder}"
+    shell:
+        '''
+        python icfree/plate_generator.py {{input.sampling_file}} {{params.sample_volume}} \\
+        --default_dead_volume {{params.default_dead_volume}} \\
+        --dead_volumes {{params.dead_volumes}} \\
+        --num_replicates {{params.num_replicates}} \\
+        --well_capacity {{params.well_capacity}} \\
+        --start_well_src_plt {{params.start_well_src_plt}} \\
+        --start_well_dst_plt {{params.start_well_dst_plt}} \\
+        --output_folder {{params.output_folder}}
+        '''
 
-    Parameters
-    ----------
-    parser: ArgumentParser
-        ArgumentParser
-    args: Namespace
-        Namespace
+rule INSTRUCTOR:
+    input:
+        source_plate=rules.PLATE_GENERATOR.output.source_plate,
+        destination_plate=rules.PLATE_GENERATOR.output.destination_plate
+    output:
+        instructions="{args.instructor_output_filename}"
+    params:
+        max_transfer_volume={args.instructor_max_transfer_volume},
+        split_threshold={args.instructor_split_threshold},
+        source_plate_type="{args.instructor_source_plate_type}",
+        split_components="{args.instructor_split_components}"
+    shell:
+        "python icfree/instructor.py {{input.source_plate}} {{input.destination_plate}} {{output.instructions}} --max_transfer_volume {{params.max_transfer_volume}} --split_threshold {{params.split_threshold}} --source_plate_type '{{params.source_plate_type}}' --split_components '{{params.split_components}}'"
+    """
+    with open('Snakefile', 'w') as file:
+        file.write(snakefile_content)
 
-    Returns
-    -------
-    logger: Logger
-        Logger, default is getLogger(__name__)
-    '''
-    from brs_utils import create_logger
-    from ._version import __version__
-
-    if args.log.lower() in ['silent', 'quiet'] or args.silent:
-        args.log = 'CRITICAL'
-
-    # Create logger
-    logger = create_logger(parser.prog, args.log)
-
-    logger.info(
-        '{color}{typo}{prog} {version}{rst}{color}{rst}\n'.format(
-            prog=logger.name,
-            version=__version__,
-            color=fg('white'),
-            typo=attr('bold'),
-            rst=attr('reset')
-        )
-    )
-    logger.debug(args)
-
-    return logger
-
-
-def get_modules(path: str) -> List[str]:
-    '''
-    Get modules from path
-
-    Parameters
-    ----------
-    path: str
-        Path
-
-    Returns
-    -------
-    modules: List[str]
-        Modules
-    '''
-    paths = [
-        os_path.abspath(
-            os_path.join(f + os_path.pardir)
-        ) for f
-        in glob(
-            os_path.join(
-                path,
-                '*',
-                '__init__.py'
-            )
-        )
-    ]
-    return [
-        os_path.basename(
-            os_path.dirname(f)
-        ) for f in paths
-    ]
-
-
-def entry_point():
-    '''
-    Entry point for iCFree
-    '''
-
-    prog = 'iCFree'
-
-    modules = get_modules(
-        os_path.dirname(os_path.abspath(__file__))
-        )
-
-    description = (
-        f'\nWelcome to {prog}!\n'
-        f'\n\'{prog}\' is a package that cannot be directly run. '
-        'Runnable modules are:\n'
-    )
-    for module in modules:
-        description += '   - '+module+'\n'
-    description += (
-        '\nTo find help for a specific module, please type:\n'
-        f'   python -m {prog.lower()}.<module> --help\n\n'
-    )
-
-    parser = build_args_parser(
-        prog=prog,
-        description=description
-    )
+def main():
+    parser = argparse.ArgumentParser(description="Generate and run a Snakemake workflow based on user parameters.")
+    parser.add_argument('--sampler_input_filename', required=True, help="Input filename for the SAMPLER step.")
+    parser.add_argument('--sampler_nb_samples', default=100, type=int, help="Number of samples (default: 100).")
+    parser.add_argument('--sampler_seed', default=42, type=int, help="Seed for sampling (default: 42).")
+    parser.add_argument('--sampler_step', default=10, type=float, help="Step size for sampling (default: 10).")
+    parser.add_argument('--plate_generator_sample_volume', default=2000, type=int, help="Sample volume for plate generator (default: 2000).")
+    parser.add_argument('--plate_generator_default_dead_volume', default=20000, type=int, help="Default dead volume (default: 20000).")
+    parser.add_argument('--plate_generator_dead_volumes', default="RNA=15000,Water=15000", help="Dead volumes for specific components (default: 'RNA=15000,Water=15000').")
+    parser.add_argument('--plate_generator_num_replicates', default=3, type=int, help="Number of replicates for plate generation (default: 3).")
+    parser.add_argument('--plate_generator_well_capacity', default=50000, type=int, help="Well capacity for plate generator (default: 50000).")
+    parser.add_argument('--plate_generator_start_well_src_plt', default="A1", help="Start well for source plate (default: 'A1').")
+    parser.add_argument('--plate_generator_start_well_dst_plt', default="A1", help="Start well for destination plate (default: 'A1').")
+    parser.add_argument('--plate_generator_output_folder', default="output", help="Output folder for plate generator (default: 'output').")
+    parser.add_argument('--plate_generator_sampling_file', required=True, help="Output file for samples generated by the SAMPLER step.")
+    parser.add_argument('--instructor_output_filename', required=True, help="Output filename for the INSTRUCTOR step.")
+    parser.add_argument('--instructor_max_transfer_volume', default=500, type=int, help="Maximum transfer volume (default: 500).")
+    parser.add_argument('--instructor_split_threshold', default=580, type=int, help="Split threshold (default: 580).")
+    parser.add_argument('--instructor_source_plate_type', default="default:384PP_AQ_GP3", help="Source plate type for the INSTRUCTOR (default: 'default:384PP_AQ_GP3').")
+    parser.add_argument('--instructor_split_components', default="", help="Split components for the INSTRUCTOR (default: '').")
+    
     args = parser.parse_args()
+    
+    generate_snakefile(args)
+    
+    # Run Snakemake
+    subprocess.run(["snakemake", "--cores", "1"])
 
-    print(description)
-
-    init(parser, args)
-
-
-def _cli():
-
-    return entry_point()
-
-
-if __name__ == '__main__':
-    _cli()
+if __name__ == "__main__":
+    main()

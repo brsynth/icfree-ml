@@ -10,7 +10,7 @@ from setuptools import (
 package     = 'icfree'
 descr       = 'Generate plates for cell-free buffer optimization'
 url         = 'https://github.com/brsynth/icfree-ml/'
-authors     = 'Yorgo El Moubayed, Joan Hérisson'
+authors     = 'ChatGPT-4, Joan Hérisson'
 corr_author = 'joan.herisson@univ-evry.fr'
 
 

@@ -1,0 +1,9 @@
+Parameter	maxValue	Ratios	deadVolume	StockConcentration
+CP	125	0.0 0.1 0.3 0.5 1.0	0	200
+CPK	125	1	0	1
+tRNA	125		0	2.5
+AA	125		0	2.5
+ribosomes	125		0	5
+mRNA	125		0	1
+Mg	125		0	20
+K	125		0	2000

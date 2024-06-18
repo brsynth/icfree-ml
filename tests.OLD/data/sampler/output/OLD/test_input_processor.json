@@ -1,0 +1,42 @@
+{
+    "Component_1": {
+        "maxValue": 125,
+        "Ratios": [
+            0.0,
+            0.1,
+            0.3,
+            0.5,
+            1.0
+        ]
+    },
+    "Component_2": {
+        "maxValue": 125,
+        "Ratios": [
+            1.0
+        ]
+    },
+    "Component_3": {
+        "maxValue": 125,
+        "Ratios": []
+    },
+    "Component_4": {
+        "maxValue": 125,
+        "Ratios": []
+    },
+    "Component_5": {
+        "maxValue": 125,
+        "Ratios": []
+    },
+    "Component_6": {
+        "maxValue": 125,
+        "Ratios": []
+    },
+    "Component_7": {
+        "maxValue": 125,
+        "Ratios": []
+    },
+    "Component_8": {
+        "maxValue": 125,
+        "Ratios": []
+    }
+}
