@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 from icfree.instructor import parse_plate_types, generate_echo_instructions
 
+
 class TestInstructorModule(unittest.TestCase):
 
     def test_parse_plate_types_normal(self):
