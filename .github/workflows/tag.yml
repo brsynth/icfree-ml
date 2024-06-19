@@ -67,8 +67,9 @@ jobs:
           environment-file: cicd-toolkit/recipe/conda_build_env.yaml
           activate-environment: test
       - name: Building & Testing conda package
-        run: |
-          conda-build cicd-toolkit/recipe
+        run: | # Because on specific channel (e.g. bioconda), run 'make' command instead of 'conda-build'
+          cd cicd-toolkit
+          make conda-build
 
   Tag:
     needs: [Conda-Build]
