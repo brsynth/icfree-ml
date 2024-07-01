@@ -13,13 +13,13 @@ read -n 1 -s
 
 python -m icfree \
                  --sampler_input_filename components.tsv \
-          --plate_generator_sampling_file $sampling_file \
-          --plate_generator_well_capacity 60000 \
-          --plate_generator_sample_volume 6000 \
-    --plate_generator_default_dead_volume 20000 \
-         --plate_generator_num_replicates $nb_replicates \
-     --plate_generator_start_well_src_plt A1 \
-          --plate_generator_output_folder $folder \
+          --plate_design_sampling_file $sampling_file \
+          --plate_design_well_capacity 60000 \
+          --plate_design_sample_volume 6000 \
+    --plate_design_default_dead_volume 20000 \
+         --plate_design_num_replicates $nb_replicates \
+     --plate_design_start_well_src_plt A1 \
+          --plate_design_output_folder $folder \
              --instructor_output_filename $folder/instructions.csv \
          --instructor_max_transfer_volume 1000 \
              --instructor_split_threshold 1020 \
@@ -36,13 +36,13 @@ echo "Waiting for $sampling_file... Press a key to continue (Ctrl+C to stop)"
 read -n 1 -s
 python -m icfree \
                  --sampler_input_filename components.tsv \
-          --plate_generator_sampling_file $sampling_file \
-          --plate_generator_well_capacity 55000 \
-          --plate_generator_sample_volume 6100 \
-    --plate_generator_default_dead_volume 20000 \
-         --plate_generator_num_replicates $nb_replicates \
-     --plate_generator_start_well_src_plt A1 \
-          --plate_generator_output_folder $folder \
+          --plate_design_sampling_file $sampling_file \
+          --plate_design_well_capacity 55000 \
+          --plate_design_sample_volume 6100 \
+    --plate_design_default_dead_volume 20000 \
+         --plate_design_num_replicates $nb_replicates \
+     --plate_design_start_well_src_plt A1 \
+          --plate_design_output_folder $folder \
              --instructor_output_filename $folder/instructions.csv \
          --instructor_max_transfer_volume 1000 \
              --instructor_split_threshold 1020 \
@@ -60,13 +60,13 @@ echo "Waiting for $sampling_file... Press a key to continue (Ctrl+C to stop)"
 read -n 1 -s
 python -m icfree \
                  --sampler_input_filename components.tsv \
-          --plate_generator_sampling_file $sampling_file \
-          --plate_generator_well_capacity 55000 \
-          --plate_generator_sample_volume 6000 \
-    --plate_generator_default_dead_volume 20000 \
-         --plate_generator_num_replicates $nb_replicates \
-     --plate_generator_start_well_src_plt A10 \
-          --plate_generator_output_folder $folder \
+          --plate_design_sampling_file $sampling_file \
+          --plate_design_well_capacity 55000 \
+          --plate_design_sample_volume 6000 \
+    --plate_design_default_dead_volume 20000 \
+         --plate_design_num_replicates $nb_replicates \
+     --plate_design_start_well_src_plt A10 \
+          --plate_design_output_folder $folder \
              --instructor_output_filename $folder/instructions.csv \
          --instructor_max_transfer_volume 1000 \
              --instructor_split_threshold 1020 \
@@ -83,13 +83,13 @@ echo "Waiting for $sampling_file... Press a key to continue (Ctrl+C to stop)"
 read -n 1 -s
 python -m icfree \
                  --sampler_input_filename components.tsv \
-          --plate_generator_sampling_file $sampling_file \
-          --plate_generator_well_capacity 55000 \
-          --plate_generator_sample_volume 6000 \
-    --plate_generator_default_dead_volume 20000 \
-         --plate_generator_num_replicates $nb_replicates \
-     --plate_generator_start_well_src_plt A1 \
-          --plate_generator_output_folder $folder \
+          --plate_design_sampling_file $sampling_file \
+          --plate_design_well_capacity 55000 \
+          --plate_design_sample_volume 6000 \
+    --plate_design_default_dead_volume 20000 \
+         --plate_design_num_replicates $nb_replicates \
+     --plate_design_start_well_src_plt A1 \
+          --plate_design_output_folder $folder \
              --instructor_output_filename $folder/instructions.csv \
          --instructor_max_transfer_volume 1000 \
              --instructor_split_threshold 1020 \
