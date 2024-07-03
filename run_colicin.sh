@@ -20,7 +20,7 @@ read -n 1 -s
 python -m icfree \
                 --sampler_input_filename $components_file \
           --plate_designer_sampling_file $sampling_file \
-          --plate_designer_well_capacity "Mg-glutamate=55000" \
+          --plate_designer_well_capacity "K-glutamate=50000" \
   --plate_designer_default_well_capacity 60000 \
           --plate_designer_sample_volume 6000 \
     --plate_designer_default_dead_volume 20000 \
@@ -44,7 +44,7 @@ read -n 1 -s
 python -m icfree \
                 --sampler_input_filename $components_file \
           --plate_designer_sampling_file $sampling_file \
-          --plate_designer_well_capacity "Mg-glutamate=55000" \
+          --plate_designer_well_capacity "K-glutamate=50000" \
   --plate_designer_default_well_capacity 60000 \
           --plate_designer_sample_volume 6100 \
     --plate_designer_default_dead_volume 20000 \
@@ -69,7 +69,7 @@ read -n 1 -s
 python -m icfree \
                 --sampler_input_filename $components_file \
           --plate_designer_sampling_file $sampling_file \
-          --plate_designer_well_capacity "Mg-glutamate=55000" \
+          --plate_designer_well_capacity "K-glutamate=50000" \
   --plate_designer_default_well_capacity 60000 \
           --plate_designer_sample_volume 6000 \
     --plate_designer_default_dead_volume 20000 \
@@ -79,7 +79,7 @@ python -m icfree \
             --instructor_output_filename $folder/instructions.csv \
         --instructor_max_transfer_volume 1000 \
             --instructor_split_threshold 1020 \
-            --instructor_split_components "HEPES,Amino acid,K-glutamate" \
+            --instructor_split_components "HEPES,Amino acid" \
           --instructor_source_plate_type default:384PP_AQ_GP3,NTP:384PP_AQ_CP,DNA:384PP_AQ_CP,PEG-8000:384PP_AQ_CP
 
     #              --sampler_input_filename $components_file \
@@ -107,7 +107,7 @@ read -n 1 -s
 python -m icfree \
                 --sampler_input_filename $components_file \
           --plate_designer_sampling_file $sampling_file \
-          --plate_designer_well_capacity "Mg-glutamate=55000" \
+          --plate_designer_well_capacity "K-glutamate=50000" \
   --plate_designer_default_well_capacity 60000 \
           --plate_designer_sample_volume 6000 \
     --plate_designer_default_dead_volume 20000 \
@@ -117,7 +117,7 @@ python -m icfree \
             --instructor_output_filename $folder/instructions.csv \
         --instructor_max_transfer_volume 1000 \
             --instructor_split_threshold 1020 \
-            --instructor_split_components "HEPES,Amino acid,K-glutamate" \
+            --instructor_split_components "HEPES,Amino acid" \
           --instructor_source_plate_type default:384PP_AQ_GP3,NTP:384PP_AQ_CP,DNA:384PP_AQ_CP,PEG-8000:384PP_AQ_CP
 
     #              --sampler_input_filename $components_file \
