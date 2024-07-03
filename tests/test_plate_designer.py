@@ -4,14 +4,14 @@ import numpy as np
 from pathlib import Path
 from io import StringIO
 import tempfile
-from icfree.plate_generator import (
+from icfree.plate_designer import (
     parse_args,
     prepare_destination_plate,
     prepare_source_plate,
     write_output_files
 )
 
-class TestPlateGenerator(unittest.TestCase):
+class TestPlateDesigner(unittest.TestCase):
 
     def setUp(self):
         # Sample data for testing
@@ -26,7 +26,8 @@ class TestPlateGenerator(unittest.TestCase):
         self.start_well_dst_plt = 'A1'
         self.dead_volumes_str = 'Component1=10,Component2=10'
         self.default_dead_volume = 10
-        self.well_capacity = 60000
+        self.well_capacity = 'Component1=55000'
+        self.default_well_capacity = 60000
         self.start_well_src_plt = 'A1'
         self.temp_dir = tempfile.TemporaryDirectory()
 
@@ -39,7 +40,7 @@ class TestPlateGenerator(unittest.TestCase):
         from unittest.mock import patch
 
         test_args = [
-            'plate_generator.py',
+            'plate_designer.py',
             'sampling_data.csv',
             '1000',
             '--start_well_dst_plt', 'A1',
@@ -47,7 +48,8 @@ class TestPlateGenerator(unittest.TestCase):
             '--num_replicates', '2',
             '--dead_volumes', 'Component1=10,Component2=10',
             '--default_dead_volume', '10',
-            '--well_capacity', '60000',
+            '--well_capacity', 'Component1=55000',
+            '--default_well_capacity', '60000',
             '--start_well_src_plt', 'A1',
             '--output_folder', self.temp_dir.name
         ]
@@ -61,7 +63,8 @@ class TestPlateGenerator(unittest.TestCase):
             self.assertEqual(args.num_replicates, 2)
             self.assertEqual(args.dead_volumes, 'Component1=10,Component2=10')
             self.assertEqual(args.default_dead_volume, 10)
-            self.assertEqual(args.well_capacity, 60000)
+            self.assertEqual(args.well_capacity, 'Component1=55000')
+            self.assertEqual(args.default_well_capacity, 60000)
             self.assertEqual(args.start_well_src_plt, 'A1')
             self.assertEqual(args.output_folder, self.temp_dir.name)
 
@@ -88,6 +91,7 @@ class TestPlateGenerator(unittest.TestCase):
             self.dead_volumes_str,
             self.default_dead_volume,
             self.well_capacity,
+            self.default_well_capacity,
             self.start_well_src_plt
         )
         self.assertEqual(result.shape[0], self.sampling_data.shape[0])
@@ -105,6 +109,7 @@ class TestPlateGenerator(unittest.TestCase):
             self.dead_volumes_str,
             self.default_dead_volume,
             self.well_capacity,
+            self.default_well_capacity,
             self.start_well_src_plt
         )
         write_output_files(source_data, destination_data, Path(self.temp_dir.name))
@@ -121,7 +126,7 @@ class TestPlateGenerator(unittest.TestCase):
         from unittest.mock import patch
 
         test_args = [
-            'plate_generator.py',
+            'plate_designer.py',
             str(sampling_file_path),
             '1000',
             '--start_well_dst_plt', 'A1',
@@ -129,13 +134,14 @@ class TestPlateGenerator(unittest.TestCase):
             '--num_replicates', '2',
             '--dead_volumes', 'Component1=10,Component2=10',
             '--default_dead_volume', '10',
-            '--well_capacity', '60000',
+            '--well_capacity', 'Component1=55000',
+            '--default_well_capacity', '60000',
             '--start_well_src_plt', 'A1',
             '--output_folder', self.temp_dir.name
         ]
 
         with patch.object(sys, 'argv', test_args):
-            from icfree.plate_generator import main
+            from icfree.plate_designer import main
             main()
             self.assertTrue((Path(self.temp_dir.name) / 'destination_plate.csv').exists())
             self.assertTrue((Path(self.temp_dir.name) / 'source_plate.csv').exists())

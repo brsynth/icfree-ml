@@ -18,7 +18,8 @@ def parse_args():
     parser.add_argument('--start_well_src_plt', type=str, default='A1', help='Starting well for the source plate')
     parser.add_argument('--start_well_dst_plt', type=str, default='A1', help='Starting well for the destination plate')
     parser.add_argument('--plate_dims', type=str, default='16x24', help='Plate dimensions (Format: NxM)')
-    parser.add_argument('--well_capacity', type=int, default=60000, help='Well capacity in nL')
+    parser.add_argument('--well_capacity', type=str, default='', help='Well capacities for specific components in format component1=capacity1,component2=capacity2,...')
+    parser.add_argument('--default_well_capacity', type=int, default=60000, help='Default well capacity in nL for components not specified in well_capacity')
     parser.add_argument('--dead_volumes', type=str, default='', help='Dead volumes for specific components in format component1=volume1,component2=volume2,...')
     parser.add_argument('--default_dead_volume', type=int, default=15000, help='Default dead volume in nL for the source plate')
     parser.add_argument('--num_replicates', type=int, default=1, help='Number of wanted replicates')
@@ -52,24 +53,24 @@ def generate_well_positions(start_well, plate_dims, num_positions):
             break
     return positions
 
-def parse_dead_volumes(dead_volumes_str, default_dead_volume):
+def parse_component_values(component_values_str, default_value):
     """
-    Parse the dead volumes string into a dictionary, with a fallback to the default dead volume.
+    Parse a string of component values into a dictionary, with a fallback to a default value.
     
     Args:
-        dead_volumes_str (str): Dead volumes for specific components (format: component1=volume1,component2=volume2,...).
-        default_dead_volume (int): Default dead volume to use if not specified in dead_volumes_str.
+        component_values_str (str): Component values in the format component1=value1,component2=value2,...
+        default_value (int): Default value to use if not specified in component_values_str.
     
     Returns:
-        tuple: Dictionary of dead volumes and the default dead volume.
+        tuple: Dictionary of component values and the default value.
     """
-    dead_volumes = {}
-    if dead_volumes_str:
-        components_volumes = dead_volumes_str.split(',')
-        for cv in components_volumes:
-            component, volume = cv.split('=')
-            dead_volumes[component] = int(volume)
-    return dead_volumes, default_dead_volume
+    component_values = {}
+    if component_values_str:
+        components_values = component_values_str.split(',')
+        for cv in components_values:
+            component, value = cv.split('=')
+            component_values[component] = int(value)
+    return component_values, default_value
 
 def prepare_destination_plate(sampling_data, start_well, plate_dims, sample_volume, num_replicates):
     """
@@ -96,7 +97,7 @@ def prepare_destination_plate(sampling_data, start_well, plate_dims, sample_volu
     
     return replicated_data
 
-def prepare_source_plate(destination_data, dead_volumes_str, default_dead_volume, well_capacity, start_well):
+def prepare_source_plate(destination_data, dead_volumes_str, default_dead_volume, well_capacity_str, default_well_capacity, start_well):
     """
     Prepare the source plate data by calculating the total volume needed for each component and assigning well positions.
     
@@ -104,14 +105,16 @@ def prepare_source_plate(destination_data, dead_volumes_str, default_dead_volume
         destination_data (pd.DataFrame): DataFrame with destination plate data.
         dead_volumes_str (str): Dead volumes for specific components (format: component1=volume1,component2=volume2,...).
         default_dead_volume (int): Default dead volume to use if not specified in dead_volumes_str.
-        well_capacity (int): Capacity of each well in nL.
+        well_capacity_str (str): Well capacities for specific components (format: component1=capacity1,component2=capacity2,...).
+        default_well_capacity (int): Default well capacity to use if not specified in well_capacity_str.
         start_well (str): Starting well position for the source plate.
     
     Returns:
         pd.DataFrame: DataFrame with source plate data, including well positions and volumes for each component.
     """
-    # Parse dead volumes
-    dead_volumes, default_dead_volume = parse_dead_volumes(dead_volumes_str, default_dead_volume)
+    # Parse dead volumes and well capacities
+    dead_volumes, default_dead_volume = parse_component_values(dead_volumes_str, default_dead_volume)
+    well_capacities, default_well_capacity = parse_component_values(well_capacity_str, default_well_capacity)
     
     # Calculate total volume needed for each component from the destination data
     component_totals = destination_data.drop(columns='Well').sum()
@@ -123,6 +126,7 @@ def prepare_source_plate(destination_data, dead_volumes_str, default_dead_volume
 
     for component, total_volume in component_totals.items():
         dead_volume = dead_volumes.get(component, default_dead_volume)
+        well_capacity = well_capacities.get(component, default_well_capacity)
         remaining_volume = total_volume
 
         while remaining_volume > 0:
@@ -183,7 +187,7 @@ def main():
     destination_data = prepare_destination_plate(sampling_data, args.start_well_dst_plt, args.plate_dims, args.sample_volume, args.num_replicates)
     
     # Prepare the source plate data
-    source_data = prepare_source_plate(destination_data, args.dead_volumes, args.default_dead_volume, args.well_capacity, args.start_well_src_plt)
+    source_data = prepare_source_plate(destination_data, args.dead_volumes, args.default_dead_volume, args.well_capacity, args.default_well_capacity, args.start_well_src_plt)
     
     # Write the output files to the specified output folder
     write_output_files(source_data, destination_data, Path(args.output_folder))
