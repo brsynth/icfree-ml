@@ -21,7 +21,7 @@ rule SAMPLER:
         seed={args.sampler_seed},
         step={args.sampler_step}
     shell:
-        "python icfree/sampler.py {{input.components}} {{output.csv}} {{params.nb_samples}} --step {{params.step}} --seed {{params.seed}}"
+        "python -m icfree.sampler {{input.components}} {{output.csv}} {{params.nb_samples}} --step {{params.step}} --seed {{params.seed}}"
 
 rule PLATE_DESIGNER:
     input:
@@ -41,7 +41,7 @@ rule PLATE_DESIGNER:
         output_folder="{args.plate_designer_output_folder}"
     shell:
         '''
-        python icfree/plate_designer.py {{input.sampling_file}} {{params.sample_volume}} \\
+        python -m icfree.plate_designer {{input.sampling_file}} {{params.sample_volume}} \\
         --default_dead_volume {{params.default_dead_volume}} \\
         --dead_volumes {{params.dead_volumes}} \\
         --num_replicates {{params.num_replicates}} \\
@@ -64,7 +64,7 @@ rule INSTRUCTOR:
         source_plate_type="{args.instructor_source_plate_type}",
         split_components="{args.instructor_split_components}"
     shell:
-        "python icfree/instructor.py {{input.source_plate}} {{input.destination_plate}} {{output.instructions}} --max_transfer_volume {{params.max_transfer_volume}} --split_threshold {{params.split_threshold}} --source_plate_type '{{params.source_plate_type}}' --split_components '{{params.split_components}}'"
+        "python -m icfree.instructor {{input.source_plate}} {{input.destination_plate}} {{output.instructions}} --max_transfer_volume {{params.max_transfer_volume}} --split_threshold {{params.split_threshold}} --source_plate_type '{{params.source_plate_type}}' --split_components '{{params.split_components}}'"
     """
     with open('Snakefile', 'w') as file:
         file.write(snakefile_content)
