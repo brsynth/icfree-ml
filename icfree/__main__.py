@@ -1,6 +1,11 @@
 import argparse
-import subprocess
 import os
+import sys
+
+# Import main functions from the modules
+from icfree.sampler import main as sampler_main
+from icfree.plate_designer import main as plate_designer_main
+from icfree.instructor import main as instructor_main
 
 def generate_snakefile(args):
     output_folder = args.plate_designer_output_folder
@@ -69,6 +74,38 @@ rule INSTRUCTOR:
     with open('Snakefile', 'w') as file:
         file.write(snakefile_content)
 
+def run_snakemake(args):
+    # Simulating Snakemake workflow by directly calling the main functions
+
+    # SAMPLER
+    sampler_main(args.sampler_input_filename, args.plate_designer_sampling_file, args.sampler_nb_samples, args.sampler_step, args.sampler_seed)
+    
+    # PLATE_DESIGNER
+    plate_designer_main(
+        args.plate_designer_sampling_file,
+        args.plate_designer_sample_volume,
+        args.plate_designer_start_well_src_plt,
+        args.plate_designer_start_well_dst_plt,
+        "16x24",  # Assuming default plate dimensions
+        args.plate_designer_well_capacity,
+        args.plate_designer_default_well_capacity,
+        args.plate_designer_dead_volumes,
+        args.plate_designer_default_dead_volume,
+        args.plate_designer_num_replicates,
+        args.plate_designer_output_folder
+    )
+    
+    # INSTRUCTOR
+    instructor_main(
+        f"{args.plate_designer_output_folder}/source_plate.csv",
+        f"{args.plate_designer_output_folder}/destination_plate.csv",
+        args.instructor_output_filename,
+        args.instructor_source_plate_type,
+        args.instructor_max_transfer_volume,
+        args.instructor_split_threshold,
+        args.instructor_split_components
+    )
+
 def main():
     parser = argparse.ArgumentParser(description="Generate and run a Snakemake workflow based on user parameters.")
     parser.add_argument('--sampler_input_filename', required=True, help="Input filename for the SAMPLER step.")
@@ -95,8 +132,8 @@ def main():
     
     generate_snakefile(args)
     
-    # Run Snakemake
-    subprocess.run(["snakemake", "--cores", "1"])
+    # Run Snakemake simulation by calling main functions directly
+    run_snakemake(args)
 
 if __name__ == "__main__":
     main()
