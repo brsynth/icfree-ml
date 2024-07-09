@@ -142,7 +142,20 @@ class TestPlateDesigner(unittest.TestCase):
 
         with patch.object(sys, 'argv', test_args):
             from icfree.plate_designer import main
-            main()
+            args = parse_args()
+            main(
+                sampling_file=args.sampling_file,
+                sample_volume=args.sample_volume,
+                start_well_src_plt=args.start_well_src_plt,
+                start_well_dst_plt=args.start_well_dst_plt,
+                plate_dims=args.plate_dims,
+                well_capacity=args.well_capacity,
+                default_well_capacity=args.default_well_capacity,
+                dead_volumes=args.dead_volumes,
+                default_dead_volume=args.default_dead_volume,
+                num_replicates=args.num_replicates,
+                output_folder=args.output_folder
+            )
             self.assertTrue((Path(self.temp_dir.name) / 'destination_plate.csv').exists())
             self.assertTrue((Path(self.temp_dir.name) / 'source_plate.csv').exists())
 

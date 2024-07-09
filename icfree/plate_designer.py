@@ -174,23 +174,51 @@ def write_output_files(source_data, destination_data, output_folder):
     print(f"Destination plate data written to {destination_path}")
     print(f"Source plate data written to {source_path}")
 
-def main():
+def main(
+    sampling_file, sample_volume, start_well_src_plt='A1', start_well_dst_plt='A1', 
+    plate_dims='16x24', well_capacity='', default_well_capacity=60000, 
+    dead_volumes='', default_dead_volume=15000, num_replicates=1, output_folder='.'):
     """
     Main function to prepare source and destination well-plate mappings and write the results to files.
+    
+    Args:
+        sampling_file (str): Path to the sampling file.
+        sample_volume (int): Wanted sample volume in the destination plate.
+        start_well_src_plt (str): Starting well for the source plate.
+        start_well_dst_plt (str): Starting well for the destination plate.
+        plate_dims (str): Plate dimensions (Format: NxM).
+        well_capacity (str): Well capacities for specific components in format component1=capacity1,component2=capacity2,...
+        default_well_capacity (int): Default well capacity in nL for components not specified in well_capacity.
+        dead_volumes (str): Dead volumes for specific components in format component1=volume1,component2=volume2,...
+        default_dead_volume (int): Default dead volume in nL for the source plate.
+        num_replicates (int): Number of wanted replicates.
+        output_folder (str): Output folder for the result files.
     """
-    args = parse_args()
-
     # Read the sampling data from the specified file
-    sampling_data = pd.read_csv(args.sampling_file)
+    sampling_data = pd.read_csv(sampling_file)
     
     # Prepare the destination plate data
-    destination_data = prepare_destination_plate(sampling_data, args.start_well_dst_plt, args.plate_dims, args.sample_volume, args.num_replicates)
+    destination_data = prepare_destination_plate(sampling_data, start_well_dst_plt, plate_dims, sample_volume, num_replicates)
     
     # Prepare the source plate data
-    source_data = prepare_source_plate(destination_data, args.dead_volumes, args.default_dead_volume, args.well_capacity, args.default_well_capacity, args.start_well_src_plt)
+    source_data = prepare_source_plate(destination_data, dead_volumes, default_dead_volume, well_capacity, default_well_capacity, start_well_src_plt)
     
     # Write the output files to the specified output folder
-    write_output_files(source_data, destination_data, Path(args.output_folder))
+    write_output_files(source_data, destination_data, Path(output_folder))
 
 if __name__ == "__main__":
-    main()
+    # If the script is executed directly, parse command-line arguments
+    args = parse_args()
+    main(
+        sampling_file=args.sampling_file,
+        sample_volume=args.sample_volume,
+        start_well_src_plt=args.start_well_src_plt,
+        start_well_dst_plt=args.start_well_dst_plt,
+        plate_dims=args.plate_dims,
+        well_capacity=args.well_capacity,
+        default_well_capacity=args.default_well_capacity,
+        dead_volumes=args.dead_volumes,
+        default_dead_volume=args.default_dead_volume,
+        num_replicates=args.num_replicates,
+        output_folder=args.output_folder
+    )

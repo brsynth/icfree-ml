@@ -48,6 +48,24 @@ def generate_lhs_samples(input_file, num_samples, step, seed=None):
     samples_df = pd.DataFrame(samples, columns=components_df['Component'])
     return samples_df
 
+def main(input_file, output_file, num_samples, step=2.5, seed=None):
+    """
+    Main function to generate LHS samples and save them to a CSV file.
+    
+    Parameters:
+    - input_file: Path to the input file containing components and their max values.
+    - output_file: Path to the output CSV file where samples will be written.
+    - num_samples: Number of samples to generate.
+    - step: Step size for creating discrete ranges (default: 2.5).
+    - seed: Random seed for reproducibility (optional).
+    """
+    # Generate LHS samples
+    samples_df = generate_lhs_samples(input_file, num_samples, step, seed)
+    
+    # Write the samples to a CSV file
+    samples_df.to_csv(output_file, index=False)
+    print(f"Generated {num_samples} samples and saved to {output_file}")
+
 if __name__ == "__main__":
     # Setup command line argument parsing
     parser = argparse.ArgumentParser(description="Generate Latin Hypercube Samples for given components.")
@@ -60,9 +78,5 @@ if __name__ == "__main__":
     # Parse arguments
     args = parser.parse_args()
     
-    # Generate LHS samples
-    samples_df = generate_lhs_samples(args.input_file, args.num_samples, args.step, args.seed)
-    
-    # Write the samples to a CSV file
-    samples_df.to_csv(args.output_file, index=False)
-    print(f"Generated {args.num_samples} samples and saved to {args.output_file}")
+    # Run the main function with the parsed arguments
+    main(args.input_file, args.output_file, args.num_samples, args.step, args.seed)
