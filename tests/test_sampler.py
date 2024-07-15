@@ -19,7 +19,7 @@ class TestGenerateLHSSamples(unittest.TestCase):
     def test_generate_lhs_samples_normal(self, mock_read_csv):
         mock_read_csv.return_value = self.components_df
         
-        result = generate_lhs_samples("fake_path.csv", self.num_samples, self.step, self.seed)
+        result = generate_lhs_samples("fake_path.csv", self.num_samples, self.step, None, self.seed)
         
         self.assertEqual(result.shape, (self.num_samples, 3))
         self.assertListEqual(list(result.columns), ['A', 'B', 'C'])
@@ -28,7 +28,7 @@ class TestGenerateLHSSamples(unittest.TestCase):
     def test_generate_lhs_samples_no_seed(self, mock_read_csv):
         mock_read_csv.return_value = self.components_df
         
-        result = generate_lhs_samples("fake_path.csv", self.num_samples, self.step, None)
+        result = generate_lhs_samples("fake_path.csv", self.num_samples, self.step, None, None)
         
         self.assertEqual(result.shape, (self.num_samples, 3))
         self.assertListEqual(list(result.columns), ['A', 'B', 'C'])
@@ -39,7 +39,7 @@ class TestGenerateLHSSamples(unittest.TestCase):
         edge_case_df.loc[0, 'maxValue'] = 0  # Set maxValue of component 'A' to 0
         mock_read_csv.return_value = edge_case_df
         
-        result = generate_lhs_samples("fake_path.csv", self.num_samples, self.step, self.seed)
+        result = generate_lhs_samples("fake_path.csv", self.num_samples, self.step, None, self.seed)
         
         self.assertEqual(result.shape, (self.num_samples, 3))
         self.assertTrue((result['A'] == 0).all())  # All values in column 'A' should be zero
@@ -49,14 +49,23 @@ class TestGenerateLHSSamples(unittest.TestCase):
         mock_read_csv.return_value = self.components_df
         
         with self.assertRaises(IndexError):
-            generate_lhs_samples("fake_path.csv", self.num_samples, -2.5, self.seed)  # Negative step size should raise an error
+            generate_lhs_samples("fake_path.csv", self.num_samples, -2.5, None, self.seed)  # Negative step size should raise an error
 
     @patch("icfree.sampler.pd.read_csv")
     def test_generate_lhs_samples_invalid_input_file(self, mock_read_csv):
         mock_read_csv.side_effect = FileNotFoundError
         
         with self.assertRaises(FileNotFoundError):
-            generate_lhs_samples("invalid_path.csv", self.num_samples, self.step, self.seed)
+            generate_lhs_samples("invalid_path.csv", self.num_samples, self.step, None, self.seed)
+
+    @patch("icfree.sampler.pd.read_csv")
+    def test_generate_lhs_samples_fix_component_value(self, mock_read_csv):
+        mock_read_csv.return_value = self.components_df
+        
+        result = generate_lhs_samples("fake_path.csv", self.num_samples, self.step, {'A': 5}, self.seed)
+        
+        self.assertEqual(result.shape, (self.num_samples, 3))
+        self.assertTrue((result['A'] == 5).all())
 
 if __name__ == "__main__":
     unittest.main()
