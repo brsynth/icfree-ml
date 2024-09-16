@@ -2,7 +2,7 @@ import unittest
 import pandas as pd
 import sys
 from os import path as os_path
-from icfree.experimenter.data_extractor import find_n_m, process_data, load_sampling_file, clean_sampling_file, process
+from icfree.experimenter.extractor import find_n_m, process_data, load_sampling_file, clean_sampling_file, process
 
 class TestDataExtractor(unittest.TestCase):
 
