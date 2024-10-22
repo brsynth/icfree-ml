@@ -1,0 +1,18 @@
+name: active
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - numpy
+  - pandas
+  - scikit-learn
+  - matplotlib
+  - seaborn
+  - xgboost
+  - scipy
+  - ipython
+  - ipywidgets 
+  - glob2  
+  - pip
+  - pip:
+    - warnings
