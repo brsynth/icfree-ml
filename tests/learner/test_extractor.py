@@ -13,7 +13,7 @@ class TestDataExtractor(unittest.TestCase):
             os_path.dirname(
                 os_path.dirname(__file__)
             ),
-            'data' , 'learner', 'data_extractor'
+            'data' , 'learner', 'extractor'
         )
         cls.initial_data_file = os_path.join(
             cls.data_path, 'input',
