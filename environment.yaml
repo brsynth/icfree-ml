@@ -7,3 +7,4 @@ dependencies:
   - numpy
   - pyDOE2
   - openpyxl
+  - statsmodels
