@@ -36,11 +36,11 @@ def fit_regression_with_outlier_removal(y: np.ndarray, y_ref: np.ndarray, r2_lim
     max_outliers = int(0.3 * len(y))  # 30% of data points can be considered outliers
     current_r2 = 0
     num_outliers_removed = 0
-    
+
+    original_indices = np.arange(len(y))
     outlier_indices = []
 
     while current_r2 <= r2_limit and num_outliers_removed < max_outliers:
-        print(f"Current R²: {current_r2:.2f}, r2_limit: {r2_limit:.2f}, Outliers removed: {num_outliers_removed}")
         # Add a constant term for OLS
         X = sm.add_constant(y)
         model = sm.OLS(y_ref, X).fit()
@@ -52,11 +52,14 @@ def fit_regression_with_outlier_removal(y: np.ndarray, y_ref: np.ndarray, r2_lim
 
         # Identify the index of the maximum Cook's distance
         max_cooks_index = np.argmax(cooks_d)
-        
-        # Add the index to outlier list and remove it from the data
-        outlier_indices.append(max_cooks_index)
+
+        # Record the original index of the outlier
+        outlier_indices.append(original_indices[max_cooks_index])
+
+        # Remove the outlier from the data
         y = np.delete(y, max_cooks_index)
         y_ref = np.delete(y_ref, max_cooks_index)
+        original_indices = np.delete(original_indices, max_cooks_index)
         num_outliers_removed += 1
 
     # Fit the final model
