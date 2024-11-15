@@ -8,3 +8,4 @@ dependencies:
   - pyDOE2
   - openpyxl
   - statsmodels
+  - matplotlib
