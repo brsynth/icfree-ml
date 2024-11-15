@@ -159,67 +159,53 @@ def save_data(data: pd.DataFrame, output_file: str):
 if __name__ == "__main__":
     # Set up argument parsing
     parser = argparse.ArgumentParser(description='Calculate yield based on fluorescence data and optionally apply calibration.')
-    parser.add_argument('--file', type=str, required=True, help='Path to the input file (.csv or .xlsx)')
+    parser.add_argument('file', type=str, help='Path to the input file (.csv or .xlsx)')
+    parser.add_argument('ref_file', type=str, help='Path to the reference input file (.csv or .xlsx)')
     parser.add_argument('--jove_plus', type=int, required=True, help='Line number for Jove+ (1-based index)')
     parser.add_argument('--jove_minus', type=int, required=True, help='Line number for Jove- (1-based index)')
     parser.add_argument('--r2_limit', type=float, default=0.8, help='R-squared limit for the regression (default: 0.8)')
-    parser.add_argument('--ref_file', type=str, help='Path to the reference input file (.csv or .xlsx)')
     parser.add_argument('--output', type=str, required=True, help='Output file name (.csv or .xlsx)')
     parser.add_argument('--plot', type=str, help='Output PNG file name for the plot of calibrated points')
-    parser.add_argument('--num_control_points', type=int, default=10, help='Number of control points to select (default: 5)')
+    parser.add_argument('--num_control_points', type=int, default=5, help='Number of control points to select (default: 5)')
 
     args = parser.parse_args()
 
     # Load the data from the input file
     input_data = load_data(args.file)
+    ref_data = load_data(args.ref_file)
 
-    # Calculate the yield and get the modified DataFrame
-    modified_data = calculate_yield(input_data, args.jove_plus, args.jove_minus)
+    # Calculate yields for the input file if they do not exist
+    if not any('Yield' in col for col in input_data.columns):
+        input_data = calculate_yield(input_data, args.jove_plus, args.jove_minus)
+
+    # Check if the reference file contains "Yield" columns
+    if not any('Yield' in col for col in ref_data.columns):
+        print("Error: The reference file must contain 'Yield #' columns. Please ensure the reference file includes these columns and try again.")
+        exit(1)
 
     # Detect component columns
-    component_columns = detect_component_columns(modified_data)
+    component_columns = detect_component_columns(input_data)
 
-    # Check if a reference file is provided
-    if args.ref_file:
-        # Load the reference data
-        ref_data = load_data(args.ref_file)
+    # Find matching indices based on component combinations
+    matching_input_indices, matching_ref_indices = find_matching_indices(input_data, ref_data, component_columns)
 
-        # Find matching indices based on component combinations
-        matching_input_indices, matching_ref_indices = find_matching_indices(modified_data, ref_data, component_columns)
+    # Compute average yields for matching component combinations
+    avg_yield, avg_yield_ref = compute_average_yields(input_data, ref_data, matching_input_indices, matching_ref_indices)
 
-        # Compute average yields for matching component combinations
-        avg_yield, avg_yield_ref = compute_average_yields(modified_data, ref_data, matching_input_indices, matching_ref_indices)
+    # Fit the regression with outlier removal on average yields
+    a, b, r2_value, outlier_indices = fit_regression_with_outlier_removal(avg_yield, avg_yield_ref, args.r2_limit)
 
-        # Fit the regression with outlier removal on average yields
-        a, b, r2_value, outlier_indices = fit_regression_with_outlier_removal(avg_yield, avg_yield_ref, args.r2_limit)
+    # Display the regression coefficients and R² value in the terminal
+    print(f"Regression Line: y = {a:.2f}x + {b:.2f}")
+    print(f"R² Value: {r2_value:.2f}")
 
-        # Display the regression coefficients and R² value in the terminal
-        print(f"Regression Line: y = {a:.2f}x + {b:.2f}")
-        print(f"R² Value: {r2_value:.2f}")
+    # Add calibrated yield columns
+    calibrated_data = add_calibrated_yield(input_data, a, b)
 
-        # Add calibrated yield columns
-        calibrated_data = add_calibrated_yield(modified_data, a, b)
-
-        # Plot the calibrated points with outliers and regression line if requested
-        if args.plot:
-            plot_calibrated_points(avg_yield, avg_yield_ref, outlier_indices, a, b, r2_value, args.plot, args.file, args.ref_file)
-    else:
-        # If no reference file is provided, just use the original
-        calibrated_data = modified_data
+    # Plot the calibrated points with outliers and regression line if requested
+    if args.plot:
+        plot_calibrated_points(avg_yield, avg_yield_ref, outlier_indices, a, b, r2_value, args.plot, args.file, args.ref_file)
 
     # Save the modified DataFrame to the specified output file
     save_data(calibrated_data, args.output)
-    print(f"Calibrated yields saved in {args.output}")
-    if args.plot:
-        print(f"Plot saved as {args.plot}")
-
-    # Select control points
-    jove_plus_index = args.jove_plus - 2
-    jove_minus_index = args.jove_minus - 2
-    control_data = select_control_points(modified_data, jove_plus_index, jove_minus_index, args.num_control_points)
-
-    # Save the new control points
-    outf = os.path.splitext(args.output)[0] + '_control_points.csv'
-    save_data(control_data, outf)
-    print(f"New control points saved in {outf}")
-
+    print(f"Modified file saved as {args.output}")
