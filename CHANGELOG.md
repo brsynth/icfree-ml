@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.5.2](https://github.com/brsynth/icfree-ml/tree/2.5.2) (2024-11-21)
+
+[Full Changelog](https://github.com/brsynth/icfree-ml/compare/2.5.1...2.5.2)
+
+**Closed issues:**
+
+- Converter throws `'Namespace' object has no attribute 'cfps'` [\#4](https://github.com/brsynth/icfree-ml/issues/4)
+
 ## [2.5.1](https://github.com/brsynth/icfree-ml/tree/2.5.1) (2024-10-23)
 
 [Full Changelog](https://github.com/brsynth/icfree-ml/compare/2.5.0...2.5.1)
