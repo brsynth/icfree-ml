@@ -1,7 +1,8 @@
 import unittest
 import pandas as pd
 from io import StringIO
-from os import path as os_path
+from os import path as os_path, remove
+from tempfile import NamedTemporaryFile
 from icfree.learner.extractor import (
     find_n_m_from_sampling,
     infer_replicates,
@@ -61,33 +62,37 @@ class TestDataExtractor(unittest.TestCase):
     def test_process(self):
         """Test end-to-end processing of data and file saving."""
         # Save the processed output to a temporary file
-        output_file = "/tmp/test_output.csv"
-        combined_df = process(
-            initial_data_file=self.initial_data_file,
-            output_file_path=output_file,
-            sampling_file=self.sampling_file,
-            num_samples=self.num_samples,
-            num_replicates=self.num_replicates,
-            display=False
-        )
-        self.assertIsInstance(combined_df, pd.DataFrame)
-        self.assertEqual(combined_df.shape[0], self.num_samples)  # Number of samples
-        self.assertTrue(combined_df.columns[-1] == "Fluorescence Average")  # Check last column name
+        with NamedTemporaryFile(delete=False) as temp_f:
+            temp_f.name += ".csv"
+            combined_df = process(
+                initial_data_file=self.initial_data_file,
+                output_file_path=temp_f.name,
+                sampling_file=self.sampling_file,
+                num_samples=self.num_samples,
+                num_replicates=self.num_replicates,
+                display=False
+            )
+            self.assertIsInstance(combined_df, pd.DataFrame)
+            self.assertEqual(combined_df.shape[0], self.num_samples)
+            self.assertTrue(combined_df.columns[-1] == "Fluorescence Average")  # Check last column name
+        remove(temp_f.name)
         
     def test_process_with_inference(self):
         """Test end-to-end processing with automatic inference."""
-        output_file = "/tmp/test_output_inferred.csv"
-        combined_df = process(
-            initial_data_file=self.initial_data_file,
-            output_file_path=output_file,
-            sampling_file=self.sampling_file,
-            num_samples=None,  # Let the function infer num_samples
-            num_replicates=None,  # Let the function infer num_replicates
-            display=False
-        )
-        self.assertIsInstance(combined_df, pd.DataFrame)
-        self.assertEqual(combined_df.shape[0], self.num_samples)  # Number of samples inferred
-        self.assertEqual(combined_df.shape[1], 18)  # Sampling columns + reshaped fluorescence columns
+        with NamedTemporaryFile(delete=False) as temp_f:
+            temp_f.name += ".csv"
+            combined_df = process(
+                initial_data_file=self.initial_data_file,
+                output_file_path=temp_f.name,
+                sampling_file=self.sampling_file,
+                num_samples=None,  # Let the function infer num_samples
+                num_replicates=None,  # Let the function infer num_replicates
+                display=False
+            )
+            self.assertIsInstance(combined_df, pd.DataFrame)
+            self.assertEqual(combined_df.shape[0], self.num_samples)  # Number of samples inferred
+            self.assertEqual(combined_df.shape[1], 18)  # Sampling columns + reshaped fluorescence columns
+        remove(temp_f.name)
         
 if __name__ == "__main__":
     unittest.main(argv=[''], verbosity=2, exit=False)
