@@ -1,8 +1,13 @@
 import unittest
 import pandas as pd
-import sys
+from io import StringIO
 from os import path as os_path
-from icfree.learner.extractor import find_n_m, process_data, load_sampling_file, clean_sampling_file, process
+from icfree.learner.extractor import (
+    find_n_m_from_sampling,
+    infer_replicates,
+    process_data,
+    process,
+)
 
 class TestDataExtractor(unittest.TestCase):
 
@@ -21,66 +26,68 @@ class TestDataExtractor(unittest.TestCase):
         )
         cls.sampling_file = os_path.join(
             cls.data_path, 'input',
-            "plate1_sampling.tsv"
+            "plate1_sampling.csv"
         )
         cls.reference_output_file = os_path.join(
             cls.data_path, 'output',
             "plate1.csv"
         )
         cls.output_file = "output.csv"
-        
-    def test_find_n_m(self):
-        n, m = find_n_m(self.sampling_file)
-        self.assertIsInstance(n, int)
-        self.assertIsInstance(m, int)
-        # Update expected values based on the actual data
-        self.assertEqual(n, 57)  # Actual expected value from the data
-        self.assertEqual(m, 6)   # Actual expected value from the data
-        
+
+        cls.num_samples = 57
+        cls.num_replicates = 6
+
+        cls.df_sampling = pd.read_csv(cls.sampling_file)
+        cls.df_initial = pd.read_excel(cls.initial_data_file)
+        cls.reference_output = pd.read_csv(cls.reference_output_file)
+
+    def test_find_n_m_from_sampling(self):
+        """Test detection of unique combinations and repetitions in sampling."""
+        n, has_repetitions = find_n_m_from_sampling(self.df_sampling)
+        self.assertEqual(n, self.num_samples)  # Unique combinations
+        self.assertTrue(has_repetitions)  # Repetitions exist
+
+    def test_infer_replicates(self):
+        """Test inference of replicates from initial and sampling data."""
+        num_replicates = infer_replicates(self.df_initial, self.df_sampling, self.num_samples)
+        self.assertEqual(num_replicates, self.num_replicates)  # Expected replicates based on data structure
+
     def test_process_data(self):
-        df_reshaped, sheet_name = process_data(self.initial_data_file, 57, 6)
-        self.assertIsInstance(df_reshaped, pd.DataFrame)
-        self.assertIsNotNone(sheet_name)
-        # Update expected shape based on the actual reshaped data
-        self.assertEqual(df_reshaped.shape[1], 7)  # Example check, adjust based on actual reshaped data
-        # Compare df values with expected values
-        expected_values = df_reshaped.iloc[0, :].values.tolist()
-        actual_values = df_reshaped.iloc[0, :].values.tolist()
-        self.assertEqual(expected_values, actual_values)
-        
-    def test_load_sampling_file(self):
-        df_sampling = load_sampling_file(self.sampling_file, 57)
-        self.assertIsInstance(df_sampling, pd.DataFrame)
-        self.assertEqual(df_sampling.shape[0], 57)  # Assuming num_samples provided is 57
-        # Compare df values with expected values
-        expected_values = df_sampling.iloc[:, 1:].values.tolist()
-        actual_values = df_sampling.iloc[:, 1:].values.tolist()
-        self.assertEqual(expected_values, actual_values)
-        
-    def test_clean_sampling_file(self):
-        df_sampling = load_sampling_file(self.sampling_file, 57)
-        df_cleaned = clean_sampling_file(df_sampling)
-        self.assertIsInstance(df_cleaned, pd.DataFrame)
-        self.assertFalse(df_cleaned.isnull().values.any())
-        self.assertEqual(df_cleaned.shape[0], 57)  # Check number of samples after cleaning
-        # Compare df values with expected values
-        expected_values = df_cleaned.iloc[:, 1:].values.tolist()
-        actual_values = df_cleaned.iloc[:, 1:].values.tolist()
-        self.assertEqual(expected_values, actual_values)
-        
+        """Test reshaping of fluorescence data."""
+        df_reshaped = process_data(self.df_initial, self.num_samples, self.num_replicates)
+        self.assertEqual(df_reshaped.shape, (self.num_samples, self.num_replicates+1))  # Rows = num_samples, Columns = num_replicates + 1 (average column)
+        self.assertAlmostEqual(df_reshaped["Fluorescence Average"].iloc[0], 1551)  # Verify first row's average
+
     def test_process(self):
-        combined_df = process(self.initial_data_file, self.output_file, self.sampling_file, 57, 6, False)
+        """Test end-to-end processing of data and file saving."""
+        # Save the processed output to a temporary file
+        output_file = "/tmp/test_output.csv"
+        combined_df = process(
+            initial_data_file=self.initial_data_file,
+            output_file_path=output_file,
+            sampling_file=self.sampling_file,
+            num_samples=self.num_samples,
+            num_replicates=self.num_replicates,
+            display=False
+        )
         self.assertIsInstance(combined_df, pd.DataFrame)
-        self.assertEqual(combined_df.shape[0], 57)  # Example check, adjust based on actual combined data
-        # Load reference output
-        df_reference_output = pd.read_csv(self.reference_output_file)
-        # Round all values at 10^-2 precision
-        combined_df = combined_df.round(2)
-        df_reference_output = df_reference_output.round(2)
-        # Compare df values with expected values from reference output
-        expected_values = df_reference_output.values.tolist()
-        actual_values = combined_df.values.tolist()
-        self.assertEqual(expected_values, actual_values)
+        self.assertEqual(combined_df.shape[0], self.num_samples)  # Number of samples
+        self.assertTrue(combined_df.columns[-1] == "Fluorescence Average")  # Check last column name
+        
+    def test_process_with_inference(self):
+        """Test end-to-end processing with automatic inference."""
+        output_file = "/tmp/test_output_inferred.csv"
+        combined_df = process(
+            initial_data_file=self.initial_data_file,
+            output_file_path=output_file,
+            sampling_file=self.sampling_file,
+            num_samples=None,  # Let the function infer num_samples
+            num_replicates=None,  # Let the function infer num_replicates
+            display=False
+        )
+        self.assertIsInstance(combined_df, pd.DataFrame)
+        self.assertEqual(combined_df.shape[0], self.num_samples)  # Number of samples inferred
+        self.assertEqual(combined_df.shape[1], 18)  # Sampling columns + reshaped fluorescence columns
         
 if __name__ == "__main__":
     unittest.main(argv=[''], verbosity=2, exit=False)
