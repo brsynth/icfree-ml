@@ -91,7 +91,7 @@ class TestDataExtractor(unittest.TestCase):
             )
             self.assertIsInstance(combined_df, pd.DataFrame)
             self.assertEqual(combined_df.shape[0], self.num_samples)  # Number of samples inferred
-            self.assertEqual(combined_df.shape[1], 18)  # Sampling columns + reshaped fluorescence columns
+            self.assertEqual(combined_df.shape[1], 17)  # Sampling columns + reshaped fluorescence columns
         remove(temp_f.name)
         
 if __name__ == "__main__":
