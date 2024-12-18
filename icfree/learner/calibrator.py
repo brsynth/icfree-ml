@@ -156,6 +156,15 @@ def save_data(data: pd.DataFrame, output_file: str):
     else:
         raise ValueError("Unsupported file format. Please specify a .csv or .xlsx output file.")
 
+def calculate_yields_if_missing(data: pd.DataFrame, jove_plus_line: int, jove_minus_line: int) -> pd.DataFrame:
+    # Check if "Yield" columns are present
+    if not any('Yield' in col for col in data.columns):
+        print("Yield columns not found. Calculating yields...")
+        data = calculate_yield(data, jove_plus_line, jove_minus_line)
+    else:
+        print("Yield columns already exist. Skipping yield calculation.")
+    return data
+
 if __name__ == "__main__":
     # Set up argument parsing
     parser = argparse.ArgumentParser(description='Calculate yield based on fluorescence data and optionally apply calibration.')
@@ -170,18 +179,15 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    # Load the data from the input file
+    # Load the data from the input and reference files
     input_data = load_data(args.file)
     ref_data = load_data(args.ref_file)
 
-    # Calculate yields for the input file if they do not exist
-    if not any('Yield' in col for col in input_data.columns):
-        input_data = calculate_yield(input_data, args.jove_plus, args.jove_minus)
+    # Calculate yields if missing in the input file
+    input_data = calculate_yields_if_missing(input_data, args.jove_plus, args.jove_minus)
 
-    # Check if the reference file contains "Yield" columns
-    if not any('Yield' in col for col in ref_data.columns):
-        print("Error: The reference file must contain 'Yield #' columns. Please ensure the reference file includes these columns and try again.")
-        exit(1)
+    # Calculate yields if missing in the reference file
+    ref_data = calculate_yields_if_missing(ref_data, args.jove_plus, args.jove_minus)
 
     # Detect component columns
     component_columns = detect_component_columns(input_data)
@@ -199,13 +205,24 @@ if __name__ == "__main__":
     print(f"Regression Line: y = {a:.2f}x + {b:.2f}")
     print(f"R² Value: {r2_value:.2f}")
 
-    # Add calibrated yield columns
+    # Add calibrated yield columns to the input data
     calibrated_data = add_calibrated_yield(input_data, a, b)
+
+    # Save the calibrated data to the specified output file
+    save_data(calibrated_data, args.output)
+    print(f"Calibrated data saved as {args.output}")
+
+    # Select control points
+    jove_plus_index = args.jove_plus - 2
+    jove_minus_index = args.jove_minus - 2
+    control_data = select_control_points(calibrated_data, jove_plus_index, jove_minus_index, args.num_control_points)
+
+    # Save the control points to a separate file
+    control_points_filename = args.output.rsplit('.', 1)[0] + "_control_points." + args.output.rsplit('.', 1)[1]
+    save_data(control_data, control_points_filename)
+    print(f"Control points saved as {control_points_filename}")
 
     # Plot the calibrated points with outliers and regression line if requested
     if args.plot:
         plot_calibrated_points(avg_yield, avg_yield_ref, outlier_indices, a, b, r2_value, args.plot, args.file, args.ref_file)
-
-    # Save the modified DataFrame to the specified output file
-    save_data(calibrated_data, args.output)
-    print(f"Modified file saved as {args.output}")
+        print(f"Plot saved as {args.plot}")
