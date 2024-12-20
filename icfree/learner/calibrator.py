@@ -165,6 +165,11 @@ def calculate_yields_if_missing(data: pd.DataFrame, jove_plus_line: int, jove_mi
         print("Yield columns already exist. Skipping yield calculation.")
     return data
 
+def validate_reference_file(ref_data: pd.DataFrame):
+    """Ensure the reference file has Yield columns."""
+    if not any('Yield' in col for col in ref_data.columns):
+        raise ValueError("Reference file must contain 'Yield' columns. Please ensure the reference file is properly formatted.")
+
 if __name__ == "__main__":
     # Set up argument parsing
     parser = argparse.ArgumentParser(description='Calculate yield based on fluorescence data and optionally apply calibration.')
@@ -183,11 +188,15 @@ if __name__ == "__main__":
     input_data = load_data(args.file)
     ref_data = load_data(args.ref_file)
 
+    # Validate that the reference file has "Yield" columns
+    try:
+        validate_reference_file(ref_data)
+    except ValueError as e:
+        print(f"Error: {e}")
+        exit(1)
+
     # Calculate yields if missing in the input file
     input_data = calculate_yields_if_missing(input_data, args.jove_plus, args.jove_minus)
-
-    # Calculate yields if missing in the reference file
-    ref_data = calculate_yields_if_missing(ref_data, args.jove_plus, args.jove_minus)
 
     # Detect component columns
     component_columns = detect_component_columns(input_data)
