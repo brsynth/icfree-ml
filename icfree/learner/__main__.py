@@ -109,26 +109,27 @@ def parse_arguments():
     # params = csv_to_dict(config_path)
     doc = parse_readme(readme_path)
 
-    # Create argparse parser
-    parser = setup_argparse(doc, parser)
+    # # Create argparse parser
+    # parser = setup_argparse(doc, parser)
    
-    # # Add all the arguments that were previously loaded from config.csv and use the CSV values as defaults
-    # parser.add_argument('--data_folder', required=True, type=str, help="Folder containing data")
-    # parser.add_argument('--parameter_file', required=True, type=str, help="Parameter file path")
-    # parser.add_argument('--output_folder', required=True, type=str, help="Name for saving outputs")
-    # parser.add_argument('--name_list', type=str, default='Yield1,Yield2,Yield3,Yield4,Yield5', help="Comma-separated list of names")
-    # parser.add_argument('--nb_rep', type=int, default=100, help="Number of repetitions")
-    # parser.add_argument('--flatten', type=str, choices=['true', 'false'], default='False', help="Whether to flatten data")
-    # parser.add_argument('--seed', type=int, default=85, help="Random seed")
-    # parser.add_argument('--nb_new_data_predict', type=int, default=3000, help="Number of new data points to predict")
-    # parser.add_argument('--nb_new_data', type=int, default=50, help="Number of new data points")
-    # parser.add_argument('--parameter_step', type=int, default=20, help="Parameter step")
-    # parser.add_argument('--test', type=int, default=1, help="Test flag")
-    # parser.add_argument('--n_group', type=int, default=15, help="Number of groups")
-    # parser.add_argument('--ks', type=int, default=20, help="ks parameter")
-    # parser.add_argument('--km', type=int, default=50, help="km parameter")
-    # parser.add_argument('--plot', type=str, choices=['true', 'false'], default='True', help="Whether to plot the results")
-    
+    # Add all the arguments that were previously loaded from config.csv and use the CSV values as defaults
+    parser.add_argument('--data_folder', required=doc['data_folder']['required'].lower()=='yes', type=eval(doc['data_folder']['type']), help=doc['data_folder']['description'].replace('%', '%%'))
+    parser.add_argument('--parameter_file', required=doc['parameter_file']['required'].lower()=='yes', type=eval(doc['parameter_file']['type']), help=doc['parameter_file']['description'].replace('%', '%%'))
+    parser.add_argument('--output_folder', required=doc['output_folder']['required'].lower()=='yes', type=eval(doc['output_folder']['type']), help=doc['output_folder']['description'].replace('%', '%%'))
+    parser.add_argument('--name_list', required=doc['name_list']['required'].lower()=='yes', type=eval(doc['name_list']['type']), default=doc['name_list']['example'].replace('`', ''), help=doc['name_list']['description'].replace('%', '%%'))
+    parser.add_argument('--nb_rep', required=doc['nb_rep']['required'].lower()=='yes', type=eval(doc['nb_rep']['type']), default=doc['nb_rep']['example'].replace('`', ''), help=doc['nb_rep']['description'].replace('%', '%%'))
+    parser.add_argument('--flatten', required=doc['flatten']['required'].lower()=='yes', help=doc['flatten']['description'].replace('%', '%%'), action='store_true')
+    parser.add_argument('--seed', required=doc['seed']['required'].lower()=='yes', type=eval(doc['seed']['type']), default=doc['seed']['example'].replace('`', ''), help=doc['seed']['description'].replace('%', '%%'))
+    parser.add_argument('--nb_new_data_predict', required=doc['nb_new_data_predict']['required'].lower()=='yes', type=eval(doc['nb_new_data_predict']['type']), default=doc['nb_new_data_predict']['example'].replace('`', ''), help=doc['nb_new_data_predict']['description'].replace('%', '%%'))
+    parser.add_argument('--nb_new_data', required=doc['nb_new_data']['required'].lower()=='yes', type=eval(doc['nb_new_data']['type']), default=doc['nb_new_data']['example'].replace('`', ''), help=doc['nb_new_data']['description'].replace('%', '%%'))
+    parser.add_argument('--parameter_step', required=doc['parameter_step']['required'].lower()=='yes', type=eval(doc['parameter_step']['type']), default=doc['parameter_step']['example'].replace('`', ''), help=doc['parameter_step']['description'].replace('%', '%%'))
+    parser.add_argument('--test', required=doc['test']['required'].lower()=='yes', help=doc['test']['description'].replace('%', '%%'), action='store_true')
+    parser.add_argument('--n_group', required=doc['n_group']['required'].lower()=='yes', type=eval(doc['n_group']['type']), default=doc['n_group']['example'].replace('`', ''), help=doc['n_group']['description'].replace('%', '%%'))
+    parser.add_argument('--ks', required=doc['ks']['required'].lower()=='yes', type=eval(doc['ks']['type']), default=doc['ks']['example'].replace('`', ''), help=doc['ks']['description'].replace('%', '%%'))
+    parser.add_argument('--km', required=doc['km']['required'].lower()=='yes', type=eval(doc['km']['type']), default=doc['km']['example'].replace('`', ''), help=doc['km']['description'].replace('%', '%%'))
+    parser.add_argument('--plot', required=doc['plot']['required'].lower()=='yes', help=doc['plot']['description'].replace('%', '%%'), action='store_true')
+    parser.add_argument('--save_plot', required=doc['save_plot']['required'].lower()=='yes', help=doc['save_plot']['description'].replace('%', '%%'), action='store_true')
+
     args = parser.parse_args()
     
     # # Convert boolean-like strings to actual booleans
@@ -189,6 +190,7 @@ def main():
     model.train(X_train_norm, y_train)
 
     if test:
+        print("Testing the model...")
         best_param = {'alpha': [model.best_params['alpha']],'kernel': [model.best_params['kernel']]}
         res = []
         for i in range(nb_rep):
@@ -205,6 +207,8 @@ def main():
 
         plt.hist(res, bins = 20, color='orange')
         plt.title(f'Histogram of R2 for different testing subset, median= {np.median(res):.2f}', size = 12)
+    else:
+        print("Skipping testing the model...")
 
     X_new = sampling_without_repeat(sampling_condition, num_samples=nb_new_data_predict, existing_data=X_train, seed=seed)
     X_new_norm = scaler.transform(X_new)
