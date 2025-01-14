@@ -29,7 +29,11 @@ def import_data(folder_for_data, verbose = True):
 
     """
 
-    files = glob.glob(folder_for_data + "\\*.csv")
+    # List all files in folder_for_data with .csv extension
+    files = glob.glob(os.path.join(folder_for_data, "*.csv"))
+    # Print names without full path of found files
+    filenames = ", ".join([os.path.basename(file) for file in files])
+    print(f"Files found in {folder_for_data}: {filenames}")
     concatenated_data = pd.DataFrame()
     size_list = []
 
@@ -230,7 +234,7 @@ def split_and_flatten(feature_matrix, label_array, ratio=0.2, seed=None, flatten
     return X_train, X_test, y_train, y_test
 
 #########################################################################################
-def plot_r2_curve(y_true, y_pred):
+def plot_r2_curve(y_true, y_pred, outfile=None):
     """
     Plots a scatter plot of true (on x axis) vs. predicted values (y axis) and displays the R-squared value on the plot
     also add a diagonal reference dot line for reference
@@ -267,10 +271,12 @@ def plot_r2_curve(y_true, y_pred):
     plt.title(f'R2: {r2:.2f}', fontsize=14)
     plt.xlim(min(TRUE) - 0.2, max(TRUE) + 0.5)
     plt.ylim(min(PRED) - 0.2, max(PRED) + 0.5)
+    if outfile is not None:
+        plt.savefig(outfile)
     plt.show()
 
 
-def plot_selected_point(y_pred, std_pred, condition, title):
+def plot_selected_point(y_pred, std_pred, condition, title, outfolder=None):
     """
     Plots a scatter plot of all generated point's predicted values (y_pred) vs. predicted standard deviations (std_pred),
     highlighting choosen points in red by active learning based on EI condition (or UCB or PI)
@@ -300,10 +306,13 @@ def plot_selected_point(y_pred, std_pred, condition, title):
     ax.legend(loc='upper left',  prop={'size': 10})
 
     plt.tight_layout()
+    if outfolder is not None:
+        outfile = os.path.join(outfolder, f"{title}.png")
+        plt.savefig(outfile)
     plt.show()
 
 
-def plot_heatmap(ax, X_new_norm, y_pred, element_list, title):
+def plot_heatmap(ax, X_new_norm, y_pred, element_list, title, outfolder=None):
     """
     Plots a heatmap of normalized data (X_new_norm), sorted by predicted values (y_pred),
     with elements along the y-axis. This shows how the model understand the evolution/relationship of each component to yield
@@ -333,8 +342,12 @@ def plot_heatmap(ax, X_new_norm, y_pred, element_list, title):
     cbar = plt.colorbar(heatmap, ax=ax)
     cbar.set_label('Ratio to Max Concentration', size=12)
 
+    if outfolder is not None:
+        outfile = os.path.join(outfolder, f"{title}.png")
+        plt.savefig(outfile)
 
-def plot_each_round(y,size_list, predict = False):
+
+def plot_each_round(y,size_list, predict = False, outfolder=None):
     """
     Plots a boxplot showing the distribution of 'y' values across different rounds,
     with an option to highlight the last boxplot if it's a prediction from our model.
@@ -371,11 +384,15 @@ def plot_each_round(y,size_list, predict = False):
         last_box.set_facecolor('silver')
 
     plt.ylabel('Yield')
-    plt.title('Yield evolution through each active learning query')
+    title = 'Yield evolution through each active learning query'
+    plt.title(title)
+    if outfolder is not None:
+        outfile = os.path.join(outfolder, f"{title}.png")
+        plt.savefig(outfile)
     plt.show()
 
 
-def plot_train_test(train, test, element_list):
+def plot_train_test(train, test, element_list, outfolder=None):
     """
     Plots histograms comparing train and test data distributions for each element
     in the provided element list. Histograms for each element are displayed in a grid.
@@ -404,3 +421,7 @@ def plot_train_test(train, test, element_list):
 
     for j in range(i + 1, len(axes)):
         fig.delaxes(axes[j])
+
+    if outfolder is not None:
+        outfile = os.path.join(outfolder, "Train_Test.png")
+        plt.savefig(outfile)
