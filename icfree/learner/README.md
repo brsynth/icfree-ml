@@ -46,56 +46,69 @@
 - **Example**: `"output"`
 
 ### `name_list: str`
+- **Required**: No
 - **Description**: A comma-separated string of column names or identifiers, converted to a list of strings representing columns that contain labels (y). This separates y columns from the rest (X features).
 - **Example**: `Yield1,Yield2,Yield3,Yield4,Yield5`
 
 ### `test: bool`
-- **Description**: A flag for validating the model; not required to run inside the active learning loop. If false, skip the validating step.
-- **Example**: `True`
+- **Required**: No
+- **Description**: A flag for validating the model; not required to run inside the active learning loop. If not set, skip the validating step.
+- **Example**: `--test`
 
 ### `nb_rep: int`
+- **Required**: No
 - **Description**: The number of test repetitions for validating the model behavior. 80% of data is randomly separated for training, and 20% is used for testing.
 - **Example**: `100`
 
 ### `flatten: bool`
-- **Description**: A flag to indicate whether to flatten Y data. Accepts 'true' or 'false' (case-insensitive). If 'true', treats each repetition in the same experiment independently; multiple same X values with different y outputs are modeled. If 'false', calculates the average of y across repetitions and only model with y average.
-- **Example**: `False`
+- **Required**: No
+- **Description**: A flag to indicate whether to flatten Y data. If set, treats each repetition in the same experiment independently; multiple same X values with different y outputs are modeled. Else, calculates the average of y across repetitions and only model with y average.
+- **Example**: `--flatten`
 
 ### `seed: int`
+- **Required**: No
 - **Description**: The random seed value used for reproducibility in random operations.
 - **Example**: `85`
 
 ### `nb_new_data_predict: int`
+- **Required**: No
 - **Description**: The number of new data points sampled from all possible cases.
 - **Example**: `1000`
 
 ### `nb_new_data: int`
+- **Required**: No
 - **Description**: The number of new data points selected from the generated ones. These are the data points labeled after active learning loops. `nb_new_data_predict` must be greater than `nb_new_data` to be meaningful.
 - **Example**: `50`
 
 ### `parameter_step: int`
+- **Required**: No
 - **Description**: The step size used to decrement the maximum predefined concentration sequentially. For example, if the maximum concentration is `max`, the sequence of concentrations is calculated as: `max - 1 * parameter_step`, `max - 2 * parameter_step`, `max - 3 * parameter_step`, and so on. Each concentration is a candidate for experimental testing. Smaller steps result in more possible combinations to sample.
 - **Example**: `10`
 
 ### `n_group: int`
+- **Required**: No
 - **Description**: Parameter for the cluster margin algorithm, specifying the number of groups into which generated data will be clustered.
 - **Example**: `15`
 
 ### `km: int`
+- **Required**: No
 - **Description**: Parameter for the cluster margin algorithm, specifying the number of data points for the first selection. Ensure `nb_new_data_predict > ks > km`.
 - **Example**: `50`
 
 ### `ks: int`
+- **Required**: No
 - **Description**: Parameter for the cluster margin algorithm, specifying the number of data points for the second selection. This is also similar to `nb_new_data`.
 - **Example**: `20`
 
 ### `plot: bool`
-- **Description**: A flag to indicate whether to generate all plots for analysis visualization. Accepts 'true' or 'false' (case-insensitive).
-- **Example**: `True`
+- **Required**: No
+- **Description**: A flag to indicate whether to generate all plots for analysis visualization.
+- **Example**: `--plot`
 
 ### `save_plot: bool`
-- **Description**: A flag to indicate whether to save all generated plots. Accepts 'true' or 'false' (case-insensitive).
-- **Example**: `True`
+- **Required**: No
+- **Description**: A flag to indicate whether to save all generated plots.
+- **Example**: `--save_plot`
 
 ---
 
