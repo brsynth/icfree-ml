@@ -16,6 +16,3 @@ dependencies:
   - ipython
   - ipywidgets 
   - glob2  
-  - pip
-  - pip:
-    - warnings

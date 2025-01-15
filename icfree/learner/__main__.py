@@ -6,9 +6,9 @@ import pandas as pd
 from sklearn.exceptions import ConvergenceWarning
 from sklearn.preprocessing import MaxAbsScaler
 import warnings
-warnings.filterwarnings("ignore", category=ConvergenceWarning)
-
 from icfree.learner.library import *
+
+warnings.filterwarnings("ignore", category=ConvergenceWarning)
 
 
 def csv_to_dict(file_path):
