@@ -95,10 +95,6 @@ def parse_arguments():
 
     args = parser.parse_args()
     
-    # # Convert boolean-like strings to actual booleans
-    # args.flatten = args.flatten.lower() == 'true'
-    # args.plot = args.plot.lower() == 'true'
-    
     # Convert comma-separated lists to actual Python lists
     args.name_list = args.name_list.split(',')
     
@@ -180,8 +176,7 @@ def main():
 
         plt.hist(res, bins = 20, color='orange')
         plt.title(f'Histogram of R2 for different testing subset, median= {np.median(res):.2f}', size = 12)
-    else:
-        print("Skipping testing the model...")
+        print("\033[92mOK\033[0m")
 
     X_new = sampling_without_repeat(sampling_condition, num_samples=nb_new_data_predict, existing_data=X_train, seed=seed)
     X_new_norm = scaler.transform(X_new)
