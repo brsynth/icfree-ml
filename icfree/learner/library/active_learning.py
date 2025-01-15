@@ -65,7 +65,7 @@ def sampling_without_repeat(sampling_condition, num_samples, existing_data, seed
     return new_samples
 
 
-def find_top_elements(X, y, cluster_list, condition, n, return_ratio=False, verbose=True):
+def find_top_elements(X, y, cluster_list, condition, n, return_ratio=False, verbose=False):
     """
     Finds the top 'n' elements from X, y, and cluster_list based on the highest values in 'condition'
 

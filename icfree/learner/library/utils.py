@@ -9,7 +9,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import r2_score
 
 
-def import_data(folder_for_data, verbose = True):
+def import_data(folder_for_data, verbose = False):
     """
     This function reads all CSV files in the specified folder, concatenates their contents
           into a single DataFrame, and returns this DataFrame along with a list of number of data in each csv (row counts) for ploting later
@@ -29,7 +29,11 @@ def import_data(folder_for_data, verbose = True):
 
     """
 
-    files = glob.glob(folder_for_data + "\\*.csv")
+    # List all files in folder_for_data with .csv extension
+    files = glob.glob(os.path.join(folder_for_data, "*.csv"))
+    # Print names without full path of found files
+    # filenames = ", ".join([os.path.basename(file) for file in files])
+    # print(f"Files found in {folder_for_data}: {filenames}")
     concatenated_data = pd.DataFrame()
     size_list = []
 
@@ -45,10 +49,11 @@ def import_data(folder_for_data, verbose = True):
             size_list.append(len(df))
 
     if verbose:
-        print("Read ", len(files), " files: ")
+        print("\nRead ", len(files), " files: ")
         for file in files:
             data_name = os.path.basename(file)
-            print("- ", data_name)
+            print("   -", data_name)
+        print()
         display(concatenated_data)
 
     return concatenated_data, size_list
@@ -96,7 +101,7 @@ def import_parameter(parameter_file, parameter_step, sep='\t', verbose=False):
     return element_list, element_max, sampling_condition 
 
 
-def check_column_names(data, element_list):
+def check_column_names(data, element_list, verbose=False):
     """
     Checks if the first n columns of the `data` DataFrame match the expected element list from parameter file.
 
@@ -115,16 +120,17 @@ def check_column_names(data, element_list):
 
     try:
         if columns_only_in_data or columns_only_in_parameter:
-            print("- Columns only in data files:", columns_only_in_data)
-            print("- Columns only in parameter files:", columns_only_in_parameter)
+            if verbose:
+                print("- Columns only in data files:", columns_only_in_data)
+                print("- Columns only in parameter files:", columns_only_in_parameter)
             raise ValueError("Column names are not matched, please modify parameter column names.")
         else:
-            print("All column names matched successfully!")
+            if verbose:
+                print("All column names matched successfully!")
     
     except ValueError as e:
         error_message = f"{type(e).__name__}: {e}"
         print("\033[1;91m{}\033[0m".format(error_message)) 
-
 
 
 def flatten_X_y(feature_matrix, label_matrix):
@@ -230,7 +236,7 @@ def split_and_flatten(feature_matrix, label_array, ratio=0.2, seed=None, flatten
     return X_train, X_test, y_train, y_test
 
 #########################################################################################
-def plot_r2_curve(y_true, y_pred):
+def plot_r2_curve(y_true, y_pred, outfile=None):
     """
     Plots a scatter plot of true (on x axis) vs. predicted values (y axis) and displays the R-squared value on the plot
     also add a diagonal reference dot line for reference
@@ -267,6 +273,8 @@ def plot_r2_curve(y_true, y_pred):
     plt.title(f'R2: {r2:.2f}', fontsize=14)
     plt.xlim(min(TRUE) - 0.2, max(TRUE) + 0.5)
     plt.ylim(min(PRED) - 0.2, max(PRED) + 0.5)
+    if outfile is not None:
+        plt.savefig(outfile)
     plt.show()
 
 
@@ -300,10 +308,11 @@ def plot_selected_point(y_pred, std_pred, condition, title):
     ax.legend(loc='upper left',  prop={'size': 10})
 
     plt.tight_layout()
-    plt.show()
+    
+    return title
 
 
-def plot_heatmap(ax, X_new_norm, y_pred, element_list, title):
+def plot_heatmap(X_new_norm, y_pred, element_list, title):
     """
     Plots a heatmap of normalized data (X_new_norm), sorted by predicted values (y_pred),
     with elements along the y-axis. This shows how the model understand the evolution/relationship of each component to yield
@@ -318,23 +327,29 @@ def plot_heatmap(ax, X_new_norm, y_pred, element_list, title):
     Returns:
         None: The plot is drawn on the provided axis `ax`.
     """
+    fig, axes = plt.subplots(1, 1, figsize=(10, 4))
     n = len(y_pred)
     sorted_indices = np.argsort(y_pred)
     sorted_X = X_new_norm[sorted_indices].T  
 
-    heatmap = ax.imshow(sorted_X, aspect='auto', cmap='viridis')
+    heatmap = axes.imshow(sorted_X, aspect='auto', cmap='viridis')
 
-    ax.set_xticks([])  
-    ax.set_title(f"{title}, samples = {n}", size=12)
+    axes.set_xticks([])  
+    axes.set_title(f"{title}, samples = {n}", size=12)
     
-    ax.set_yticks(np.arange(len(element_list)))
-    ax.set_yticklabels(element_list, fontsize=12)
+    axes.set_yticks(np.arange(len(element_list)))
+    axes.set_yticklabels(element_list, fontsize=12)
 
-    cbar = plt.colorbar(heatmap, ax=ax)
+    cbar = plt.colorbar(heatmap, ax=axes)
     cbar.set_label('Ratio to Max Concentration', size=12)
 
+    plt.tight_layout()
+    plt.xlabel("Yield: left-low, right-high")
 
-def plot_each_round(y,size_list, predict = False):
+    return title
+
+
+def plot_each_round(y, size_list, predict):
     """
     Plots a boxplot showing the distribution of 'y' values across different rounds,
     with an option to highlight the last boxplot if it's a prediction from our model.
@@ -371,8 +386,10 @@ def plot_each_round(y,size_list, predict = False):
         last_box.set_facecolor('silver')
 
     plt.ylabel('Yield')
-    plt.title('Yield evolution through each active learning query')
-    plt.show()
+    title = 'Yield evolution through each active learning query'
+    plt.title(title)
+
+    return title
 
 
 def plot_train_test(train, test, element_list):
@@ -404,3 +421,5 @@ def plot_train_test(train, test, element_list):
 
     for j in range(i + 1, len(axes)):
         fig.delaxes(axes[j])
+
+    return "Train_Test.png"
