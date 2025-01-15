@@ -9,7 +9,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import r2_score
 
 
-def import_data(folder_for_data, verbose = True):
+def import_data(folder_for_data, verbose = False):
     """
     This function reads all CSV files in the specified folder, concatenates their contents
           into a single DataFrame, and returns this DataFrame along with a list of number of data in each csv (row counts) for ploting later
@@ -32,8 +32,8 @@ def import_data(folder_for_data, verbose = True):
     # List all files in folder_for_data with .csv extension
     files = glob.glob(os.path.join(folder_for_data, "*.csv"))
     # Print names without full path of found files
-    filenames = ", ".join([os.path.basename(file) for file in files])
-    print(f"Files found in {folder_for_data}: {filenames}")
+    # filenames = ", ".join([os.path.basename(file) for file in files])
+    # print(f"Files found in {folder_for_data}: {filenames}")
     concatenated_data = pd.DataFrame()
     size_list = []
 
@@ -49,10 +49,11 @@ def import_data(folder_for_data, verbose = True):
             size_list.append(len(df))
 
     if verbose:
-        print("Read ", len(files), " files: ")
+        print("\nRead ", len(files), " files: ")
         for file in files:
             data_name = os.path.basename(file)
-            print("- ", data_name)
+            print("   -", data_name)
+        print()
         display(concatenated_data)
 
     return concatenated_data, size_list
@@ -100,7 +101,7 @@ def import_parameter(parameter_file, parameter_step, sep='\t', verbose=False):
     return element_list, element_max, sampling_condition 
 
 
-def check_column_names(data, element_list):
+def check_column_names(data, element_list, verbose=False):
     """
     Checks if the first n columns of the `data` DataFrame match the expected element list from parameter file.
 
@@ -119,16 +120,17 @@ def check_column_names(data, element_list):
 
     try:
         if columns_only_in_data or columns_only_in_parameter:
-            print("- Columns only in data files:", columns_only_in_data)
-            print("- Columns only in parameter files:", columns_only_in_parameter)
+            if verbose:
+                print("- Columns only in data files:", columns_only_in_data)
+                print("- Columns only in parameter files:", columns_only_in_parameter)
             raise ValueError("Column names are not matched, please modify parameter column names.")
         else:
-            print("All column names matched successfully!")
+            if verbose:
+                print("All column names matched successfully!")
     
     except ValueError as e:
         error_message = f"{type(e).__name__}: {e}"
         print("\033[1;91m{}\033[0m".format(error_message)) 
-
 
 
 def flatten_X_y(feature_matrix, label_matrix):

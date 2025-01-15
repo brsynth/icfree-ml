@@ -110,6 +110,11 @@
 - **Description**: A flag to indicate whether to save all generated plots.
 - **Example**: `--save_plot`
 
+### `verbose: bool`
+- **Required**: No
+- **Description**: A flag to indicate whether to print all messages to the console.
+- **Example**: `--verbose`
+
 ---
 
 ## Example Configuration File

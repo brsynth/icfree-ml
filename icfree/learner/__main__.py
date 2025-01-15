@@ -100,15 +100,26 @@ def parse_arguments():
     
     return args
 
-def save_and_or_plot(plot, save_plot, outfile=None):
+def save_and_or_plot(plot, save_plot, outfile=None, verbose=False):
     if save_plot:
-        # Print message of saving with OK at the end of the line when it's done
-        print(f"Saving plot to {outfile}...", end=' ')
+        if verbose:
+            # Print message of saving with OK at the end of the line when it's done
+            print(f"Saving plot to {outfile}...", end=' ')
         plt.savefig(outfile)
-        print("\033[92mOK\033[0m")
+        if verbose:
+            print_CheckMark()
     if plot:
         plt.show()
     plt.close()
+
+def print_pending_step(msg):
+    print(f"\033[1m{msg}...\033[0m", end=' ', flush=True)
+
+def print_OK():
+    print('\033[1m\033[92mOK\033[0m')
+
+def print_CheckMark():
+    print(u'\033[92m\N{check mark}\033[0m')
 
 def main():
     args = parse_arguments()
@@ -129,16 +140,21 @@ def main():
     km = args.km
     plot = args.plot
     save_plot = args.save_plot
+    verbose = args.verbose
 
     # Proceed with the rest of the script logic
     element_list, element_max, sampling_condition = import_parameter(parameter_file, parameter_step)
 
-    data, size_list = import_data(data_folder, verbose = True)
+    print_pending_step("Importing data...")
+    data, size_list = import_data(data_folder, verbose)
     if len(size_list) == 0:
         print("No data found")
         print("Exiting...")
         exit()
-    check_column_names(data, element_list)
+    print_OK()
+    print_pending_step("Checking data...")
+    check_column_names(data, element_list, verbose)
+    print_OK()
 
     no_element = len(element_list)
     y = np.array(data[name_list])
@@ -152,14 +168,20 @@ def main():
     #            'alpha':[0.01, 0.025, 0.05, 0.075, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5]}
                 'alpha':[0.05]}
 
+    print_pending_step("Formatting data...")
     X_train, X_test, y_train, y_test = split_and_flatten(X, y, ratio = 0, flatten = flatten)
     scaler = MaxAbsScaler()
     X_train_norm = scaler.fit_transform(X_train)
+    print_OK()
+    print_pending_step("Creating the model...")
     model = BayesianModels(n_folds= 10, model_type = 'gp', params=params)
-    model.train(X_train_norm, y_train)
+    print_OK()
+    print_pending_step("Training the model...")
+    model.train(X_train_norm, y_train, verbose = verbose)
+    print_OK()
 
     if test:
-        print("Testing the model...")
+        print_pending_step("Testing the model...")
         best_param = {'alpha': [model.best_params['alpha']],'kernel': [model.best_params['kernel']]}
         res = []
         for i in range(nb_rep):
@@ -176,42 +198,49 @@ def main():
 
         plt.hist(res, bins = 20, color='orange')
         plt.title(f'Histogram of R2 for different testing subset, median= {np.median(res):.2f}', size = 12)
-        print("\033[92mOK\033[0m")
+        print_OK()
 
+    print_pending_step("Predicting new samples to test...")
     X_new = sampling_without_repeat(sampling_condition, num_samples=nb_new_data_predict, existing_data=X_train, seed=seed)
     X_new_norm = scaler.transform(X_new)
     y_pred, std_pred = model.predict(X_new_norm)
     clusters = cluster(X_new_norm, n_group)
 
     ei = expected_improvement(y_pred, std_pred, max(y_train))
-    print("For EI:")
-    ei_top, y_ei, ratio_ei, ei_cluster = find_top_elements(X_new, y_pred, clusters, ei, km, return_ratio=True)
+    if verbose:
+        print("EI: ", end='')
+    ei_top, y_ei, ratio_ei, ei_cluster = find_top_elements(X_new, y_pred, clusters, ei, km, return_ratio=True, verbose=verbose)
     ei_top_norm = scaler.transform(ei_top)
+    print_OK()
 
+    print_pending_step("Saving results...")
     # Create outfolder if it does not exist
     if not os_path.exists(output_folder):
         os.makedirs(output_folder)
 
     if plot or save_plot:
         title = plot_selected_point(y_pred, std_pred, y_ei, 'EI selected')
-        save_and_or_plot(plot, save_plot, os_path.join(output_folder, title))
+        save_and_or_plot(plot, save_plot, os_path.join(output_folder, title), verbose)
 
         size_list.append(nb_new_data)
         y_mean = np.append(y_mean, y_ei)
         title = plot_each_round(y_mean, size_list, True)
-        save_and_or_plot(plot, save_plot, os_path.join(output_folder, title))
+        save_and_or_plot(plot, save_plot, os_path.join(output_folder, title), verbose)
 
         title = plot_train_test(X_train_norm, ei_top_norm, element_list)
-        save_and_or_plot(plot, save_plot, os_path.join(output_folder, title))
+        save_and_or_plot(plot, save_plot, os_path.join(output_folder, title), verbose)
 
         title = plot_heatmap(ei_top_norm, y_ei, element_list, 'EI')
-        save_and_or_plot(plot, save_plot, os_path.join(output_folder, title))
+        save_and_or_plot(plot, save_plot, os_path.join(output_folder, title), verbose)
 
     X_ei = pd.DataFrame(ei_top, columns=element_list)
     outfile = os_path.join(output_folder, 'next_sampling_ei'+ str(km) + '.csv')
-    print(f"Saving next sampling points to {outfile}...", end=' ')
+    if verbose:
+        print(f"Saving next sampling points to {outfile}...", end=' ')
     X_ei.to_csv(outfile, index=False)
-    print("\033[92mOK\033[0m")
+    if verbose:
+        print_CheckMark()
+    print_OK()
 
 
 if __name__ == "__main__":
