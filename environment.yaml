@@ -9,3 +9,13 @@ dependencies:
   - openpyxl
   - statsmodels
   - matplotlib-base
+  - scikit-learn
+  - seaborn
+  - xgboost
+  - scipy
+  - ipython
+  - ipywidgets 
+  - glob2  
+  - pip
+  - pip:
+    - warnings
