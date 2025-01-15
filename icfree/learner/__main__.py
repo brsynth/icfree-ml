@@ -32,23 +32,12 @@ def parse_readme(file_path):
         params_dict[name] = {
             'required': match.group('required') if match.groupdict().get('required') else None,
             'type': match.group('type'),
-            'description': match.group('description').strip(),
+            'description': match.group('description').strip().replace('%', '%%'),
             'example': match.group('example').strip() if match.groupdict().get('example') else None
         }
+        params_dict[name]['example'] = params_dict[name]['example'].replace('`', '') if params_dict[name]['example'] else None
     
     return params_dict
-
-def merge_dicts_for_argparse(config_dict, doc_dict):
-    merged_dict = {}
-    for param, value in config_dict.items():
-        param_info = doc_dict.get(param, {})
-        merged_dict[param] = {
-            'default': value,
-            'type': param_info.get('type', 'str'),
-            'help': param_info.get('description', '') + f" (Default: {value})",
-            'example': param_info.get('example', None)
-        }
-    return merged_dict
 
 def string_to_type(type_string):
     # Supported types in Python
@@ -58,41 +47,6 @@ def string_to_type(type_string):
         'float': float
     }
     return type_mapping.get(type_string, str)  # Default to str if type is unknown
-
-def setup_argparse(parameters, parser=None):
-    if parser is None:
-        parser = argparse.ArgumentParser(description="Application Configuration")
-    for param, param_info in parameters.items():
-        required_value = param_info['required'].lower() == 'yes' if param_info['required'] else False
-        default_value = param_info['example'].replace('`', '') if param_info['example'] else ''
-        type_value = eval(param_info['type'])
-        default_value = type_value(default_value) if default_value else ''
-        example_value = param_info['example'].replace('`', '') if param_info['example'] else ''
-        help_value = f"{param_info['description']} (Example: {example_value})"
-        # Replace all '%' with '%%' to avoid formatting issues
-        help_value = help_value.replace('%', '%%')
-        # print(f"--{param}",
-        #     required_value,
-        #     default_value,
-        #     type(default_value),
-        #     type_value,
-        #     help_value
-        # )
-        if required_value:
-            parser.add_argument(
-                f"--{param}",
-                required=True,
-                type=type_value,
-                help=help_value
-            )
-        else:
-            parser.add_argument(
-                f"--{param}",
-                default=default_value,
-                type=type_value,
-                help=help_value
-            )
-    return parser
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Script for active learning and model training.")
@@ -109,26 +63,35 @@ def parse_arguments():
     # params = csv_to_dict(config_path)
     doc = parse_readme(readme_path)
 
-    # # Create argparse parser
-    # parser = setup_argparse(doc, parser)
-   
-    # Add all the arguments that were previously loaded from config.csv and use the CSV values as defaults
-    parser.add_argument('--data_folder', required=doc['data_folder']['required'].lower()=='yes', type=eval(doc['data_folder']['type']), help=doc['data_folder']['description'].replace('%', '%%'))
-    parser.add_argument('--parameter_file', required=doc['parameter_file']['required'].lower()=='yes', type=eval(doc['parameter_file']['type']), help=doc['parameter_file']['description'].replace('%', '%%'))
-    parser.add_argument('--output_folder', required=doc['output_folder']['required'].lower()=='yes', type=eval(doc['output_folder']['type']), help=doc['output_folder']['description'].replace('%', '%%'))
-    parser.add_argument('--name_list', required=doc['name_list']['required'].lower()=='yes', type=eval(doc['name_list']['type']), default=doc['name_list']['example'].replace('`', ''), help=doc['name_list']['description'].replace('%', '%%'))
-    parser.add_argument('--nb_rep', required=doc['nb_rep']['required'].lower()=='yes', type=eval(doc['nb_rep']['type']), default=doc['nb_rep']['example'].replace('`', ''), help=doc['nb_rep']['description'].replace('%', '%%'))
-    parser.add_argument('--flatten', required=doc['flatten']['required'].lower()=='yes', help=doc['flatten']['description'].replace('%', '%%'), action='store_true')
-    parser.add_argument('--seed', required=doc['seed']['required'].lower()=='yes', type=eval(doc['seed']['type']), default=doc['seed']['example'].replace('`', ''), help=doc['seed']['description'].replace('%', '%%'))
-    parser.add_argument('--nb_new_data_predict', required=doc['nb_new_data_predict']['required'].lower()=='yes', type=eval(doc['nb_new_data_predict']['type']), default=doc['nb_new_data_predict']['example'].replace('`', ''), help=doc['nb_new_data_predict']['description'].replace('%', '%%'))
-    parser.add_argument('--nb_new_data', required=doc['nb_new_data']['required'].lower()=='yes', type=eval(doc['nb_new_data']['type']), default=doc['nb_new_data']['example'].replace('`', ''), help=doc['nb_new_data']['description'].replace('%', '%%'))
-    parser.add_argument('--parameter_step', required=doc['parameter_step']['required'].lower()=='yes', type=eval(doc['parameter_step']['type']), default=doc['parameter_step']['example'].replace('`', ''), help=doc['parameter_step']['description'].replace('%', '%%'))
-    parser.add_argument('--test', required=doc['test']['required'].lower()=='yes', help=doc['test']['description'].replace('%', '%%'), action='store_true')
-    parser.add_argument('--n_group', required=doc['n_group']['required'].lower()=='yes', type=eval(doc['n_group']['type']), default=doc['n_group']['example'].replace('`', ''), help=doc['n_group']['description'].replace('%', '%%'))
-    parser.add_argument('--ks', required=doc['ks']['required'].lower()=='yes', type=eval(doc['ks']['type']), default=doc['ks']['example'].replace('`', ''), help=doc['ks']['description'].replace('%', '%%'))
-    parser.add_argument('--km', required=doc['km']['required'].lower()=='yes', type=eval(doc['km']['type']), default=doc['km']['example'].replace('`', ''), help=doc['km']['description'].replace('%', '%%'))
-    parser.add_argument('--plot', required=doc['plot']['required'].lower()=='yes', help=doc['plot']['description'].replace('%', '%%'), action='store_true')
-    parser.add_argument('--save_plot', required=doc['save_plot']['required'].lower()=='yes', help=doc['save_plot']['description'].replace('%', '%%'), action='store_true')
+    # Create argparse parser   
+    for arg in doc:
+        required = doc[arg]['required'].lower() == 'yes'
+        type = string_to_type(doc[arg]['type'])
+        help = doc[arg]['description']
+        default = doc[arg]['example']
+        if doc[arg]['type'] == 'bool':
+            parser.add_argument(f'--{arg}', help=help, action='store_true')
+        else:
+            if not required:
+                help += f" (Default: {doc[arg]['example']})"
+            parser.add_argument(f'--{arg}', required=required, type=type, help=help, default=default)
+
+    # parser.add_argument('--data_folder', required=doc['data_folder']['required'].lower()=='yes', type=eval(doc['data_folder']['type']), help=doc['data_folder']['description'].replace('%', '%%'))
+    # parser.add_argument('--parameter_file', required=doc['parameter_file']['required'].lower()=='yes', type=eval(doc['parameter_file']['type']), help=doc['parameter_file']['description'].replace('%', '%%'))
+    # parser.add_argument('--output_folder', required=doc['output_folder']['required'].lower()=='yes', type=eval(doc['output_folder']['type']), help=doc['output_folder']['description'].replace('%', '%%'))
+    # parser.add_argument('--name_list', required=doc['name_list']['required'].lower()=='yes', type=eval(doc['name_list']['type']), default=doc['name_list']['example'].replace('`', ''), help=doc['name_list']['description'].replace('%', '%%')+f" (default: {doc['name_list']['example']})")
+    # parser.add_argument('--nb_rep', required=doc['nb_rep']['required'].lower()=='yes', type=eval(doc['nb_rep']['type']), default=doc['nb_rep']['example'].replace('`', ''), help=doc['nb_rep']['description'].replace('%', '%%'))
+    # parser.add_argument('--flatten', required=doc['flatten']['required'].lower()=='yes', help=doc['flatten']['description'].replace('%', '%%'), action='store_true')
+    # parser.add_argument('--seed', required=doc['seed']['required'].lower()=='yes', type=eval(doc['seed']['type']), default=doc['seed']['example'].replace('`', ''), help=doc['seed']['description'].replace('%', '%%'))
+    # parser.add_argument('--nb_new_data_predict', required=doc['nb_new_data_predict']['required'].lower()=='yes', type=eval(doc['nb_new_data_predict']['type']), default=doc['nb_new_data_predict']['example'].replace('`', ''), help=doc['nb_new_data_predict']['description'].replace('%', '%%'))
+    # parser.add_argument('--nb_new_data', required=doc['nb_new_data']['required'].lower()=='yes', type=eval(doc['nb_new_data']['type']), default=doc['nb_new_data']['example'].replace('`', ''), help=doc['nb_new_data']['description'].replace('%', '%%'))
+    # parser.add_argument('--parameter_step', required=doc['parameter_step']['required'].lower()=='yes', type=eval(doc['parameter_step']['type']), default=doc['parameter_step']['example'].replace('`', ''), help=doc['parameter_step']['description'].replace('%', '%%'))
+    # parser.add_argument('--test', required=doc['test']['required'].lower()=='yes', help=doc['test']['description'].replace('%', '%%'), action='store_true')
+    # parser.add_argument('--n_group', required=doc['n_group']['required'].lower()=='yes', type=eval(doc['n_group']['type']), default=doc['n_group']['example'].replace('`', ''), help=doc['n_group']['description'].replace('%', '%%'))
+    # parser.add_argument('--ks', required=doc['ks']['required'].lower()=='yes', type=eval(doc['ks']['type']), default=doc['ks']['example'].replace('`', ''), help=doc['ks']['description'].replace('%', '%%'))
+    # parser.add_argument('--km', required=doc['km']['required'].lower()=='yes', type=eval(doc['km']['type']), default=doc['km']['example'].replace('`', ''), help=doc['km']['description'].replace('%', '%%'))
+    # parser.add_argument('--plot', required=doc['plot']['required'].lower()=='yes', help=doc['plot']['description'].replace('%', '%%'), action='store_true')
+    # parser.add_argument('--save_plot', required=doc['save_plot']['required'].lower()=='yes', help=doc['save_plot']['description'].replace('%', '%%'), action='store_true')
 
     args = parser.parse_args()
     
@@ -140,6 +103,16 @@ def parse_arguments():
     args.name_list = args.name_list.split(',')
     
     return args
+
+def save_and_or_plot(plot, save_plot, outfile=None):
+    if save_plot:
+        # Print message of saving with OK at the end of the line when it's done
+        print(f"Saving plot to {outfile}...", end=' ')
+        plt.savefig(outfile)
+        print("\033[92mOK\033[0m")
+    if plot:
+        plt.show()
+    plt.close()
 
 def main():
     args = parse_arguments()
@@ -223,30 +196,27 @@ def main():
     # Create outfolder if it does not exist
     if not os_path.exists(output_folder):
         os.makedirs(output_folder)
-    
-    _output_folder = None
-    if save_plot:
-        _output_folder = output_folder
 
-    if plot: 
-        plot_selected_point(y_pred, std_pred, y_ei, 'EI selected', outfolder=output_folder)
+    if plot or save_plot:
+        title = plot_selected_point(y_pred, std_pred, y_ei, 'EI selected')
+        save_and_or_plot(plot, save_plot, os_path.join(output_folder, title))
 
         size_list.append(nb_new_data)
         y_mean = np.append(y_mean, y_ei)
-        plot_each_round(y_mean,size_list, predict = True, outfolder=output_folder)
+        title = plot_each_round(y_mean, size_list, True)
+        save_and_or_plot(plot, save_plot, os_path.join(output_folder, title))
 
-        plot_train_test(X_train_norm, ei_top_norm, element_list, outfolder=output_folder)
+        title = plot_train_test(X_train_norm, ei_top_norm, element_list)
+        save_and_or_plot(plot, save_plot, os_path.join(output_folder, title))
 
-        fig, axes = plt.subplots(1, 1, figsize=(10, 4))
-        plot_heatmap(axes, ei_top_norm, y_ei, element_list, 'EI', outfolder=output_folder)
-        plt.tight_layout()
-        plt.xlabel("Yield: left-low, right-high")
-        plt.show()
+        title = plot_heatmap(ei_top_norm, y_ei, element_list, 'EI')
+        save_and_or_plot(plot, save_plot, os_path.join(output_folder, title))
 
     X_ei = pd.DataFrame(ei_top, columns=element_list)
     outfile = os_path.join(output_folder, 'next_sampling_ei'+ str(km) + '.csv')
-    print(f"Saving next sampling points to {outfile}...")
+    print(f"Saving next sampling points to {outfile}...", end=' ')
     X_ei.to_csv(outfile, index=False)
+    print("\033[92mOK\033[0m")
 
 
 if __name__ == "__main__":

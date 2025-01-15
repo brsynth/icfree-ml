@@ -276,7 +276,7 @@ def plot_r2_curve(y_true, y_pred, outfile=None):
     plt.show()
 
 
-def plot_selected_point(y_pred, std_pred, condition, title, outfolder=None):
+def plot_selected_point(y_pred, std_pred, condition, title):
     """
     Plots a scatter plot of all generated point's predicted values (y_pred) vs. predicted standard deviations (std_pred),
     highlighting choosen points in red by active learning based on EI condition (or UCB or PI)
@@ -306,13 +306,11 @@ def plot_selected_point(y_pred, std_pred, condition, title, outfolder=None):
     ax.legend(loc='upper left',  prop={'size': 10})
 
     plt.tight_layout()
-    if outfolder is not None:
-        outfile = os.path.join(outfolder, f"{title}.png")
-        plt.savefig(outfile)
-    plt.show()
+    
+    return title
 
 
-def plot_heatmap(ax, X_new_norm, y_pred, element_list, title, outfolder=None):
+def plot_heatmap(X_new_norm, y_pred, element_list, title):
     """
     Plots a heatmap of normalized data (X_new_norm), sorted by predicted values (y_pred),
     with elements along the y-axis. This shows how the model understand the evolution/relationship of each component to yield
@@ -327,27 +325,29 @@ def plot_heatmap(ax, X_new_norm, y_pred, element_list, title, outfolder=None):
     Returns:
         None: The plot is drawn on the provided axis `ax`.
     """
+    fig, axes = plt.subplots(1, 1, figsize=(10, 4))
     n = len(y_pred)
     sorted_indices = np.argsort(y_pred)
     sorted_X = X_new_norm[sorted_indices].T  
 
-    heatmap = ax.imshow(sorted_X, aspect='auto', cmap='viridis')
+    heatmap = axes.imshow(sorted_X, aspect='auto', cmap='viridis')
 
-    ax.set_xticks([])  
-    ax.set_title(f"{title}, samples = {n}", size=12)
+    axes.set_xticks([])  
+    axes.set_title(f"{title}, samples = {n}", size=12)
     
-    ax.set_yticks(np.arange(len(element_list)))
-    ax.set_yticklabels(element_list, fontsize=12)
+    axes.set_yticks(np.arange(len(element_list)))
+    axes.set_yticklabels(element_list, fontsize=12)
 
-    cbar = plt.colorbar(heatmap, ax=ax)
+    cbar = plt.colorbar(heatmap, ax=axes)
     cbar.set_label('Ratio to Max Concentration', size=12)
 
-    if outfolder is not None:
-        outfile = os.path.join(outfolder, f"{title}.png")
-        plt.savefig(outfile)
+    plt.tight_layout()
+    plt.xlabel("Yield: left-low, right-high")
+
+    return title
 
 
-def plot_each_round(y,size_list, predict = False, outfolder=None):
+def plot_each_round(y, size_list, predict):
     """
     Plots a boxplot showing the distribution of 'y' values across different rounds,
     with an option to highlight the last boxplot if it's a prediction from our model.
@@ -386,13 +386,11 @@ def plot_each_round(y,size_list, predict = False, outfolder=None):
     plt.ylabel('Yield')
     title = 'Yield evolution through each active learning query'
     plt.title(title)
-    if outfolder is not None:
-        outfile = os.path.join(outfolder, f"{title}.png")
-        plt.savefig(outfile)
-    plt.show()
+
+    return title
 
 
-def plot_train_test(train, test, element_list, outfolder=None):
+def plot_train_test(train, test, element_list):
     """
     Plots histograms comparing train and test data distributions for each element
     in the provided element list. Histograms for each element are displayed in a grid.
@@ -422,6 +420,4 @@ def plot_train_test(train, test, element_list, outfolder=None):
     for j in range(i + 1, len(axes)):
         fig.delaxes(axes[j])
 
-    if outfolder is not None:
-        outfile = os.path.join(outfolder, "Train_Test.png")
-        plt.savefig(outfile)
+    return "Train_Test.png"
