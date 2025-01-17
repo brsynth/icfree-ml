@@ -28,6 +28,8 @@ class TestPlateDesigner(unittest.TestCase):
         self.default_dead_volume = 10
         self.well_capacity = 'Component1=55000'
         self.default_well_capacity = 60000
+        self.cheap_components = ''
+        self.num_extra_wells = '1'
         self.start_well_src_plt = 'A1'
         self.temp_dir = tempfile.TemporaryDirectory()
 
@@ -51,7 +53,9 @@ class TestPlateDesigner(unittest.TestCase):
             '--well_capacity', 'Component1=55000',
             '--default_well_capacity', '60000',
             '--start_well_src_plt', 'A1',
-            '--output_folder', self.temp_dir.name
+            '--output_folder', self.temp_dir.name,
+            '--cheap_components', '',
+            '--num_extra_wells', '1'
         ]
 
         with patch.object(sys, 'argv', test_args):
@@ -67,6 +71,8 @@ class TestPlateDesigner(unittest.TestCase):
             self.assertEqual(args.default_well_capacity, 60000)
             self.assertEqual(args.start_well_src_plt, 'A1')
             self.assertEqual(args.output_folder, self.temp_dir.name)
+            self.assertEqual(args.cheap_components, '')
+            self.assertEqual(args.num_extra_wells, '1')
 
     def test_prepare_destination_plate(self):
         result = prepare_destination_plate(
@@ -92,6 +98,8 @@ class TestPlateDesigner(unittest.TestCase):
             self.default_dead_volume,
             self.well_capacity,
             self.default_well_capacity,
+            self.cheap_components,
+            self.num_extra_wells,
             self.start_well_src_plt
         )
         self.assertEqual(result.shape[0], self.sampling_data.shape[0])
@@ -110,6 +118,8 @@ class TestPlateDesigner(unittest.TestCase):
             self.default_dead_volume,
             self.well_capacity,
             self.default_well_capacity,
+            self.cheap_components,
+            self.num_extra_wells,
             self.start_well_src_plt
         )
         write_output_files(source_data, destination_data, Path(self.temp_dir.name))
