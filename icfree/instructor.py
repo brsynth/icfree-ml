@@ -37,7 +37,7 @@ def generate_echo_instructions(source_plate_df, destination_plate_df, source_pla
     - split_threshold: Volume threshold above which transfers need to be split, if specified.
     
     Returns:
-    - DataFrame containing all transfer instructions, grouped by component.
+    - DataFrame containing all transfer instructions.
     """
     instructions = []
     component_columns = [col for col in destination_plate_df.columns if col != 'Well']
@@ -90,10 +90,37 @@ def generate_echo_instructions(source_plate_df, destination_plate_df, source_pla
                     })
 
     instructions_df = pd.DataFrame(instructions)
-    return instructions_df.groupby('Sample ID', as_index=False).apply(lambda x: x)
+    return instructions_df.reset_index(drop=True)
+
+def reorder_instructions(instructions_df, dispensing_order):
+    """
+    Reorders the instructions based on the specified dispensing order.
+    
+    Parameters:
+    - instructions_df: DataFrame containing all transfer instructions.
+    - dispensing_order: List of component names specifying the desired dispensing order.
+    
+    Returns:
+    - Reordered DataFrame.
+    """
+    if not dispensing_order:
+        return instructions_df
+    
+    # Separate the DataFrame into specified and remaining components
+    specified_order_df = instructions_df[instructions_df['Sample ID'].isin(dispensing_order)].copy()
+    specified_order_df = specified_order_df.assign(Order=specified_order_df['Sample ID'].apply(lambda x: dispensing_order.index(x)))
+    
+    # Sort the specified components by their order
+    specified_order_df = specified_order_df.sort_values(by='Order').drop(columns='Order')
+    
+    # Get the remaining components
+    remaining_df = instructions_df[~instructions_df['Sample ID'].isin(dispensing_order)]
+    
+    # Concatenate the DataFrames
+    return pd.concat([specified_order_df, remaining_df], ignore_index=True)
 
 def main(source_plate_file, destination_plate_file, output_file, source_plate_type="default:384PP_AQ_GP3",
-         max_transfer_volume=None, split_threshold=None, split_components=None):
+         max_transfer_volume=None, split_threshold=None, split_components=None, dispensing_order=None):
     """
     Main function to read input files, generate ECHO instructions, and write the output to files.
     
@@ -105,19 +132,16 @@ def main(source_plate_file, destination_plate_file, output_file, source_plate_ty
     - max_transfer_volume: Maximum volume for a single transfer. If not specified, no splitting will be performed.
     - split_threshold: Volume threshold above which transfers need to be split. If not specified, no splitting will be performed.
     - split_components: Comma-separated list of component names to create separate files for.
+    - dispensing_order: Comma-separated list of component names specifying the dispensing order.
     """
-    # Parse the source plate types from the string argument
     source_plate_types = parse_plate_types(source_plate_type)
-    
-    # Read the source and destination plate data from CSV files
     source_plate_df = pd.read_csv(source_plate_file)
     destination_plate_df = pd.read_csv(destination_plate_file)
-    
-    # Generate the ECHO instructions
     instructions_df = generate_echo_instructions(source_plate_df, destination_plate_df, source_plate_types,
                                                  max_transfer_volume, split_threshold)
-    
-    # Handle splitting of components into separate files if specified
+    if dispensing_order:
+        dispensing_order_list = dispensing_order.split(',')
+        instructions_df = reorder_instructions(instructions_df, dispensing_order_list)
     if split_components:
         split_components_list = split_components.split(',')
         for component in split_components_list:
@@ -125,14 +149,11 @@ def main(source_plate_file, destination_plate_file, output_file, source_plate_ty
             component_output_file = f"{os.path.splitext(output_file)[0]}_{component}.csv"
             component_df.to_csv(component_output_file, index=False)
             print(f"Instructions for {component} have been generated and saved to {component_output_file}")
-        
-        # Write remaining components to the original output file
         remaining_df = instructions_df[~instructions_df['Sample ID'].isin(split_components_list)]
         if not remaining_df.empty:
             remaining_df.to_csv(output_file, index=False)
             print(f"Instructions for remaining components have been generated and saved to {output_file}")
     else:
-        # Write all instructions to the original output file
         instructions_df.to_csv(output_file, index=False)
         print(f"Instructions have been generated and saved to {output_file}")
 
@@ -147,8 +168,9 @@ if __name__ == "__main__":
     parser.add_argument("--max_transfer_volume", type=int, help="Maximum volume for a single transfer. If not specified, no splitting will be performed.")
     parser.add_argument("--split_threshold", type=int, help="Volume threshold above which transfers need to be split. If not specified, no splitting will be performed.")
     parser.add_argument("--split_components", type=str, help="Comma-separated list of component names to create separate files for.")
+    parser.add_argument("--dispensing_order", type=str, help="Comma-separated list of component names specifying the dispensing order.")
     
     args = parser.parse_args()
     
     main(args.source_plate_file, args.destination_plate_file, args.output_file, args.source_plate_type,
-         args.max_transfer_volume, args.split_threshold, args.split_components)
+         args.max_transfer_volume, args.split_threshold, args.split_components, args.dispensing_order)
