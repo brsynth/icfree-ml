@@ -1,10 +1,39 @@
 import unittest
 import pandas as pd
 import numpy as np
+from os import path as os_path
 from icfree.instructor import parse_plate_types, generate_echo_instructions, reorder_by_dispense_order
 
 
 class TestInstructorModule(unittest.TestCase):
+
+    @classmethod
+    def setUp(cls):
+        cls.data_path = os_path.join(
+            # parent folder of the current file
+            os_path.dirname(__file__),
+            'data' , 'instructor'
+        )
+        cls.input_folder = os_path.join(
+            cls.data_path, 'input'
+        )
+        cls.reference_output_folder = os_path.join(
+            cls.data_path, 'output'
+        )
+        # Load source and destination plate data from files
+        cls.source_plate_file = os_path.join(
+            cls.input_folder, 'source_plate.csv'
+        )
+        cls.destination_plate_file = os_path.join(
+            cls.input_folder, 'destination_plate.csv'
+        )
+        cls.source_plate_df = pd.read_csv(cls.source_plate_file)
+        cls.destination_plate_df = pd.read_csv(cls.destination_plate_file)
+        # Load expected output data
+        cls.expected_output_file = os_path.join(
+            cls.reference_output_folder, 'instructions.csv'
+        )
+        cls.expected_output_file_df = pd.read_csv(cls.expected_output_file)
 
     def test_parse_plate_types_normal(self):
         self.assertEqual(
@@ -36,62 +65,29 @@ class TestInstructorModule(unittest.TestCase):
         )
 
     def test_generate_echo_instructions_normal(self):
-        source_plate_df = pd.DataFrame({
-            'Well': ['A1', 'B1', 'C1'],
-            'Component1': [1000, 0, 0],
-            'Component2': [0, 1500, 0]
-        })
-        destination_plate_df = pd.DataFrame({
-            'Well': ['A1', 'B1', 'C1'],
-            'Component1': [10, 20, 30],
-            'Component2': [5, 15, 25]
-        })
         source_plate_types = {'default': '384PP_AQ_GP3'}
-        
-        result = generate_echo_instructions(source_plate_df, destination_plate_df, source_plate_types)
+        result = generate_echo_instructions(self.source_plate_df, self.destination_plate_df, source_plate_types)
+        # Flatten the DataFrame for easier comparison
+        result = result.reset_index(drop=True)
         self.assertIsInstance(result, pd.DataFrame)
-
-        expected_result = pd.DataFrame({
-            'Source Plate Name': ['Source[1]', 'Source[1]', 'Source[1]', 'Source[1]', 'Source[1]', 'Source[1]'],
-            'Source Plate Type': ['384PP_AQ_GP3'] * 6,
-            'Source Well': ['A1', 'A1', 'B1', 'B1', 'C1', 'C1'],
-            'Destination Plate Name': ['Destination[1]'] * 6,
-            'Destination Well': ['A1', 'A1', 'B1', 'B1', 'C1', 'C1'],
-            'Transfer Volume': [10, 5, 20, 15, 30, 25],
-            'Sample ID': ['Component1', 'Component1', 'Component1', 'Component2', 'Component2', 'Component2']
-        })
-        np.array_equal(result.values, expected_result.values)
+        pd.testing.assert_frame_equal(result, self.expected_output_file_df)
 
     def test_reorder_by_dispense_order(self):
-        source_plate_df = pd.DataFrame({
-            'Well': ['A1', 'B1', 'C1'],
-            'Component1': [1000, 0, 0],
-            'Component2': [0, 1500, 0]
-        })
-        destination_plate_df = pd.DataFrame({
-            'Well': ['A1', 'B1', 'C1'],
-            'Component1': [10, 20, 30],
-            'Component2': [5, 15, 25]
-        })
         source_plate_types = {'default': '384PP_AQ_GP3'}
-        dispensing_order = 'Component2'
-        
-        result = generate_echo_instructions(source_plate_df, destination_plate_df, source_plate_types)
-        dispensing_order_list = dispensing_order.split(',')
-        result = reorder_by_dispense_order(result, dispensing_order_list)
+        result = generate_echo_instructions(self.source_plate_df, self.destination_plate_df, source_plate_types)
+        # Flatten the DataFrame for easier comparison
+        result = result.reset_index(drop=True)
+        dispense_order = ['Water', 'Hela lysate']
+        result = reorder_by_dispense_order(result, dispense_order)
+        # Reset the index for easier comparison
+        result = result.reset_index(drop=True)
         self.assertIsInstance(result, pd.DataFrame)
-
-        expected_result = pd.DataFrame({
-            'Source Plate Name': ['Source[1]', 'Source[1]', 'Source[1]', 'Source[1]', 'Source[1]', 'Source[1]'],
-            'Source Plate Type': ['384PP_AQ_GP3'] * 6,
-            'Source Well': ['A1', 'A1', 'B1', 'B1', 'C1', 'C1'],
-            'Destination Plate Name': ['Destination[1]'] * 6,
-            'Destination Well': ['A1', 'A1', 'B1', 'B1', 'C1', 'C1'],
-            'Transfer Volume': [10, 5, 20, 15, 30, 25],
-            'Sample ID': ['Component2', 'Component2', 'Component2', 'Component1', 'Component1', 'Component1']
-        })
-        # Compare 'Sample ID' list order
-        self.assertEqual(result['Sample ID'].tolist(), expected_result['Sample ID'].tolist())
+        # Load expected output data
+        expected_output_file = os_path.join(
+            self.reference_output_folder, 'instructions_reordered.csv'
+        )
+        expected_output_file_df = pd.read_csv(expected_output_file)
+        pd.testing.assert_frame_equal(result, expected_output_file_df)
 
     # def test_generate_echo_instructions_edge(self):
     #     empty_source_df = pd.DataFrame(columns=['Well', 'Component1', 'Component2'])
