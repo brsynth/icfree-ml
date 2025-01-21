@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 
+
 def parse_args():
     """
     Parse command-line arguments.
@@ -23,8 +24,10 @@ def parse_args():
     parser.add_argument('--dead_volumes', type=str, default='', help='Dead volumes for specific components in format component1=volume1,component2=volume2,...')
     parser.add_argument('--default_dead_volume', type=int, default=15000, help='Default dead volume in nL for the source plate')
     parser.add_argument('--num_replicates', type=int, default=1, help='Number of wanted replicates')
+    parser.add_argument('--extra_wells', type=str, default='', help='Extra source wells for specific components in format component1=num1,component2=num2,...')
     parser.add_argument('--output_folder', type=str, default='.', help='Output folder for the result files')
     return parser.parse_args()
+
 
 def generate_well_positions(start_well, plate_dims, num_positions):
     """
@@ -53,6 +56,7 @@ def generate_well_positions(start_well, plate_dims, num_positions):
             break
     return positions
 
+
 def parse_component_values(component_values_str, default_value):
     """
     Parse a string of component values into a dictionary, with a fallback to a default value.
@@ -71,6 +75,7 @@ def parse_component_values(component_values_str, default_value):
             component, value = cv.split('=')
             component_values[component] = int(value)
     return component_values, default_value
+
 
 def prepare_destination_plate(sampling_data, start_well, plate_dims, sample_volume, num_replicates):
     """
@@ -97,9 +102,10 @@ def prepare_destination_plate(sampling_data, start_well, plate_dims, sample_volu
     
     return replicated_data
 
-def prepare_source_plate(destination_data, dead_volumes_str, default_dead_volume, well_capacity_str, default_well_capacity, start_well):
+
+def prepare_source_plate(destination_data, dead_volumes_str, default_dead_volume, well_capacity_str, default_well_capacity, start_well, extra_wells_str):
     """
-    Prepare the source plate data by calculating the total volume needed for each component and assigning well positions.
+    Prepare the source plate data by calculating the total volume needed for each component, adding extra wells, and assigning well positions.
     
     Args:
         destination_data (pd.DataFrame): DataFrame with destination plate data.
@@ -108,13 +114,15 @@ def prepare_source_plate(destination_data, dead_volumes_str, default_dead_volume
         well_capacity_str (str): Well capacities for specific components (format: component1=capacity1,component2=capacity2,...).
         default_well_capacity (int): Default well capacity to use if not specified in well_capacity_str.
         start_well (str): Starting well position for the source plate.
+        extra_wells_str (str): Extra wells for specific components in format component1=num1,component2=num2,...
     
     Returns:
         pd.DataFrame: DataFrame with source plate data, including well positions and volumes for each component.
     """
-    # Parse dead volumes and well capacities
+    # Parse dead volumes, well capacities, and extra wells
     dead_volumes, default_dead_volume = parse_component_values(dead_volumes_str, default_dead_volume)
     well_capacities, default_well_capacity = parse_component_values(well_capacity_str, default_well_capacity)
+    extra_wells, _ = parse_component_values(extra_wells_str, 0)
     
     # Calculate total volume needed for each component from the destination data
     component_totals = destination_data.drop(columns='Well').sum()
@@ -129,6 +137,7 @@ def prepare_source_plate(destination_data, dead_volumes_str, default_dead_volume
         well_capacity = well_capacities.get(component, default_well_capacity)
         remaining_volume = total_volume
 
+        # Distribute the component across source wells
         while remaining_volume > 0:
             # Calculate effective capacity for the current well
             effective_capacity = well_capacity - dead_volume
@@ -145,6 +154,16 @@ def prepare_source_plate(destination_data, dead_volumes_str, default_dead_volume
 
         current_position += 1
 
+        # Add extra wells for this component, if specified
+        if component in extra_wells:
+            for _ in range(extra_wells[component]):
+                source_rows.append({
+                    'Well': well_positions[current_position],
+                    'Component': component,
+                    'Volume': well_capacity
+                })
+                current_position += 1
+
     # Convert source well allocations to a DataFrame and pivot for the desired format
     source_df = pd.DataFrame(source_rows)
     source_df_pivoted = source_df.pivot(index='Well', columns='Component', values='Volume').fillna(0)
@@ -155,6 +174,7 @@ def prepare_source_plate(destination_data, dead_volumes_str, default_dead_volume
     source_df_final = source_df_pivoted[cols]
 
     return source_df_final
+
 
 def write_output_files(source_data, destination_data, output_folder):
     """
@@ -174,10 +194,11 @@ def write_output_files(source_data, destination_data, output_folder):
     print(f"Destination plate data written to {destination_path}")
     print(f"Source plate data written to {source_path}")
 
+
 def main(
     sampling_file, sample_volume, start_well_src_plt='A1', start_well_dst_plt='A1', 
     plate_dims='16x24', well_capacity='', default_well_capacity=60000, 
-    dead_volumes='', default_dead_volume=15000, num_replicates=1, output_folder='.'):
+    dead_volumes='', default_dead_volume=15000, num_replicates=1, extra_wells='', output_folder='.'):
     """
     Main function to prepare source and destination well-plate mappings and write the results to files.
     
@@ -192,6 +213,7 @@ def main(
         dead_volumes (str): Dead volumes for specific components in format component1=volume1,component2=volume2,...
         default_dead_volume (int): Default dead volume in nL for the source plate.
         num_replicates (int): Number of wanted replicates.
+        extra_wells (str): Extra wells for specific components in format component1=num1,component2=num2,...
         output_folder (str): Output folder for the result files.
     """
     # Read the sampling data from the specified file
@@ -201,10 +223,11 @@ def main(
     destination_data = prepare_destination_plate(sampling_data, start_well_dst_plt, plate_dims, sample_volume, num_replicates)
     
     # Prepare the source plate data
-    source_data = prepare_source_plate(destination_data, dead_volumes, default_dead_volume, well_capacity, default_well_capacity, start_well_src_plt)
+    source_data = prepare_source_plate(destination_data, dead_volumes, default_dead_volume, well_capacity, default_well_capacity, start_well_src_plt, extra_wells)
     
     # Write the output files to the specified output folder
     write_output_files(source_data, destination_data, Path(output_folder))
+
 
 if __name__ == "__main__":
     # If the script is executed directly, parse command-line arguments
@@ -220,5 +243,6 @@ if __name__ == "__main__":
         dead_volumes=args.dead_volumes,
         default_dead_volume=args.default_dead_volume,
         num_replicates=args.num_replicates,
+        extra_wells=args.extra_wells,
         output_folder=args.output_folder
     )
