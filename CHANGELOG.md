@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.9.0](https://github.com/brsynth/icfree-ml/tree/2.9.0) (2025-01-21)
+
+[Full Changelog](https://github.com/brsynth/icfree-ml/compare/2.8.0...2.9.0)
+
+**Closed issues:**
+
+- Adding Extra source wells for Cheap Components [\#6](https://github.com/brsynth/icfree-ml/issues/6)
+- Arranging Components to specific order [\#5](https://github.com/brsynth/icfree-ml/issues/5)
+
 ## [2.8.0](https://github.com/brsynth/icfree-ml/tree/2.8.0) (2025-01-15)
 
 [Full Changelog](https://github.com/brsynth/icfree-ml/compare/2.7.1...2.8.0)
