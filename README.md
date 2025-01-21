@@ -105,7 +105,7 @@ python icfree/instructor.py <source_plate> <destination_plate> <output_instructi
 - --split_threshold: Threshold for splitting components.
 - --source_plate_type: Type of the source plate.
 - --split_components: Components to split.
-- --dispensing_order: Comma-separated list of component names specifying the dispensing order.
+- --dispense_order: Comma-separated list of component names specifying the dispensing order.
 
 #### Learner
 The Learner module carries out an active learning process to both train the model and explore the space of possible cell-free combinations.

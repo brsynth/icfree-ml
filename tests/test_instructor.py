@@ -1,7 +1,7 @@
 import unittest
 import pandas as pd
 import numpy as np
-from icfree.instructor import parse_plate_types, generate_echo_instructions, reorder_instructions
+from icfree.instructor import parse_plate_types, generate_echo_instructions, reorder_by_dispense_order
 
 
 class TestInstructorModule(unittest.TestCase):
@@ -62,7 +62,7 @@ class TestInstructorModule(unittest.TestCase):
         })
         np.array_equal(result.values, expected_result.values)
 
-    def test_reorder_instructions(self):
+    def test_reorder_by_dispense_order(self):
         source_plate_df = pd.DataFrame({
             'Well': ['A1', 'B1', 'C1'],
             'Component1': [1000, 0, 0],
@@ -78,7 +78,7 @@ class TestInstructorModule(unittest.TestCase):
         
         result = generate_echo_instructions(source_plate_df, destination_plate_df, source_plate_types)
         dispensing_order_list = dispensing_order.split(',')
-        result = reorder_instructions(result, dispensing_order_list)
+        result = reorder_by_dispense_order(result, dispensing_order_list)
         self.assertIsInstance(result, pd.DataFrame)
 
         expected_result = pd.DataFrame({
