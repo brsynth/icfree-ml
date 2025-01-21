@@ -87,6 +87,7 @@ python icfree/plate_designer.py <input_file> <sample_volume> [options]
 - --well_capacity: Well capacity.
 - --start_well_src_plt: Starting well for the source plate.
 - --start_well_dst_plt: Starting well for the destination plate.
+- --extra_wells: Extra wells to add to the plate.
 - --output_folder: Folder to save the output files.
 
 #### Instructor
