@@ -7,6 +7,7 @@ on:
       - stable
     paths:
       - '**.py'
+      - '!tests/**'
 
 
 jobs:
