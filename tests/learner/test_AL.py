@@ -124,26 +124,6 @@ class TestCLI(unittest.TestCase):
             # for file, details in results.items():
             #     # Check if all files are identical
             #     self.assertTrue(details[0] == "Identical", f"{file}: {details}")
-                
-                
- 
-        
-
-    # @patch('sys.stdout', new_callable=io.StringIO)
-    # def test_main_no_arguments(self, mock_stdout):
-    #     """
-    #     Test the main() function with no additional arguments,
-    #     e.g., `python main.py`
-    #     """
-    #     test_args = ["python -m icfree.learner"]
-    #     with patch.object(sys, 'argv', test_args):
-    #         main()
-
-    #     output = mock_stdout.getvalue()
-
-    #     # Check if your program's behavior with no arguments matches expectations
-    #     # This will depend on how your main() handles empty arguments
-    #     self.assertIn("CLI arguments received: []", output)
 
 
 if __name__ == "__main__":
