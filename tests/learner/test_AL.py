@@ -13,7 +13,6 @@ from tempfile import TemporaryDirectory
 from icfree.learner.__main__ import main
 
 
-
 def file_fingerprint(file_path):
     """
     Calculate the fingerprint (SHA-256 hash) of a file.
